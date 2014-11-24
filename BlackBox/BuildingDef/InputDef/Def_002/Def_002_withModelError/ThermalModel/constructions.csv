@@ -1,0 +1,11 @@
+identifier;description;material_identifiers;thickness;conv_coeff_adjacent_A;conv_coeff_adjacent_B;
+C0001;ExtWall;M0002,M0014,M0015,M0003;0.01,0.1,0.15,0.01;convCoeff_WallExt;convCoeff_WallInt;
+C0002;IntFloor_TABS;M0012,M0011,M0010,M0009;0.01,0.2,0.05,0.01;convCoeff_CeilingADB;convCoeff_FloorInt;
+C0003;IntFloor_Hall;M0018,M0013,M0010,M0009;0,0.2,0.05,0.01;convCoeff_CeilingADB;convCoeff_FloorInt;
+C0004;IntWall_Plasterboard;M0001,M0008,M0001;0.015,0.07,0.015;convCoeff_WallInt;convCoeff_WallInt;
+C0005;IntWall_Concrete;M0007;0.25;convCoeff_WallInt;convCoeff_WallInt;
+C0006;IntMass_Beams;M0006;0.3;convCoeff_InternalMass;convCoeff_InternalMass;
+C0007;IntCeiling_TABS;M0009,M0010,M0011,M0012;0.01,0.05,0.2,0.01;convCoeff_FloorADB;convCoeff_CeilingInt;
+C0008;IntCeiling_Hall;M0009,M0010,M0013,M0018;0.01,0.05,0.2,0;convCoeff_FloorADB;convCoeff_CeilingInt;
+C0009;IntCeiling_TABSSource;M0009,M0010,M0016,M0017,M0012;0.01,0.05,0.12,0.08,0.01;convCoeff_FloorADB;convCoeff_CeilingInt;
+C0010;IntCeiling_TABSSource_Zone07;M0009,M0010,M0016,M0017,M0018;0.01,0.05,0.12,0.08,0;convCoeff_FloorADB;convCoeff_CeilingInt;

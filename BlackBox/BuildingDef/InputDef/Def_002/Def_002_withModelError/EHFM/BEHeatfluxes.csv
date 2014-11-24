@@ -1,0 +1,16 @@
+buildingelement_identifier;layer_number;control_identifier;heating_cooling_selection;
+B0001;2;hTABS;h;
+B0008;2;hTABS;h;
+B0038;2;hTABS;h;
+B0043;2;hTABS;h;
+B0047;2;hTABS;h;
+B0051;2;hTABS;h;
+B0056;2;hTABS;h;
+B0062;2;hTABS;h;
+B0071;2;hTABS;h;
+B0073;2;hTABS;h;
+B0077;2;hTABS;h;
+B0080;2;hTABS;h;
+B0083;2;hTABS;h;
+B0086;2;cTABS;c;
+B0065;2;cTABS;c;

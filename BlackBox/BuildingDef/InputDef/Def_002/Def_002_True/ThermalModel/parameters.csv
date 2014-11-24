@@ -1,0 +1,13 @@
+identifier;description;value;
+UValue_IRTransparent;UValue of Infrared Partition (usually used to model two parts of the same room);100;
+convCoeff_CeilingADB;Convective coefficient of a ground contact surface (unused, set to 0);0;
+convCoeff_CeilingInt;Convective coefficient of ceiling to zone (default, considering thermal radiation);8;
+convCoeff_FloorADB;Convective coefficient of a ground contact surface (unused, set to 0);0;
+convCoeff_FloorInt;Convective coefficient of floor to zone (default, considering thermal radiation);5;
+convCoeff_InternalMass;Convective Coefficient of Internal Mass (default, considering thermal radiation);6;
+convCoeff_WallExt;Convective coefficient of a surface to ambient air (default);12.5;
+convCoeff_WallInt;Convective coefficient of wall to zone (default, considering thermal radiation);7;
+GValue_Window_EPConstr_WindowGlazing_Lobby;GValue of Window with EP ConstructionWindowGlazing_Lobby (default value);0.5;
+GValue_Window_EPConstr_WindowGlazing_Office;GValue of Window with EP ConstructionWindowGlazing_Office (default value);0.5;
+UValue_Window_EPConstr_WindowGlazing_Lobby;UValue of Window with EP ConstructionWindowGlazing_Lobby (default value);1;
+UValue_Window_EPConstr_WindowGlazing_Office;UValue of Window with EP ConstructionWindowGlazing_Office (default value);1;
