@@ -121,10 +121,10 @@ classdef ProgressModelEngine < handle
         % Define functions directly implemented here:
         % -----------------------------------------------
         % FUNCTION: to call the state update routine externally
-        function [xnew , l , constraintSatisfaction] = performStateUpdate(obj,x,u,xi,delta_t)
+        function [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate(obj,x,u,xi,currentTime)
             % The model property is a class that implements the state
             % update appropriate to the model type
-            [xnew , l , constraintSatisfaction] = requestStateUpdate(obj.model,x,u,xi,delta_t);
+            [xnew , l , l_per_ss , constraintSatisfaction] = requestStateUpdate(obj.model,x,u,xi,currentTime);
             
             % Keep the local object updated with the new state
             obj.x   = xnew;
@@ -133,7 +133,7 @@ classdef ProgressModelEngine < handle
             
             % Increment the time counter and time
             obj.k = obj.k + 1;
-            obj.t = obj.t + delta_t;
+            obj.t = obj.t + currentTime.abs_increment;
         end
         % END OF: "function [...] = performStateUpdate(...)"
         
@@ -164,7 +164,14 @@ classdef ProgressModelEngine < handle
             end
         end
         % END OF: "function [...] = checkInputModelIsValid(...)"
-
+        
+        % FUNCTION: to update the masks of the StateDef Object in the model
+        function updateStateDefMasks( obj , new_n_ss , new_mask_x_ss , new_mask_u_ss , new_mask_xi_ss )
+            % Put the input objects directly into the variables assuming
+            % they have been checked via the "checkMasksAreValid" function
+            updateMasks( obj.model.stateDef , new_n_ss , new_mask_x_ss , new_mask_u_ss , new_mask_xi_ss );
+        end
+        % END OF: "function [...] = updateStateDefMasks(...)"
         
     end
     % END OF: "methods (Static = false , Access = public)"

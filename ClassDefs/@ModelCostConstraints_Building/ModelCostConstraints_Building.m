@@ -46,6 +46,9 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         % Building Model
         building@Building;
         
+        % Size of the State, Input and Uncertainty vectors
+        stateDef@StateDef;
+        
         % The Constraint Definition Object
         constraintDef@ConstraintDef
         
@@ -63,9 +66,6 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         model = [];
         % Model type for knowing how to handle the model object
         modelType@string;
-        % Size of the State, Input and Uncertainty vectors
-        stateDef@StateDef;
-        
         
         
         % EXTRA PROPERTIES REQUIRED FOR BUILDINGS
@@ -185,8 +185,8 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         
         % FUNCTION: to call for a state update externally
         %       > This function is defined in the SUPER-CLASS as ABSTRACT
-        function [xnew , l , constraintSatisfaction] = requestStateUpdate( obj , x , u , xi , delta_t )
-            [xnew , l , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t );
+        function [xnew , l , l_per_ss , constraintSatisfaction] = requestStateUpdate( obj , x , u , xi , delta_t )
+            [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t );
         end
         % END OF: "function [...] = requestStateUpdate(...)"
         
@@ -202,6 +202,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         %       > This function is defined in the SUPER-CLASS as ABSTRACT
         function returnConstraintDef = requestConstraintDefObject( obj )
             returnConstraintDef = buildAndReturnConstraintDefObject( obj );
+            createCombinedConstraintDescription( returnConstraintDef );
             obj.constraintDef = returnConstraintDef;
         end
         % END OF: "function [...] = requestStateUpdate(...)"
@@ -227,7 +228,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         returnIsValid = checkValidity(obj);
         
         % FUNCTION: to update the state for this type of model
-        [xnew , l , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t );
+        [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , currentTime );
        
         % FUNCTION: to build a "StateDef" object for this type of model
         returnStateDef = buildAndReturnStateDefObject( obj );

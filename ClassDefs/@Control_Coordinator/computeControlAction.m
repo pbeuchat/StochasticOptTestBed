@@ -1,4 +1,7 @@
-function [u , diagnostics] = computeControlAction( obj , x , xi , stageCost , prediction , statsRequired_mask , timeHorizon )
+function [u , diagnostics] = computeControlAction( obj , currTime , x , xi , stageCost , stageCost_per_ss , prediction , statsRequired_mask , timeHorizon )
+%stageCost.localcost
+%stageCost.globalcost
+%stageCost.comfort local and global
 % Defined for the "ControllerInterface" class, this function builds a cell
 % array of initialised controllers
 % ----------------------------------------------------------------------- %
@@ -26,8 +29,7 @@ function [u , diagnostics] = computeControlAction( obj , x , xi , stageCost , pr
     mask_xi_local  = obj.stateDef.mask_xi_ss;
     
     % Intialise the return "u"
-    n_u_local      = obj.stateDef.n_u;
-    u = zeros(n_u_local,1);
+    u = zeros(obj.stateDef.n_u,1);
     
     % Check if the predicitons are even required
     if isempty( prediction)
@@ -56,7 +58,7 @@ function [u , diagnostics] = computeControlAction( obj , x , xi , stageCost , pr
         
         % Compute the control action (Mapping it back to its portion of
         % the full vector using the mask indexing)
-        u(thisMask_u,1) = computeControlAction( obj.localControllerArray(iCtrl) , this_x , this_xi , stageCost , this_prediction);
+        u(thisMask_u,1) = computeControlAction( obj.localControllerArray(iCtrl) , currTime , this_x , this_xi , stageCost , stageCost_per_ss(:,iCtrl) , this_prediction);
         
     end
     

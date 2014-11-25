@@ -26,7 +26,7 @@
 
 %% --------------------------------------------------------------------- %%
 %% CLEAR and CLOSE EVERYTHING
-clear all;
+%clear all;
 close all
 clc;
 
@@ -72,7 +72,7 @@ systemIDRequest     = '001';
 %% SPECIFY THE TIME HORIZON FOR WHICH TO RUN THE SIMULATIONS
 
 timeStart       = 1;
-timeHorizon     = 24*50;
+timeHorizon     = (24*4) * 5;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
@@ -164,6 +164,25 @@ cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
 thisVararginGlobal                  = 'two';
 cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
+
+
+% -----------------------------------
+% Add a Controller Spec
+numCntr = numCntr + 1;
+% Mandatory Specifications
+cntrSpecs{numCntr}.label            = 'Random Controller with Central Coordinator';
+cntrSpecs{numCntr}.legend           = 'Rand w Coord';
+cntrSpecs{numCntr}.modelFree        = false;
+cntrSpecs{numCntr}.trueModelBased   = true;
+cntrSpecs{numCntr}.classNameLocal   = 'Control_Rand_Local';
+cntrSpecs{numCntr}.classNameGlobal  = 'Control_Rand_Global';
+cntrSpecs{numCntr}.globalInit       = true;
+% Optional Specifications
+cntrSpecs{numCntr}.description      = 'A controller that randomly chooses and input between the lower and upper bound for each input';
+thisVararginLocal                   = 'one';
+cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+thisVararginGlobal                  = 'two';
+cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 

@@ -89,8 +89,8 @@ mask_xi_ss = sparse( mask_xi_ss );
 
 
 %% SPECIFY THE INITIAL CONDITION
-% @TODO: This is unashamedly hard-coded for now
-x0 = 25 * ones( n_x , 1 );
+% 
+x0 = obj.x0;
 
 
 %% --------------------------------------------------------------------- %%

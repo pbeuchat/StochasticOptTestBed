@@ -1,4 +1,4 @@
-classdef Control_Null_Local < Control_LocalController
+classdef Control_Rand_Global < Control_GlobalController
 % This class runs the local control algorithms
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
@@ -9,15 +9,17 @@ classdef Control_Null_Local < Control_LocalController
 % ----------------------------------------------------------------------- %
 
     properties(Hidden,Constant)
-        % Number of properties required for object instantation
-        n_properties@uint64 = uint64(2);
         % Name of this class for displaying relevant messages
-        thisClassName@string = 'Control_Null_Local';
+        thisClassName@string = 'Control_Null_Gocal';
+        
+        % Inheritted from the Abstract "Control_GlobalController" class
+        % Number of properties required for object instantation
+        %n_properties@uint64 = uint64(2);
     end
    
     properties (Access = public)
         % A cell array of strings with the statistics required
-        statsRequired@cell = {'mean','cov'};
+        statsRequired@cell = {};
         statsPredictionHorizon@uint32 = uint32(10);
         
         % The Identifiaction Number that specifies which sub-system 
@@ -31,36 +33,35 @@ classdef Control_Null_Local < Control_LocalController
     
     properties (Access = private)
         
-        % Size of the input vector that must be returned
-        % (Default set to "0" so that an error occurs if not changed)
-        n_u@uint32 = uint32(0);
-        
         % The type of model that is being controller
         modelType@string = '';
+        
+        % The State Definiton Object
+        stateDef@StateDef;
         
         % The Constraints Definiton object
         constraintDef@ConstraintDef;
         
-        % The object which every local controller should be given the same
-        % handle to so that a Global Control/Coordinator can be implemented
-        globalController@Control_GlobalController;
-        
+        % Variables for handling the inputs passed in from the local
+        % controllers
+        numReceived@uint32 = uint32(0);
+        current_u@double;
+
     end
 
     
     methods
         % This is the "CONSTRUCTOR" method
-        function obj = Control_Null_Local( input_idnum , inputStateDef , inputConstraintDef , inputGlobalControlObject)
+        function obj = Control_Rand_Global( inputStateDef , inputConstraintDef )
             % Allow the Constructor method to pass through when called with
             % no nput arguments (required for the "empty" object array
             % creator)
             if nargin > 0
                 
-                % Check that the Identifiaction Number (i.e. "input_idnum")
-                % is of the correct type
-                if ~isa( input_idnum , 'uint32' )
-                    disp( ' ... ERROR: the input Identifiaction Number for this local controller is not of the expected "uint32" type');
-                    disp(['            It was input as type(input_idnum) = ',type(input_idnum) ]);
+                % Check if number of input arguments is correct
+                if nargin ~= obj.n_properties
+                    %disp( ' ... ERROR: The Constructor for the %s class requires %d argument/s for object creation.' , obj.thisClassName , obj.n_properties );
+                    disp([' ... ERROR: The Constructor for the "',obj.thisClassName,'" class requires ',num2str(obj.n_properties),' argument/s for object creation.']);
                     error(bbConstants.errorMsg);
                 end
                 
@@ -80,19 +81,10 @@ classdef Control_Null_Local < Control_LocalController
                     error(bbConstants.errorMsg);
                 end
                 
-                % Check that the Gloabl Control Object
-                % (i.e. "inputGlobalControlObject") is of the correct type
-                if ( ~isempty(inputGlobalControlObject)  &&  ~isa( inputGlobalControlObject , 'Control_GlobalController' ) )
-                    disp( ' ... ERROR: the input Identifiaction Number for this local controller is not of the expected "Control_GlobalController" type');
-                    disp(['            It was input as type(inputGlobalControlObject) = ',type(inputGlobalControlObject) ]);
-                    error(bbConstants.errorMsg);
-                end
-                
                 % Perform all the initialisation here
-                obj.idnum               = input_idnum;
-                obj.n_u                 = inputStateDef.n_u;
+                obj.stateDef            = inputStateDef;
                 obj.constraintDef       = inputConstraintDef;
-                obj.globalController    = inputGlobalControlObject;
+                
                 
             end
             % END OF: "if nargin > 0"
@@ -118,16 +110,18 @@ classdef Control_Null_Local < Control_LocalController
     % END OF: "methods"
     
     methods (Static = false , Access = public)
-        % This function will be called at every time step and must return
-        % the input vector to be applied
-        u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_prev , stageCost_this_ss_prev , predictions );
         
+        % FUNCTION:
+        passLocalInputToGlobalCoordinator( obj , local_ss_id , u , timeIndex );
+
+
+        % FUNCTION: 
         % This function will be called once before the simulation is
         % started
-        % This function should be used to perform off-line possible
-        % computations so that the controller computation speed during
-        % simulation run-time is faster
-        flag_successfullyInitialised = initialise_localControl( obj , inputModelType , inputModel , vararginLocal);
+        % This function is to initialise the controller at a global level
+        % This function should be used to specify a different number of
+        % sub-systems and their corresponding masks
+        [flag_ControlStructureChanged , new_n_ss , new_mask_x_ss , new_mask_u_ss , new_mask_xi_ss] = initialise_globalControl( obj , inputModelType , inputModel , vararginGlobal);
         
     end
     % END OF: "methods (Static = false , Access = public)"

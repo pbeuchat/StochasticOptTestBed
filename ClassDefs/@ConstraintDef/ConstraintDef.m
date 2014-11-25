@@ -23,6 +23,9 @@ classdef ConstraintDef < handle
         % concept and benefits of Object-Orientated-Programming will be
         % degraded...
         
+        % The state definiton used to instantiate this object
+        stateDef@StateDef;
+        
         % The constraint definitions for the state vector
         x_box@double;
         x_rect_upper@double;
@@ -49,6 +52,17 @@ classdef ConstraintDef < handle
         flag_inc_u_box@logical   = false;
         flag_inc_u_rect@logical  = false;
         flag_inc_u_poly@logical  = false;
+        
+        % Having all the constraints together as one polytope is the
+        % fastest for computation
+        x_all_A@double;
+        x_all_b@double;
+        x_all_label@cell;
+        
+        u_all_A@double;
+        u_all_b@double;
+        u_all_label@cell;
+        
         
         
     end
@@ -193,7 +207,7 @@ classdef ConstraintDef < handle
             else
                 x_poly_A        = [];
                 x_poly_b        = [];
-                x_poly_label    = cell(0,0);
+                x_poly_label    = cell(0,1);
                 x_poly_mask     = false(0,0);
             end
             
@@ -309,7 +323,7 @@ classdef ConstraintDef < handle
             else
                 u_poly_A        = [];
                 u_poly_b        = [];
-                u_poly_label    = cell(0,0);
+                u_poly_label    = cell(0,1);
                 u_poly_mask     = false(0,0);
             end
             
@@ -317,7 +331,8 @@ classdef ConstraintDef < handle
             % ---------------------------------------------------- %
             % NOW PUT ALL THE INPUT INTO THE APPROPRIATE VARIABLES OF THIS
             % OBJECT
-            %obj.stateDef        = inputStateDef;
+            obj.stateDef        = inputStateDef;
+            
             obj.x_box           = x_box;
             obj.x_rect_lower    = x_rect_lower;
             obj.x_rect_upper    = x_rect_upper;
@@ -397,7 +412,7 @@ classdef ConstraintDef < handle
             else
                 new_x_poly_A = [];
                 new_x_poly_b = [];
-                new_x_poly_label = cell(0,0);
+                new_x_poly_label = cell(0,1);
             end
             
             
@@ -433,7 +448,7 @@ classdef ConstraintDef < handle
             else
                 new_u_poly_A = [];
                 new_u_poly_b = [];
-                new_u_poly_label = cell(0,0);
+                new_u_poly_label = cell(0,1);
             end
             
             % Create the return object
@@ -442,6 +457,131 @@ classdef ConstraintDef < handle
         % END OF: "function [...] = xxx(...)"
         
  
+        % FUNCTION: to construct a single polytope that describes all the
+        % constraints
+        function createCombinedConstraintDescription( obj )
+            
+            % Get the state and input size from the State Definition object
+            n_x = double( obj.stateDef.n_x );
+            n_u = double( obj.stateDef.n_u );
+            
+            % The polytope should not be included if this is a partial
+            % constraint defintion. This can be identified by checking if
+            % the "A" matrix is the same width as "n_x" or "n_u"
+            % respectively
+            if obj.flag_inc_x_poly
+                flag_compatible_x_poly = ( n_x == size(obj.x_poly_A,2) );
+            else
+                flag_compatible_x_poly = false;
+            end
+            
+            if obj.flag_inc_u_poly
+                flag_compatible_u_poly = ( n_u == size(obj.u_poly_A,2) );
+            else
+                flag_compatible_u_poly = false;
+            end
+           
+            
+            % Start with the x-only constraints
+            if obj.flag_inc_x_box
+                A_x_box = [ speye(n_x) ; -speye(n_x)  ];
+                b_x_box = [ obj.x_box  ; -obj.x_box   ];
+                x_box_label = cell(2*n_x,1);
+                for i_x = 1:n_x
+                    x_box_label{i_x,1}      = [ 'Box on "x" element ',num2str(i_x),', with identifier ',obj.stateDef.label_x{i_x},', [x]_',num2str(i_x),' <= ',num2str(obj.x_box(i_x,1)) ];
+                end
+                for i_x = 1:n_x
+                    x_box_label{n_x+i_x,1}  = [ 'Box on "x" element ',num2str(i_x),', with identifier ',obj.stateDef.label_x{i_x},', [x]_',num2str(i_x),' >= -',num2str(obj.x_box(i_x,1)) ];
+                end
+            else
+                A_x_box = sparse( [],[],[], 0 , n_x , 0 );
+                b_x_box = zeros(0,1);
+                x_box_label = cell(0,1);
+            end
+            
+            if obj.flag_inc_x_rect
+                A_x_rect = [ speye(n_x)       ; -speye(n_x)  ];
+                b_x_rect = [ obj.x_rect_upper  ; -obj.x_rect_lower   ];
+                x_rect_label = cell(2*n_x,1);
+                for i_x = 1:n_x
+                    x_rect_label{i_x,1}         = [ 'Hyper-rectanlge on "x" element ',num2str(i_x),', with identifier ',obj.stateDef.label_x{i_x},', [x]_',num2str(i_x),' <= ',num2str(obj.x_rect_upper(i_x,1)) ];
+                end
+                for i_x = 1:n_x
+                    x_rect_label{n_x+i_x,1}     = [ 'Hyper-rectangle on "x" element ',num2str(i_x),', with identifier ',obj.stateDef.label_x{i_x},', [x]_',num2str(i_x),' >= ',num2str(obj.x_rect_lower(i_x,1)) ];
+                end
+            else
+                A_x_rect = sparse( [],[],[], 0 , n_x , 0 );
+                b_x_rect = zeros(0,1);
+                x_rect_label = cell(0,1);
+            end
+            
+            if flag_compatible_x_poly
+                A_x_poly = obj.x_poly_A;
+                b_x_poly = obj.x_poly_b;
+                x_poly_label_copy = obj.x_poly_label;
+            else
+                A_x_poly = sparse( [],[],[], 0 , n_x , 0 );
+                b_x_poly = zeros(0,1);
+                x_poly_label_copy = cell(0,1);
+            end
+            
+            % Now put them together
+            obj.x_all_A = [ A_x_box ; A_x_rect ; A_x_poly ];
+            obj.x_all_b = [ b_x_box ; b_x_rect ; b_x_poly ];
+            obj.x_all_label = [x_box_label ; x_rect_label ; x_poly_label_copy];
+            
+            
+            % Start with the u-only constraints
+            if obj.flag_inc_u_box
+                A_u_box = [ speye(n_u) ; -speye(n_u)  ];
+                b_u_box = [ obj.u_box  ; -obj.u_box   ];
+                u_box_label = cell(2*n_u,1);
+                for i_u = 1:n_u
+                    u_box_label{i_u,1}      = [ 'Box on "u" element ',num2str(i_u),', with identifier ',obj.stateDef.label_u{i_u},', [u]_',num2str(i_u),' <= ',num2str(obj.u_box(i_u,1)) ];
+                end
+                for i_u = 1:n_u
+                    u_box_label{n_u+i_u,1}  = [ 'Box on "u" element ',num2str(i_u),', with identifier ',obj.stateDef.label_u{i_u},', [u]_',num2str(i_u),' >= -',num2str(obj.u_box(i_u,1)) ];
+                end
+            else
+                A_u_box = sparse( [],[],[], 0 , n_u , 0 );
+                b_u_box = zeros(0,1);
+                u_box_label = cell(0,1);
+            end
+            
+            if obj.flag_inc_u_rect
+                A_u_rect = [ speye(n_u)       ; -speye(n_u)  ];
+                b_u_rect = [ obj.u_rect_upper  ; -obj.u_rect_lower   ];
+                u_rect_label = cell(2*n_u,1);
+                for i_u = 1:n_u
+                    u_rect_label{i_u,1}         = [ 'Hyper-rectanlge on "u" element ',num2str(i_u),', with identifier ',obj.stateDef.label_u{i_u},', [u]_',num2str(i_u),' <= ',num2str(obj.u_rect_upper(i_u,1)) ];
+                end
+                for i_u = 1:n_u
+                    u_rect_label{n_u+i_u,1}     = [ 'Hyper-rectangle on "u" element ',num2str(i_u),', with identifier ',obj.stateDef.label_u{i_u},', [u]_',num2str(i_u),' >= ',num2str(obj.u_rect_lower(i_u,1)) ];
+                end
+            else
+                A_u_rect = sparse( [],[],[], 0 , n_u , 0 );
+                b_u_rect = zeros(0,1);
+                u_rect_label = cell(0,1);
+            end
+            
+            if flag_compatible_u_poly
+                A_u_poly = obj.u_poly_A;
+                b_u_poly = obj.u_poly_b;
+                u_poly_label_copy = obj.u_poly_label;
+            else
+                A_u_poly = sparse( [],[],[], 0 , n_u , 0 );
+                b_u_poly = zeros(0,1);
+                u_poly_label_copy = cell(0,1);
+            end
+            
+            % Now put them together
+            obj.u_all_A = [ A_u_box ; A_u_rect ; A_u_poly ];
+            obj.u_all_b = [ b_u_box ; b_u_rect ; b_u_poly ];
+            obj.u_all_label = [u_box_label ; u_rect_label ; u_poly_label_copy];
+            
+            
+        end
+        
         
 
         

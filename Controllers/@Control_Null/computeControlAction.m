@@ -1,4 +1,4 @@
-function u = computeControlAction( obj , x , xi_prev , stageCost_prev , predictions )
+function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_prev , stageCost_this_ss_prev , predictions )
 % Defined for the "ControllerInterface" class, this function builds a cell
 % array of initialised controllers
 % ----------------------------------------------------------------------- %

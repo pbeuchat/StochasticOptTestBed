@@ -120,7 +120,7 @@ classdef Control_Null < Control_LocalController
     methods (Static = false , Access = public)
         % This function will be called at every time step and must return
         % the input vector to be applied
-        u = computeControlAction( obj , x , xi_prev , stageCost_prev , predictions );
+        u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_prev , stageCost_this_ss_prev , predictions );
         
         % This function will be called once before the simulation is
         % started
