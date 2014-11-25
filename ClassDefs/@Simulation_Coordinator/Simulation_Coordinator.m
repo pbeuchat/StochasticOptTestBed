@@ -23,7 +23,7 @@ classdef Simulation_Coordinator < handle
 
     properties(Hidden,Constant)
         % Number of properties required for object instantation
-        n_properties@uint64 = uint64(4);
+        n_properties@uint64 = uint64(6);
         % Name of this class for displaying relevant messages
         thisClassName@string = 'Simulation_Coordinator';
     end
@@ -47,6 +47,12 @@ classdef Simulation_Coordinator < handle
         % The State Definition of the appropriate class
         stateDef@StateDef;
         
+        % The State Definition of the appropriate class
+        costDef@CostDef;
+        
+        % The State Definition of the appropriate class
+        constraintDef@ConstraintDef;
+        
         % Flag to keep track of whether a simulation can be run (this
         % involves checking that the various components are all compatible
         % with eachother and that all fields are non-empty and sensible)
@@ -67,7 +73,7 @@ classdef Simulation_Coordinator < handle
     
     methods
         % This is the "CONSTRUCTOR" method
-        function obj = Simulation_Coordinator(inputDistCoor , inputControlCoord , inputProgModelEng , inputStateDef )
+        function obj = Simulation_Coordinator(inputDistCoor , inputControlCoord , inputProgModelEng , inputStateDef , inputCostDef , inputConstraintDef )
             % Allow the Constructor method to pass through when called with
             % no nput arguments (required for the "empty" object array
             % creator)
@@ -106,19 +112,38 @@ classdef Simulation_Coordinator < handle
                 
                 % Check the input State Defintion is:
                 if ~isa( inputStateDef , 'StateDef' )
-                    disp(' ... ERROR: The Progress Model Engine object that was input is not of class "ProgressModelEngine"' );
+                    disp(' ... ERROR: The State Defintion object that was input is not of class "StateDef"' );
                     disp('            Instead it has:');
-                    disp(['            class(inputProgModelEng) = ',class(inputProgModelEng)]);
+                    disp(['            class(inputStateDef) = ',class(inputStateDef)]);
                     error(bbConstants.errorMsg);
                 end
 
+                % Check the input Cost Defintion is:
+                if ~isa( inputCostDef , 'CostDef' )
+                    disp(' ... ERROR: The Cost Definition object that was input is not of class "CostDef"' );
+                    disp('            Instead it has:');
+                    disp(['            class(inputCostDef) = ',class(inputCostDef)]);
+                    error(bbConstants.errorMsg);
+                end
+                
+                % Check the input State Defintion is:
+                if ~isa( inputConstraintDef , 'ConstraintDef' )
+                    disp(' ... ERROR: The Constraint Definition object that was input is not of class "ConstraintDef"' );
+                    disp('            Instead it has:');
+                    disp(['            class(inputConstraintDef) = ',class(inputConstraintDef)]);
+                    error(bbConstants.errorMsg);
+                end
                 
 
                 % Set the handles to the appropriate properties
                 obj.distCoord       = inputDistCoor;
                 obj.controlCoord    = inputControlCoord;
                 obj.progModelEng    = inputProgModelEng;
+                
                 obj.stateDef        = inputStateDef;
+                obj.costDef         = inputCostDef;
+                obj.constraintDef   = inputConstraintDef;
+                
                 
                 % Now check that the interfaces between the components are
                 % compatible

@@ -13,7 +13,7 @@ classdef CostDef < handle
 
     properties(Hidden,Constant)
         % Number of properties required for object instantation
-        n_properties@uint64 = uint64(8);
+        n_properties@uint64 = uint64(10);
         % Name of this class for displaying relevant messages
         thisClassName@string = 'CostDef';
     end
@@ -35,9 +35,13 @@ classdef CostDef < handle
         R@double;
         S@double;
         
-        
         % Flags for which constraints are "included"
         flag_separable@logical = false;
+        
+        % This object also allows for information about part of the cost to
+        % be computed and passed around
+        subCosts_num@uint32;
+        subCosts_label@cell;
         
         
     end
@@ -55,7 +59,7 @@ classdef CostDef < handle
         % Define functions directly implemented here:
         % -----------------------------------------------
         % FUNCTION: the CONSTRUCTOR method for this class
-        function obj = CostDef( inputStateDef , funcType , c , q , r , Q , R , S )
+        function obj = CostDef( inputStateDef , funcType , c , q , r , Q , R , S , inputSubCosts_num , inputSubCosts_label )
             % Check if number of input arguments is correct
             if nargin ~= obj.n_properties
                 %fprintf(' ... ERROR: The Constructor for the %s class requires %d argument/s for object creation.' , obj.thisClassName , obj.n_properties);
@@ -72,6 +76,28 @@ classdef CostDef < handle
                 disp(['             Instead it was class(inputStateDef)  = ',class(inputStateDef)]);
                 error(bbConstants.errorMsg);
             end
+            
+            
+            % Check the Sub Costs input
+            if ( isempty(inputSubCosts_num) || isempty(inputSubCosts_label) )
+                inputSubCosts_num = 0;
+                inputSubCosts_label = cell(0,1);
+            else
+                % Check they are the right format
+                if ~isa(inputSubCosts_num,'uint32') || ~isscalar(inputSubCosts_num)
+                    disp( ' ... ERROR: the "inputSubCosts_num" for the number of additional cost components must be of class "uint32" and must be a scalar');
+                    disp(['            class(inputSubCosts_num) = ',class(inputSubCosts_num) ]);
+                    disp(['            size(inputSubCosts_num)  = ',num2str(size(inputSubCosts_num,1)),' -by- ',num2str(size(inputSubCosts_num,1)) ]);
+                end
+                
+                % Check they are the right format
+                if ~iscellstr(inputSubCosts_label) || ~(size(inputSubCosts_label,1) == inputSubCosts_num) || ~(size(inputSubCosts_label,2) == 1)
+                    disp( ' ... ERROR: the "inputSubCosts_label" for describing the additional cost components must be cell array of string and must have a size that agrees with "inputSubCosts_num"');
+                    disp(['            class(inputSubCosts_label) = ',class(inputSubCosts_label) ]);
+                    disp(['            size(inputSubCosts_label)  = ',num2str(size(inputSubCosts_label,1)),' -by- ',num2str(size(inputSubCosts_label,1)) ]);
+                    disp(['            expected size()            = ',num2str(inputSubCosts_num),' -by- 1' ]);
+                end
+            end
 
             
             % ---------------------------------------------------- %
@@ -85,6 +111,9 @@ classdef CostDef < handle
             obj.Q               = Q;
             obj.R               = R;
             obj.S               = S;
+            
+            obj.subCosts_num    = inputSubCosts_num;
+            obj.subCosts_label  = inputSubCosts_label;
             
         end
         % END OF: "function [..] = ProgressModelEngine(...)"

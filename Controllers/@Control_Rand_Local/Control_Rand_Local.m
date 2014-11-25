@@ -1,4 +1,4 @@
-classdef Control_Null_Local < Control_LocalController
+classdef Control_Rand_Local < Control_LocalController
 % This class runs the local control algorithms
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
@@ -31,9 +31,8 @@ classdef Control_Null_Local < Control_LocalController
     
     properties (Access = private)
         
-        % Size of the input vector that must be returned
-        % (Default set to "0" so that an error occurs if not changed)
-        n_u@uint32 = uint32(0);
+        % The state definiton object
+        stateDef@StateDef;
         
         % The type of model that is being controller
         modelType@string = '';
@@ -50,7 +49,7 @@ classdef Control_Null_Local < Control_LocalController
     
     methods
         % This is the "CONSTRUCTOR" method
-        function obj = Control_Null_Local( input_idnum , inputStateDef , inputConstraintDef , inputGlobalControlObject)
+        function obj = Control_Rand_Local( input_idnum , inputStateDef , inputConstraintDef , inputGlobalControlObject)
             % Allow the Constructor method to pass through when called with
             % no nput arguments (required for the "empty" object array
             % creator)
@@ -90,7 +89,7 @@ classdef Control_Null_Local < Control_LocalController
                 
                 % Perform all the initialisation here
                 obj.idnum               = input_idnum;
-                obj.n_u                 = inputStateDef.n_u;
+                obj.stateDef            = inputStateDef;
                 obj.constraintDef       = inputConstraintDef;
                 obj.globalController    = inputGlobalControlObject;
                 

@@ -93,7 +93,7 @@ stateDef = requestStateDefObject( sysModel );
 constraintDef = requestConstraintDefObject( sysModel );
 
 % Extract the "ConstraintDef" definition object
-[~] = requestCostDefObject( sysModel );
+costDef = requestCostDefObject( sysModel );
 
 
 % Wrap the "Progress Model Engine" class around the model so that the
@@ -213,7 +213,7 @@ for iController = 1:numControlTechniques
     %thisControllerSpec = controllerSpecArray{iController};
     
     % Create the Global Coordinator for this controller
-    mySimCoordArray(iController,1) = Simulation_Coordinator( distCoord , myControlCoordArray(iController,1) , myProgModelEng , stateDef );
+    mySimCoordArray(iController,1) = Simulation_Coordinator( distCoord , myControlCoordArray(iController,1) , myProgModelEng , stateDef , costDef , constraintDef );
     
     % Set the parameters for the simulation
     specifySimulationParameters( mySimCoordArray(iController,1) , timeIndex_start , timeIndex_end , flag_saveResults);

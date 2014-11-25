@@ -34,8 +34,12 @@ classdef Control_Coordinator < handle
         % Very few properties should have public access, otherwise the
         % concept and benefits of Object-Orientated-Programming will be
         % degraded...
-        
         distStatsRequired@cell;
+        
+        % The "StateDef" object with the size of the State, Input and
+        % Uncertainty vectors, there labels and the masks
+        stateDef@StateDef;
+        
     end
     
     properties (Access = private)
@@ -64,9 +68,6 @@ classdef Control_Coordinator < handle
         vararginLocal;
         vararginGlobal;
         
-        % The "StateDef" object with the size of the State, Input and
-        % Uncertainty vectors, there labels and the masks
-        stateDef@StateDef;
 
         % The "ConstraintDef" object with the definiton of the constraints
         constraintDef@ConstraintDef;
@@ -173,7 +174,7 @@ classdef Control_Coordinator < handle
         
         [ ] = initialiseControllers(obj , inputSettings , inputModel)
         
-        [u , diagnostics] = computeControlAction( obj , x , xi , stageCost , prediciton , statsRequired_mask , timeHorizon );
+        [u , diagnostics] = computeControlAction( obj , currTime , x , xi , stageCost , stageCost_per_ss , prediciton , statsRequired_mask , timeHorizon );
         
         
     end

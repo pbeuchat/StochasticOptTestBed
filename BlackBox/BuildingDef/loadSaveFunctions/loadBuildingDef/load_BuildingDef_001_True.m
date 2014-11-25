@@ -242,7 +242,6 @@ constraintsByHand.u_poly_b = n_u * u_radiator_max * 0.8;
 constraintsByHand.u_poly_label = { 'resource' };
 
 
-
 %% --------------------------------------------------------------------- %%
 %% 8) GENERATE COST DESCRIPTION
 disp('     8) Generate cost description');
@@ -302,10 +301,13 @@ costsByHand.R       = sparse([],[],[],n_u,n_u,0);
 costsByHand.S       = sparse([],[],[],n_u,n_x,0);
 
 
+costsByHand.subCosts_num      = uint32(2);
+costsByHand.subCosts_label    = {'energy';'comfort'};
 
 
 
 
+%% --------------------------------------------------------------------- %%
 %% SPECIFY THE INITIAL CONDITION
 n_x = size( B.building_model.discrete_time_model.A  , 2 );
 x0 = 22.5 * ones( n_x , 1 );

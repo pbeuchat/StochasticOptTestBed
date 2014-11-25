@@ -11,7 +11,7 @@ function returnCompletedSuccessfully = runSimulation( obj )
 
     % Set the return flag to "false", and if we make it to the end of this
     % function it will be set to "true"
-    returnCompletedSuccessfully = false;
+    %returnCompletedSuccessfully = false;
 
     %% First check that is is ready to run
     if ~( obj.flag_readyToSimulate )
@@ -21,22 +21,37 @@ function returnCompletedSuccessfully = runSimulation( obj )
     end
     
     
+    % Set the "stateDef" object for the model to have the same masks as for
+    % this "Control_Coordinator"
+    updateStateDefMasks( obj.progModelEng , obj.controlCoord.stateDef.n_ss , obj.controlCoord.stateDef.mask_x_ss , obj.controlCoord.stateDef.mask_u_ss , obj.controlCoord.stateDef.mask_xi_ss );
+    
     
     % Get the initial condition
-    this_x         = obj.stateDef.x0;
+    this_x = obj.stateDef.x0;
+    
     % Set the stage cost for the first time step iteration to be zero
-    this_stageCost = 0;
+    numSubCostValues = obj.costDef.subCosts_num;
+    numCostValues = numSubCostValues + 1;
+    this_stageCost          = zeros( numCostValues , 1 );
+    this_stageCost_per_ss   = zeros( numCostValues , obj.stateDef.n_ss );
+    
     % Set the disturbance for the first time step to be its initial value
+    % Chosen to be zero for now
     prev_xi = zeros( obj.stateDef.n_xi , 1 );
+    
     
     % Flag for whether the current or previous disturbance is available to
     % the controller
     flag_current_xi_isAvailable = false;
     
     % Get the timing
-    timeStart      = obj.simTimeIndex_start;
-    timeEnd        = obj.simTimeIndex_end;
-    timeDuration   = timeEnd - timeStart + 1;
+    timeStartIndex  = obj.simTimeIndex_start;
+    timeEndIndex    = obj.simTimeIndex_end;
+    timeDuration    = timeEndIndex - timeStartIndex + 1;
+
+    % Pre-allocate a "thisTime" struct
+    this_time = struct( 'index' , 0 , 'abs_hours' , 0 , 'abs_increment' , 0.25 );
+
 
     % Initiliase variables for storing the State, Input and Disturbance
     % results
@@ -44,16 +59,25 @@ function returnCompletedSuccessfully = runSimulation( obj )
     result_u  = zeros( obj.stateDef.n_u  , timeDuration );
     result_xi = zeros( obj.stateDef.n_xi , timeDuration );
     % Initiliase a variable for storing the per-Stage-Cost
-    result_cost = zeros( 1 , timeDuration + 1);
+    result_cost = zeros( numCostValues , timeDuration + 1);
+    result_cost_per_ss = zeros( numCostValues , obj.stateDef.n_ss , timeDuration + 1);
     
     % Get the list of stats required, and convert it to the "masked"
     % format
     statsRequired = obj.controlCoord.distStatsRequired;
     statsRequired_mask = bbConstants.stats_createMaskFromCellArray( statsRequired );
     
+    % Combine this into one flag for the case that NO predicitons are
+    % needed
     flag_getPredictions = ( sum(statsRequired_mask) > 0 );
     
-    timeHorizon = 5;
+    % @TODO - this is a HORRIBLE hack because it should be specified by the
+    % control method
+    if flag_getPredictions
+        timeHorizon = 5;
+    else
+        timeHorizon = 0;
+    end
     
     % Step through each of the "Local" controllers
     for iTime = 1 : timeDuration
@@ -64,14 +88,15 @@ function returnCompletedSuccessfully = runSimulation( obj )
         % ------------------------ %
         
         % Get the time step for this itertion
-        this_time = timeStart + (iTime - 1);
+        this_time.index      = timeStartIndex + (iTime - 1);
+        this_time.abs_hours  = this_time.index * 0.25;
         
         % Get the disturbance sample for this time
-        this_xi = getDisturbanceSampleForOneTimeStep( obj.distCoord , this_time );
+        this_xi = getDisturbanceSampleForOneTimeStep( obj.distCoord , this_time.index );
         
         % Get the disturbance statisitcs for this time
         if flag_getPredictions
-            this_prediction = getPredictions( obj.distCoord , statsRequired_mask , this_time , timeHorizon);
+            this_prediction = getPredictions( obj.distCoord , statsRequired_mask , this_time.index , timeHorizon);
         else
             this_prediction = [];
         end
@@ -82,18 +107,20 @@ function returnCompletedSuccessfully = runSimulation( obj )
         end
         
         % Get the control action to apply
-        this_u = computeControlAction( obj.controlCoord , this_x , prev_xi , this_stageCost , this_prediction , statsRequired_mask , timeHorizon );
+        this_u = computeControlAction( obj.controlCoord , this_time , this_x , prev_xi , this_stageCost , this_stageCost_per_ss , this_prediction , statsRequired_mask , timeHorizon );
         
         % Progress the Plant
-        delta_t = [];
-        [new_x , this_stageCost , constraintSatisfaction] = performStateUpdate( obj.progModelEng , this_x , this_u , this_xi , delta_t);
+        [new_x , this_stageCost , this_stageCost_per_ss , constraintSatisfaction] = performStateUpdate( obj.progModelEng , this_x , this_u , this_xi , this_time);
         
         % Save the results
         result_x(  : , iTime ) = this_x;
         result_u(  : , iTime ) = this_u;
         result_xi( : , iTime ) = this_xi;
+        
+        
         % Save the stage cost
-        result_cost( 1 , iTime ) = this_stageCost;
+        result_cost( : , iTime ) = this_stageCost;
+        result_cost_per_ss( : , : , iTime ) =  this_stageCost_per_ss;
         
         % Put the updated the state in to the running state variable
         this_x = new_x;
@@ -117,6 +144,10 @@ function returnCompletedSuccessfully = runSimulation( obj )
     
     % Save the terminal cost
     result_cost( 1 , timeDuration ) = 0;
+    
+    
+    
+    
     
     
     % Put the error flag in to the return variable

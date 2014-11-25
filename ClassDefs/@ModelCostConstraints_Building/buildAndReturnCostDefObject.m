@@ -39,6 +39,9 @@ for iField = 1:numFields
     end
 end
 
+subCosts_num    = costParams.subCosts_num;
+subCosts_label  = costParams.subCosts_label;
+
 
 %% --------------------------------------------------------------------- %%
 %% FINALLY BUILD THE CONSTRAINT-DEF OBJECT FROM ALL THE VARIABLES ABOVE
@@ -46,7 +49,7 @@ end
 %  function obj = CostDef( inputStateDef , funcType , c , q , r , Q , R , S )
 
 % Now call the constraint definiton object instantiation method:
-returnCostDef = CostDef( obj.stateDef , temp{1} , temp{2} , temp{3} , temp{4} , temp{5} , temp{6} , temp{7} );
+returnCostDef = CostDef( obj.stateDef , temp{1} , temp{2} , temp{3} , temp{4} , temp{5} , temp{6} , temp{7} , subCosts_num , subCosts_label );
 
 
 end

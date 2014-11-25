@@ -98,6 +98,8 @@ function initialiseControllers( obj , inputSettings , inputModel)
                 % Update the State Definiton object
                 updateMasks( obj.stateDef , new_n_ss , new_mask_x_ss , new_mask_u_ss , new_mask_xi_ss )
             end
+        else
+            obj.numControllers = myNumControllers;
         end
         
     else
@@ -133,6 +135,7 @@ function initialiseControllers( obj , inputSettings , inputModel)
         
         % Create a partial "Constraint Definition" object for this sub-system
         thisConstraintDef = requestPartialConstraintDefForGivenSubSystem( obj.constraintDef , thisStateDef , obj.stateDef , iController );
+        createCombinedConstraintDescription(thisConstraintDef);
         
         % Now create the constroller for this sub-system
         tempLocalControllerObjectArray(iController,1) = myClassFuncLocal( uint32(iController) , thisStateDef , thisConstraintDef , obj.globalController);
