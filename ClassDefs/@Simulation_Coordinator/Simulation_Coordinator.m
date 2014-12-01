@@ -178,7 +178,7 @@ classdef Simulation_Coordinator < handle
         end
         
         
-        returnCompletedSuccessfully = runSimulation( obj );
+        [returnCompletedSuccessfully , returnResults , savedDataNames] = runSimulation( obj , savePath );
         
         
     end

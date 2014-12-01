@@ -260,21 +260,70 @@ disp( '            The total time for performing all the initialisation function
 disp(['                ', num2str(timedResults.initTotal) ]);
 
 
+%% CREATE A FOLDER IN WHICH TO SAVE THE SIMULATION RESULTS
+
+if flag_saveResults
+    % Get the Root Path for where to save everything
+    savePath_Root = constants_MachineSpecific.saveDataPath;
+
+    % Path for Save Disturbance Data
+    savePath_Results = [savePath_Root,'savedResults/'];
+    if ~(exist(savePath_Results,'dir') == 7)
+        mkdir(savePath_Results);
+    end
+
+    % Get a string for the current time to name the save folder
+    [~, ~, currDateStr, currTimeStr] = getCurrentTimeStrings();
+
+    % Save Path for the time of this run
+    savePath_Results_thistime = [ savePath_Results , currDateStr , '_' , currTimeStr ,'/' ];
+    if ~(exist(savePath_Results_thistime,'dir') == 7)
+        mkdir(savePath_Results_thistime);
+    end
+end
+
+
+
+
 %% NOW RUN THE SIMULATIONS
 tic;
+prevTime = 0;
+thisTime = 0;
 % Keep the user updated
 disp('******************************************************************');
 disp(' Black-Box: Running the simulation for each contoller on the same');
 disp('            Building Model and Disturbance Scenarios');
-tic;
+
+% Initialise an empty cell array for storing all the results
+allResults          = cell( numControlTechniques , 1 );
+allDataFileNames    = cell( numControlTechniques , 1 );
+
 % Iterated through the controller specs
 for iController = 1:numControlTechniques
-    % Run the simulation
-    thisCompletedSuccessfully = runSimulation( mySimCoordArray(iController,1) );
+    % Use the previously started timer
+    thisControllerSpec = controllerSpecArray{iController};
     
+    % Create a folder to save the results for this Control Technique
+    if flag_saveResults
+        savePath_Results_thistime_thisTechnique = [ savePath_Results_thistime , controllerSpecArray{iController,1}.saveFolderName ,'/' ];
+        if ~(exist(savePath_Results_thistime_thisTechnique,'dir') == 7)
+            mkdir(savePath_Results_thistime_thisTechnique);
+        end
+    end
+    
+    
+    % Run the simulation
+    [thisCompletedSuccessfully , allResults{iController,1} , savedDataFileNames] = runSimulation( mySimCoordArray(iController,1) , savePath_Results_thistime_thisTechnique );
+    allDataFileNames{iController,1} = savedDataFileNames;
+    
+    % If completed successfully then store the names of the files saved
+    % And put the reesults into one big struct
+    if thisCompletedSuccessfully
+        save( [savePath_Results_thistime,'savedDataFileNames.mat'] , 'savedDataFileNames' , '-v7.3' );
+        
     % If not completed successfully, inform the user
-    if ~thisCompletedSuccessfully
-        thisControllerSpec = controllerSpecArray{iController};
+    else
+        %thisControllerSpec = controllerSpecArray{iController};
         disp([' ... ERROR: the simulation did not successfully run for Control Technique number ',num2str(iController) ]);
         disp( '            The results from this technique should not be trusted' );
         disp( '            To help you identify which control technique this was, its details are:' );
@@ -282,7 +331,15 @@ for iController = 1:numControlTechniques
         disp(['            classNameLocal:    ',thisControllerSpec.classNameLocal ]);
         disp(['            classNameGlobal:   ',thisControllerSpec.classNameGlobal ]);
     end
-    
+    % Store the time taken for this section
+    totalTime = toc;
+    thisTime = totalTime - prevTime;
+    % Give the user a little bit of info
+    disp([' ... INFO: The ',thisControllerSpec.label ,' was run for ',num2str((timeIndex_end-timeIndex_start+1)),' time steps, this was completed in ',num2str(thisTime),' seconds']);
+
+    % Update the previous time just before looping around to the next
+    % iteration
+    prevTime = toc;
 end
 
 % This loop naturally suits parallelisation, see this links for some
@@ -298,6 +355,21 @@ end
 timedResults.runAllSimulations = toc;
 % Give the user a little bit of info
 disp([' ... INFO: ',num2str(numControlTechniques),' controllers were run for ',num2str((timeIndex_end-timeIndex_start+1)),' time steps each, this was completed in ',num2str(timedResults.runAllSimulations),' seconds']);
+%% --------------------------------------------------------------------- %%
+%% NOW PLOT THE RESULTS
+tic;
+% Keep the user updated
+disp('******************************************************************');
+disp(' Black-Box: Plotting the simulation results');
+tic;
+% Iterated through the controller specs
+for iController = 1:numControlTechniques
+    % Visualise the results for each controller
+    Visualisation.visualise_singleController( controllerSpecArray{iController,1} , allResults{iController,1} , allDataFileNames{iController,1} );
+end
+
+
+
 %% --------------------------------------------------------------------- %%
 %% PUT TOGETHER THE RETURN VARIABLES
 returnAllResults = [];

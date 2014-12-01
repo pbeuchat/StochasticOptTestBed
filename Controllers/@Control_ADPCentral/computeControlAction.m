@@ -11,7 +11,7 @@ function u = computeControlAction( obj , x , xi_prev , stageCost_prev , predicti
 
     % Implement the ADP computation just for the sake of testing
     
-    tic;
+    %tic;
     
 %% --------------------------------------------------------------------- %%
 %% EXTRACT THE DETAILS FROM THE INPUTS AND PROPERTIES OF THIS OBJECT
@@ -44,12 +44,12 @@ function u = computeControlAction( obj , x , xi_prev , stageCost_prev , predicti
     
 %% --------------------------------------------------------------------- %%
 %% DECLARE THE OPTIMISATION VARIABLES FOR THE VALUE FUNCTION
-    tic;
+    %tic;
     P = sdpvar(n_x,n_x,'symmetric');        % Symmetric nxn matrix
     p = sdpvar(n_x,1,'full');        % Symmetric nxn matrix
     s = sdpvar(1,1,'full');        % Symmetric nxn matrix
-    toc
-    tic;
+    %toc
+    %tic;
 %% --------------------------------------------------------------------- %%
 %% DEFINE THE DISCOUNT FACTOR
     
@@ -148,17 +148,17 @@ function u = computeControlAction( obj , x , xi_prev , stageCost_prev , predicti
 %% --------------------------------------------------------------------- %%
 %% DECLARE THE OPTIMISATION VARIABLES FOR THE CONSTRAINT S-PROCEDURE
 
-    toc
-    tic;
+    %toc
+    %tic;
     numCons = 2;
     lmul = cell(numCons,1);
     for iCon = 1:numCons
         lmul{iCon,1} = sdpvar(1+n_x+n_u,1+n_x+n_u,'symmetric');
     end
-    toc
+    %toc
 
     numVariables = 0.5*(1+n_x)*(1+n_x+1) + 0.5*(1+n_x+n_u)*(1+n_x+n_u+1)*numCons;
-    time_toBuild = toc;
+    time_toBuild = 0.1;%toc;
     disp([' ... INFO: > It took ',num2str(time_toBuild),' seconds to build the APD formulation']);
     disp( '           > The optimisation problem involves:');
     disp(['                  ',num2str(numVariables,'%12d'),'   variables']);

@@ -165,7 +165,6 @@ function initialiseControllers( obj , inputSettings , inputModel)
     % Initialise a blank cell array for the list of stats
     numStatsRequired = 0;
     statsRequired = cell( numStatsRequired , 1);
-    statsRequiredHorizon = 0;
     
     % Iterate through the controllers
     for iController = 1:myNumControllers
@@ -197,16 +196,10 @@ function initialiseControllers( obj , inputSettings , inputModel)
                 end
             end
         end
-        % If Stats were required (ie. if "thisNumStats > 0"), then check
-        % what time horizon is required
-        if thisNumStats > 0
-            statsRequiredHorizon = max( statsRequiredHorizon , obj.localControllerArray(1).statsPredictionHorizon );
-        end
     end
 
     % Finally put the list into the appropriate property
     obj.distStatsRequired = statsRequired;
-    obj.distStatsHorizon  = statsRequiredHorizon;
     clear statsRequired;
 
 end

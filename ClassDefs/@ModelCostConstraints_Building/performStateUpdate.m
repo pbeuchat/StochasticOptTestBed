@@ -46,7 +46,7 @@ function [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( ob
     % GLOBAL:
     % Compute the Stage Cost for the whole system
     %l = x'*obj.costDef.Q*x  +  u'*obj.costDef.R*u  +  2*u'*obj.costDef.S*x  +  2*obj.costDef.q'*x  +  2*obj.costDef.r'*u  +  obj.costDef.c;
-    l(2,1)    = 2*obj.costDef.r'*u;
+    l(2,1)    = obj.costDef.r'*u + x'*obj.costDef.Q'*x + obj.costDef.q'*x + obj.costDef.c;
     l(3,1)    = sum(l_per_ss(3,:));
     l(1,1)    = l(2,1) + l(3,1);
     

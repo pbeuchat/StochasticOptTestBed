@@ -1,4 +1,4 @@
-function returnCompletedSuccessfully = runSimulation( obj )
+function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSimulation( obj , savePath )
 % Defined for the "Simulation_Coordinator" class, this function runs a
 % simulation
 % ----------------------------------------------------------------------- %
@@ -20,30 +20,33 @@ function returnCompletedSuccessfully = runSimulation( obj )
         error(bbConstants.errorMsg);
     end
     
-    
+    %% UPDATE THE STATE DEFITION - only the sub-system config part is updated
     % Set the "stateDef" object for the model to have the same masks as for
     % this "Control_Coordinator"
     updateStateDefMasks( obj.progModelEng , obj.controlCoord.stateDef.n_ss , obj.controlCoord.stateDef.mask_x_ss , obj.controlCoord.stateDef.mask_u_ss , obj.controlCoord.stateDef.mask_xi_ss );
     
     
+    %% SET THE INITIAL CONDITION FOR: 'x', 'xi', 'cost'
     % Get the initial condition
     this_x = obj.stateDef.x0;
-    
-    % Set the stage cost for the first time step iteration to be zero
-    numSubCostValues = obj.costDef.subCosts_num;
-    numCostValues = numSubCostValues + 1;
-    this_stageCost          = zeros( numCostValues , 1 );
-    this_stageCost_per_ss   = zeros( numCostValues , obj.stateDef.n_ss );
     
     % Set the disturbance for the first time step to be its initial value
     % Chosen to be zero for now
     prev_xi = zeros( obj.stateDef.n_xi , 1 );
+    
+    % Set the stage cost for the first time step iteration to be zero
+    numSubCostValues        = obj.costDef.subCosts_num;
+    numCostValues           = numSubCostValues + 1;
+    this_stageCost          = zeros( numCostValues , 1 );
+    this_stageCost_per_ss   = zeros( numCostValues , obj.stateDef.n_ss );
+    costLabels              = [ {'full'} ; obj.costDef.subCosts_label ];
     
     
     % Flag for whether the current or previous disturbance is available to
     % the controller
     flag_current_xi_isAvailable = false;
     
+    %% GET THE TIMING SPECIFICATIONS FOR THIS SIMULATION RUN
     % Get the timing
     timeStartIndex  = obj.simTimeIndex_start;
     timeEndIndex    = obj.simTimeIndex_end;
@@ -52,7 +55,7 @@ function returnCompletedSuccessfully = runSimulation( obj )
     % Pre-allocate a "thisTime" struct
     this_time = struct( 'index' , 0 , 'abs_hours' , 0 , 'abs_increment' , 0.25 );
 
-
+    %% PRE-ALLOCATE VARIABLE FOR STORING THE RESULTS
     % Initiliase variables for storing the State, Input and Disturbance
     % results
     result_x  = zeros( obj.stateDef.n_x  , timeDuration + 1 );
@@ -62,6 +65,13 @@ function returnCompletedSuccessfully = runSimulation( obj )
     result_cost = zeros( numCostValues , timeDuration + 1);
     result_cost_per_ss = zeros( numCostValues , obj.stateDef.n_ss , timeDuration + 1);
     
+    result_controlComputationTime = zeros( 1 , timeDuration );
+    result_controlComputationTime_per_ss = zeros( obj.stateDef.n_ss , timeDuration );
+    
+    result_time = zeros( 2 , timeDuration+1 );
+    result_time_label = {'index','abs_hours'};
+    
+    %% CONVERT THE LIST OF STATISTICS REQUIRED TO A "masked" LIST
     % Get the list of stats required, and convert it to the "masked"
     % format
     statsRequired = obj.controlCoord.distStatsRequired;
@@ -71,14 +81,19 @@ function returnCompletedSuccessfully = runSimulation( obj )
     % needed
     flag_getPredictions = ( sum(statsRequired_mask) > 0 );
     
+    
+    %% GET THE PREDICITON HORIZON
     % @TODO - this is a HORRIBLE hack because it should be specified by the
     % control method
     if flag_getPredictions
-        timeHorizon = 5;
+        timeHorizon = obj.controlCoord.distStatsHorizon;
     else
         timeHorizon = 0;
     end
     
+    
+    %% ----------------------------------------------------------------- %%
+    %% RUN THE SIMULATION
     % Step through each of the "Local" controllers
     for iTime = 1 : timeDuration
         
@@ -91,12 +106,15 @@ function returnCompletedSuccessfully = runSimulation( obj )
         this_time.index      = timeStartIndex + (iTime - 1);
         this_time.abs_hours  = this_time.index * 0.25;
         
+        result_time(1,iTime) = this_time.index;
+        result_time(2,iTime) = this_time.abs_hours;
+        
         % Get the disturbance sample for this time
         this_xi = getDisturbanceSampleForOneTimeStep( obj.distCoord , this_time.index );
         
         % Get the disturbance statisitcs for this time
         if flag_getPredictions
-            this_prediction = getPredictions( obj.distCoord , statsRequired_mask , this_time.index , timeHorizon);
+            this_prediction = getPredictions( obj.distCoord , statsRequired_mask , this_time.index , double(timeHorizon) );
         else
             this_prediction = [];
         end
@@ -107,7 +125,11 @@ function returnCompletedSuccessfully = runSimulation( obj )
         end
         
         % Get the control action to apply
-        this_u = computeControlAction( obj.controlCoord , this_time , this_x , prev_xi , this_stageCost , this_stageCost_per_ss , this_prediction , statsRequired_mask , timeHorizon );
+        %tic;
+        [this_u , this_compTime_per_ss ] = computeControlAction( obj.controlCoord , this_time , this_x , prev_xi , this_stageCost , this_stageCost_per_ss , this_prediction , statsRequired_mask , timeHorizon );
+        result_controlComputationTime( 1 , iTime ) = 0.1;%toc;
+        result_controlComputationTime_per_ss( : , iTime ) = this_compTime_per_ss;
+        
         
         % Progress the Plant
         [new_x , this_stageCost , this_stageCost_per_ss , constraintSatisfaction] = performStateUpdate( obj.progModelEng , this_x , this_u , this_xi , this_time);
@@ -139,17 +161,143 @@ function returnCompletedSuccessfully = runSimulation( obj )
     fprintf('\n');
     % ------------------------ %
     
-    % Save the final state
+    % Store the final state
     result_x( : , timeDuration+1 ) = this_x;
     
-    % Save the terminal cost
-    result_cost( 1 , timeDuration ) = 0;
+    % Store the terminal cost
+    result_cost( : , timeDuration+1 ) = 0;
+    result_cost_per_ss( : , : , timeDuration+1 ) =  0;
+    
+    % Store the terminal time
+    result_time(1,timeDuration+1) = timeStartIndex + timeDuration;
+    result_time(2,timeDuration+1) = (timeStartIndex + timeDuration) * 0.25;
+    
+    
+    %% ----------------------------------------------------------------- %%
+    %% SAVE THE DATA
+    % To save a particular data set, we should store the data plus the
+    % following attributes so that things can be easily plotted
+    % Specifically
+    % .data         - this is the actual data
+    % .dimPerTime   - this is the number of dimension of data stored per time step
+    % .labelPerDim  - this is a label of the variable for each non-time dimension
     
     
     
+    % When then put all these together into a struct, where the properties
+    % names for the struct are saved in a cell array of strings
+    % 
+    
+    % Initialise the data counter
+    iDataName = 0;
+    
+    % --------------------------- %
+    % For 'time'
+    iDataName                   = iDataName + 1;
+    savedDataNames{iDataName,1}  = 'time';
+    tempResult.data             = result_time;
+    tempResult.dimPerTime       = 1;
+    tempLabels                  = cell(tempResult.dimPerTime,1);
+    tempLabels{1,1}             = result_time_label;
+    tempResult.labelPerDim      = tempLabels;
+    
+    returnResults.(savedDataNames{iDataName}) = tempResult;
+    clear tempLabels;
+    clear tempResult;
+    
+    % --------------------------- %
+    % For 'x'
+    iDataName                   = iDataName + 1;
+    savedDataNames{iDataName,1}  = 'x';
+    tempResult.data             = result_x;
+    tempResult.dimPerTime       = 1;
+    tempLabels                  = cell(tempResult.dimPerTime,1);
+    tempLabels{1,1}             = obj.stateDef.label_x;
+    tempResult.labelPerDim      = tempLabels;
+    
+    returnResults.(savedDataNames{iDataName}) = tempResult;
+    clear tempLabels;
+    clear tempResult;
+    
+    
+    % --------------------------- %
+    % For 'u'
+    iDataName                   = iDataName + 1;
+    savedDataNames{iDataName,1}  = 'u';
+    tempResult.data             = result_u;
+    tempResult.dimPerTime       = 1;
+    tempLabels                  = cell(tempResult.dimPerTime,1);
+    tempLabels{1,1}             = obj.stateDef.label_u;
+    tempResult.labelPerDim      = tempLabels;
+    
+    returnResults.(savedDataNames{iDataName}) = tempResult;
+    clear tempLabels;
+    clear tempResult;
     
     
     
+    % --------------------------- %
+    % For 'xi'
+    iDataName                   = iDataName + 1;
+    savedDataNames{iDataName,1}  = 'xi';
+    tempResult.data             = result_xi;
+    tempResult.dimPerTime       = 1;
+    tempLabels                  = cell(tempResult.dimPerTime,1);
+    tempLabels{1,1}             = obj.stateDef.label_xi;
+    tempResult.labelPerDim      = tempLabels;
+    
+    returnResults.(savedDataNames{iDataName}) = tempResult;
+    clear tempLabels;
+    clear tempResult;
+    
+    
+    % --------------------------- %
+    % For 'cost'
+    iDataName                   = iDataName + 1;
+    savedDataNames{iDataName,1}  = 'cost';
+    tempResult.data             = result_cost;
+    tempResult.dimPerTime       = 1;
+    tempLabels                  = cell(tempResult.dimPerTime,1);
+    tempLabels{1,1}             = costLabels;
+    tempResult.labelPerDim      = tempLabels;
+    
+    returnResults.(savedDataNames{iDataName}) = tempResult;
+    clear tempLabels;
+    clear tempResult;
+    
+    
+    % --------------------------- %
+    % For 'cost_per_ss'
+    iDataName                   = iDataName + 1;
+    savedDataNames{iDataName,1}  = 'cost_per_ss';
+    tempResult.data             = result_cost_per_ss;
+    tempResult.dimPerTime       = 2;
+    tempLabels                  = cell(tempResult.dimPerTime,1);
+    tempLabels{1,1}             = costLabels;
+    
+    tempCell = cell(obj.stateDef.n_ss,1);
+    for itemp=1:obj.stateDef.n_ss
+        tempCell{itemp,1} = num2str(itemp);
+    end
+    
+    tempLabels{2,1}             = tempCell;
+    tempResult.labelPerDim      = tempLabels;
+    
+    returnResults.(savedDataNames{iDataName}) = tempResult;
+    clear tempLabels;
+    clear tempResult;
+    
+    numDataNames = iDataName;
+    
+    
+    % Step through the data and save it
+    for iDataName = 1:numDataNames
+        save( [savePath , savedDataNames{iDataName} , '.mat'] , '-struct' ,  'returnResults' , savedDataNames{iDataName} , '-v7.3' )
+    end
+    
+    
+    
+    %% SET THAT THE SIMULATION WAS SUCCESSFUL IF WE MADE IT HERE
     % Put the error flag in to the return variable
     %diagnostics.error       = errorOccurred;
     %diagnostics.errorMsg    = errorMsg;

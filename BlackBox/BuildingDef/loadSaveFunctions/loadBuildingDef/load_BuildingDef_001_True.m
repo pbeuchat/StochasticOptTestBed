@@ -290,13 +290,18 @@ n_x = size( B.building_model.discrete_time_model.A  , 2 );
 % Get the size of the input vector
 n_u = size( B.building_model.discrete_time_model.Bu  , 2 );
 
+x_ref = 22.5;
+num_x_to_cotnrol = 7;
+
+scalingOfComfortRelativeToEnergy = 100;
+
 
 % Now put in the parameters
 costsByHand.type    = 'linear';
-costsByHand.c       = 0;
-costsByHand.q       = sparse([],[],[],n_x,1,0);
+costsByHand.c       = scalingOfComfortRelativeToEnergy * num_x_to_cotnrol * x_ref^2;
+costsByHand.q       = sparse( 1:num_x_to_cotnrol , ones(num_x_to_cotnrol,1) , -2*scalingOfComfortRelativeToEnergy*x_ref * ones(num_x_to_cotnrol,1) , n_x , 1 , num_x_to_cotnrol );
 costsByHand.r       = cu;
-costsByHand.Q       = sparse([],[],[],n_x,n_x,0);
+costsByHand.Q       = sparse( 1:num_x_to_cotnrol , 1:num_x_to_cotnrol , scalingOfComfortRelativeToEnergy * ones(num_x_to_cotnrol,1) , n_x , n_x , num_x_to_cotnrol );
 costsByHand.R       = sparse([],[],[],n_u,n_u,0);
 costsByHand.S       = sparse([],[],[],n_u,n_x,0);
 

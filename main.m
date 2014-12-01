@@ -72,7 +72,7 @@ systemIDRequest     = '001';
 %% SPECIFY THE TIME HORIZON FOR WHICH TO RUN THE SIMULATIONS
 
 timeStart       = 1;
-timeHorizon     = (24*4) * 5;
+timeHorizon     = 10;% (24*4) * 4;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
@@ -128,62 +128,84 @@ cntrSpecs = cell(20,1);
 numCntr = 0;
 
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'Null Controller Local Only';
-cntrSpecs{numCntr}.legend           = 'Null Local';
-cntrSpecs{numCntr}.modelFree        = true;
-cntrSpecs{numCntr}.trueModelBased   = [];
-cntrSpecs{numCntr}.classNameLocal   = 'Control_Null';
-cntrSpecs{numCntr}.classNameGlobal  = [];
-cntrSpecs{numCntr}.globalInit       = false;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'A Null controller that always returns 0 input';
-thisVararginLocal                   = 'one';
-cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-cntrSpecs{numCntr}.vararginGlobal   = [];
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Null Controller Local Only';
+% cntrSpecs{numCntr}.legend           = 'Null Local';
+% cntrSpecs{numCntr}.saveFolderName   = 'Null_Local';
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = [];
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Null';
+% cntrSpecs{numCntr}.classNameGlobal  = [];
+% cntrSpecs{numCntr}.globalInit       = false;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A Null controller that always returns 0 input';
+% thisVararginLocal                   = 'one';
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% cntrSpecs{numCntr}.vararginGlobal   = [];
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Null Controller Central';
+% cntrSpecs{numCntr}.legend           = 'Null Central';
+% cntrSpecs{numCntr}.saveFolderName   = 'Null_Central';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Null_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_Null_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A Null controller that always returns 0 input';
+% thisVararginLocal                   = 'one';
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Random Controller with Central Coordinator';
+% cntrSpecs{numCntr}.legend           = 'Rand w Coord';
+% cntrSpecs{numCntr}.saveFolderName   = 'Rand_with_GlobalCoord';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Rand_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_Rand_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A controller that randomly chooses and input between the lower and upper bound for each input';
+% thisVararginLocal                   = 'one';
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 % -----------------------------------
 % Add a Controller Spec
 numCntr = numCntr + 1;
 % Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'Null Controller Central';
-cntrSpecs{numCntr}.legend           = 'Null Central';
+cntrSpecs{numCntr}.label            = 'Diagonal Only Approx Value Function';
+cntrSpecs{numCntr}.legend           = 'ADP - Diag Only';
+cntrSpecs{numCntr}.saveFolderName   = 'ADP_DiagOnly';
 cntrSpecs{numCntr}.modelFree        = false;
 cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_Null_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_Null_Global';
+cntrSpecs{numCntr}.classNameLocal   = 'Control_DiagOnly_Local';
+cntrSpecs{numCntr}.classNameGlobal  = 'Control_DiagOnly_Global';
 cntrSpecs{numCntr}.globalInit       = true;
 % Optional Specifications
-cntrSpecs{numCntr}.description      = 'A Null controller that always returns 0 input';
+cntrSpecs{numCntr}.description      = 'A controller that restricts the approximate value function to be purely diag';
 thisVararginLocal                   = 'one';
 cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
 thisVararginGlobal                  = 'two';
 cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
-
-
-
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'Random Controller with Central Coordinator';
-cntrSpecs{numCntr}.legend           = 'Rand w Coord';
-cntrSpecs{numCntr}.modelFree        = false;
-cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_Rand_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_Rand_Global';
-cntrSpecs{numCntr}.globalInit       = true;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'A controller that randomly chooses and input between the lower and upper bound for each input';
-thisVararginLocal                   = 'one';
-cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-thisVararginGlobal                  = 'two';
-cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
-
 
 
 % % -----------------------------------
