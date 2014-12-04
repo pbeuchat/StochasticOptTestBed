@@ -72,7 +72,7 @@ systemIDRequest     = '001';
 %% SPECIFY THE TIME HORIZON FOR WHICH TO RUN THE SIMULATIONS
 
 timeStart       = 1;
-timeHorizon     = 10;% (24*4) * 4;
+timeHorizon     = 24*4*10;% (24*4) * 4;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
@@ -167,6 +167,61 @@ numCntr = 0;
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
+% cntrSpecs{numCntr}.legend           = 'Constant Local';
+% cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = [];
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
+% cntrSpecs{numCntr}.classNameGlobal  = [];
+% cntrSpecs{numCntr}.globalInit       = false;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
+% thisVararginLocal                   = 0;        % This is the constant control action that will be applied
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% cntrSpecs{numCntr}.vararginGlobal   = [];
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
+% cntrSpecs{numCntr}.legend           = 'Constant Local';
+% cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = [];
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
+% cntrSpecs{numCntr}.classNameGlobal  = [];
+% cntrSpecs{numCntr}.globalInit       = false;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
+% thisVararginLocal                   = 10;        % This is the constant control action that will be applied
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% cntrSpecs{numCntr}.vararginGlobal   = [];
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
+% cntrSpecs{numCntr}.legend           = 'Constant Local';
+% cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = [];
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
+% cntrSpecs{numCntr}.classNameGlobal  = [];
+% cntrSpecs{numCntr}.globalInit       = false;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
+% thisVararginLocal                   = 20;        % This is the constant control action that will be applied
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% cntrSpecs{numCntr}.vararginGlobal   = [];
+
 
 % % -----------------------------------
 % % Add a Controller Spec
@@ -188,20 +243,39 @@ numCntr = 0;
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Diagonal Only Approx Value Function';
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag Only';
+% cntrSpecs{numCntr}.saveFolderName   = 'ADP_DiagOnly';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_DiagOnly_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_DiagOnly_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A controller that restricts the approximate value function to be purely diag';
+% thisVararginLocal                   = 'one';
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
 % -----------------------------------
 % Add a Controller Spec
 numCntr = numCntr + 1;
 % Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'Diagonal Only Approx Value Function';
-cntrSpecs{numCntr}.legend           = 'ADP - Diag Only';
-cntrSpecs{numCntr}.saveFolderName   = 'ADP_DiagOnly';
+cntrSpecs{numCntr}.label            = 'Using 1-step predicition only';
+cntrSpecs{numCntr}.legend           = 'Naive - One Step Prediciton';
+cntrSpecs{numCntr}.saveFolderName   = 'OneStepPred';
 cntrSpecs{numCntr}.modelFree        = false;
 cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_DiagOnly_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_DiagOnly_Global';
+cntrSpecs{numCntr}.classNameLocal   = 'Control_OneStepPred_Local';
+cntrSpecs{numCntr}.classNameGlobal  = 'Control_OneStepPred_Global';
 cntrSpecs{numCntr}.globalInit       = true;
 % Optional Specifications
-cntrSpecs{numCntr}.description      = 'A controller that restricts the approximate value function to be purely diag';
+cntrSpecs{numCntr}.description      = 'A controller that simply minimises the cost at every step based on the prediciton for the next step';
 thisVararginLocal                   = 'one';
 cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
 thisVararginGlobal                  = 'two';

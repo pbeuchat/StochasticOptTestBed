@@ -50,7 +50,7 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
     % Get the timing
     timeStartIndex  = obj.simTimeIndex_start;
     timeEndIndex    = obj.simTimeIndex_end;
-    timeDuration    = timeEndIndex - timeStartIndex + 1;
+    timeDuration    = timeEndIndex - timeStartIndex;
 
     % Pre-allocate a "thisTime" struct
     this_time = struct( 'index' , 0 , 'abs_hours' , 0 , 'abs_increment' , 0.25 );
@@ -100,6 +100,7 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
         % ------------------------ %
         % Some debugging code
         %fprintf(' %03d ',iTime);
+        disp(iTime);
         % ------------------------ %
         
         % Get the time step for this itertion

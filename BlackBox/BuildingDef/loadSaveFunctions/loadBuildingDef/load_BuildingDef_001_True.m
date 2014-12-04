@@ -230,8 +230,8 @@ constraintsByHand.x_rect_upper = 25 * ones( n_x , 1);
 
 % For the min and max on each input
 %   (assuming they are all radiators)
-u_radiator_min = 1;
-u_radiator_max = 3;
+u_radiator_min = 0;
+u_radiator_max = 20;
 constraintsByHand.u_rect_lower = u_radiator_min * ones( n_u , 1);
 constraintsByHand.u_rect_upper = u_radiator_max * ones( n_u , 1);
 
@@ -293,7 +293,7 @@ n_u = size( B.building_model.discrete_time_model.Bu  , 2 );
 x_ref = 22.5;
 num_x_to_cotnrol = 7;
 
-scalingOfComfortRelativeToEnergy = 100;
+scalingOfComfortRelativeToEnergy = 1000;
 
 
 % Now put in the parameters

@@ -39,15 +39,17 @@ function [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( ob
     l_per_ss(2,:)      = 2 .* ( ( obj.stateDef.mask_u_ss' .* repmat(obj.costDef.r',n_ss,1) ) * u )';
     % For the comfort score
     comfortRef = 22.5*ones(n_ss,1);
-    l_per_ss(3,:)      = (x(1:n_ss).^2 - 2.*comfortRef.*x(1:n_ss) + comfortRef.^2)';
+    scalingOfComfortRelativeToEnergy = 1000;
+    
+    l_per_ss(3,:)      = scalingOfComfortRelativeToEnergy * (x(1:n_ss).^2 - 2.*comfortRef.*x(1:n_ss) + comfortRef.^2)';
     % For the total cost
     l_per_ss(1,:)      = l_per_ss(2,:) + l_per_ss(3,:);
 
     % GLOBAL:
     % Compute the Stage Cost for the whole system
     %l = x'*obj.costDef.Q*x  +  u'*obj.costDef.R*u  +  2*u'*obj.costDef.S*x  +  2*obj.costDef.q'*x  +  2*obj.costDef.r'*u  +  obj.costDef.c;
-    l(2,1)    = obj.costDef.r'*u + x'*obj.costDef.Q'*x + obj.costDef.q'*x + obj.costDef.c;
-    l(3,1)    = sum(l_per_ss(3,:));
+    l(2,1)    = obj.costDef.r'*u;
+    l(3,1)    = x'*obj.costDef.Q'*x + obj.costDef.q'*x + obj.costDef.c;  %sum(l_per_ss(3,:));
     l(1,1)    = l(2,1) + l(3,1);
     
     

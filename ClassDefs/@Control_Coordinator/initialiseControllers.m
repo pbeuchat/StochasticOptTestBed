@@ -165,7 +165,7 @@ function initialiseControllers( obj , inputSettings , inputModel)
     % Initialise a blank cell array for the list of stats
     numStatsRequired = 0;
     statsRequired = cell( numStatsRequired , 1);
-    statsRequiredHorizon = 0;
+    statsRequiredHorizon = uint32(0);
     
     % Iterate through the controllers
     for iController = 1:myNumControllers

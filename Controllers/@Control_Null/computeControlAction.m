@@ -10,7 +10,7 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
 % ----------------------------------------------------------------------- %
 
     % Null controller for now
-    u = 2 * ones( obj.n_u , 1 );
+    u = 0 * ones( obj.n_u , 1 );
     
     % When using the "Null" controller as a template, insert your code here
     % for computing the input vector to return at this time step

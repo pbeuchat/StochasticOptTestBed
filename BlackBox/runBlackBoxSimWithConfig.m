@@ -362,6 +362,9 @@ tic;
 disp('******************************************************************');
 disp(' Black-Box: Plotting the simulation results');
 tic;
+
+figure;
+
 % Iterated through the controller specs
 for iController = 1:numControlTechniques
     % Visualise the results for each controller
