@@ -1,0 +1,544 @@
+function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
+% Defined for the "ControllerInterface" class, this function builds a cell
+% array of initialised controllers
+% ----------------------------------------------------------------------- %
+%  AUTHOR:      Paul N. Beuchat
+%  DATE:        13-Oct-2014
+%  GOAL:        Black-Box Simulation-Based Test-Bed for Building Control
+%
+%  DESCRIPTION: > ...
+% ----------------------------------------------------------------------- %
+
+
+    %% REFERENCES:
+    % See this Matlab page for all the possible properties that can be set
+    % for the "Axes Properties";
+    % http://ch.mathworks.com/help/matlab/ref/axes-properties.html
+    
+
+    %% ----------------------------------------------------------------- %%
+    %% PRELIMINARY CHECKS AND SETTINGS
+    
+
+    %% Set the default interpretter for text to be latex
+    %   > This will apply to all figures created
+    set(0, 'defaultTextInterpreter', 'latex');
+    
+    %% Check the x and y data are compatible with eachother
+    if ~( (size(data_x,1) == 1) || (size(data_x,2) == 1) )
+        disp( ' ... ERROR: the input "x" data was not a vector');
+        disp(['            size(data_x) = ',num2str(size(data_x,1)),' -by- ',num2str(size(data_x,2)) ]);
+        disp( ' ... Returning from function now without plotting anything');
+        return;
+    end
+    
+    if ~( length(data_x) == size(data_y,2) )
+        disp( ' ... ERROR: the input "y" data should have the same width as the length of the "x" data');
+        disp(['            size(data_y)    = ',num2str(size(data_y,1)),' -by- ',num2str(size(data_y,2)) ]);
+        disp(['            length(data_x)  = ',num2str(length(data_y)),' -by- ',num2str(size(data_y,2)) ]);
+        disp( ' ... Returning from function now without plotting anything');
+        return;
+    end
+    
+    
+    %% GET THE NUMBER OF LINE TO PLOT - directly from the "y" data
+    numLinesToPlot = size(data_y,1);
+    
+    
+    %% ----------------------------------------------------------------- %%
+    %% NOW PARSE THE "varargin" TO EXTRACT THE SETTINGS FROM IT
+    % The following need to be set for the plotting to be performed
+    % We declare them all as empty here, parse through the "varargin", and
+    % then set those that are still empty to their default
+    
+    
+    %% INITIALISE ALL THE VARIABLES
+    % Line details
+    lineColourIndex         = [];
+    lineWidth               = [];
+    markerIndex             = [];
+    
+    % Legend details
+    legendStrings           = [];
+    legendFontSize          = [];
+    legendFontWeight        = [];
+    legendLocation          = [];
+    legendInterpreter       = [];
+    
+    % Title details
+    titleString             = [];
+    titleFontSize           = [];
+	titleFontWeight         = [];
+	titleColour             = [];
+
+    % Axis label details
+    xLabelString            = [];
+	yLabelString            = [];
+	xLabelColour            = [];
+	yLabelColour            = [];
+	labelFontSize           = [];
+	labelFontWeight         = [];
+    
+    % Grid details
+	xGridOnOff              = [];
+	yGridOnOff              = [];
+	xGridStyle              = [];
+	yGridStyle              = [];
+	xGridMinorOnOff         = [];
+	yGridMinorOnOff         = [];
+	xGridMinorStyle         = [];
+	yGridMinorStyle         = [];
+    
+    %% Specify also in one place the defaults for each of the above
+    % Line defaults
+    default_lineColourIndex = ones( numLinesToPlot , 1 );
+    default_lineWidth = Visualisation.lineWidthDefault * ones( numLinesToPlot , 1 );
+    default_markerIndex = zeros( numLinesToPlot , 1 );
+    
+    % Legend defaults
+    default_legendStrings           = [];
+    default_legendFontSize          = 10;
+    default_legendFontWeight        = 'normal';
+    default_legendLocation          = 'bestOutside';
+    default_legendInterpreter       = 'none';
+    
+    % Title defaults
+    default_titleString             = [];
+    default_titleFontSize           = 16;
+	default_titleFontWeight         = 'bold';
+	default_titleColour             = 'k';
+
+    % Axis label defaults
+    default_xLabelString            = [];
+	default_yLabelString            = [];
+	default_xLabelColour            = 'k';
+	default_yLabelColour            = 'k';
+	default_labelFontSize           = 12;
+	default_labelFontWeight         = 'normal';
+    
+    % Grid defaults
+	default_xGridOnOff              = 'on';
+	default_yGridOnOff              = 'on';
+	default_xGridStyle              = '--';
+	default_yGridStyle              = '--';
+	default_xGridMinorOnOff         = 'off';
+	default_yGridMinorOnOff         = 'off';
+	default_xGridMinorStyle         = ':';
+	default_yGridMinorStyle         = ':';
+    
+    %% Now parse through the "VARiable ARGuments IN" cell array (i.e.
+    % "varargin")
+    if (~isempty(varargin))
+        % Check if the number of extra arguments is more than expected
+        if length(varargin) > 1
+            disp(' ... ERROR: inputs after the 4th are not used');
+        end
+        inputSettings = varargin{1};
+        for iTemp = 1:size(inputSettings,1)
+            switch lower(inputSettings{iTemp,1})
+                % ------------------------------- %
+                case 'linecolourindex'
+                    lineColourIndex = inputSettings{iTemp,2};
+                    % If entered as a singleton, increase it to a vector
+                    if ( isscalar(lineColourIndex) && ismatrix(lineColourIndex) )
+                        lineColourIndex = repmat(lineColourIndex,numLinesToPlot,1);
+                    end
+                    % Check it is the right size
+                    if ~( length(lineColourIndex) == numLinesToPlot && isvector(lineColourIndex) )
+                        disp(' ... ERROR: the "LineColourIndex" option input was not a compatible size, using the default instead');
+                        lineColourIndex = [];
+                    end
+                    
+                % ------------------------------- %
+                case 'linewidth'
+                    lineWidth = inputSettings{iTemp,2};
+                    % If entered as a singleton, increase it to a vector
+                    if ( isscalar(lineWidth) && ismatrix(lineWidth) )
+                        lineWidth = repmat(lineWidth,numLinesToPlot,1);
+                    end
+                    % Check it is the right size
+                    if ~( length(lineWidth) == numLinesToPlot && min(size(lineWidth)) == 1 && ismatrix(lineWidth) )
+                        disp(' ... ERROR: the "lineWidth" option input was not a compatible size, using the default instead');
+                        lineWidth = [];
+                    end
+                    
+                % ------------------------------- %
+                case 'markerindex'
+                    markerIndex = inputSettings{iTemp,2};
+                    % If entered as a singleton, increase it to a vector
+                    if ( isscalar(markerIndex) && ismatrix(markerIndex) )
+                        markerIndex = repmat(markerIndex,numLinesToPlot,1);
+                    end
+                    % Check it is the right size
+                    if ~( length(markerIndex) == numLinesToPlot && min(size(markerIndex)) == 1 && ismatrix(markerIndex) )
+                        disp(' ... ERROR: the "markerIndex" option input was not a compatible size, using the default instead');
+                        markerIndex = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'legendstrings'
+                    legendStrings = inputSettings{iTemp,2};
+                    % If is is not a cell array of strings then ignore
+                    if ~iscellstr( legendStrings )
+                        disp(' ... ERROR: the "legendStrings" option input was not a cell array of strings and can not be used');
+                        disp('            No legend will be displayed');
+                        legendStrings = [];
+                    end
+                    % Check it is the right size
+                    if ~( length(legendStrings) == numLinesToPlot && isvector(legendStrings) )
+                        disp(' ... ERROR: the "legendStrings" option input was not a compatible size');
+                        disp('            No legend will be displayed');
+                        legendStrings = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'legendfontsize'
+                    legendFontSize = inputSettings{iTemp,2};
+                    % If is is not a 1-by-1 double then ignore it
+                    if ~( isscalar(legendFontSize) && ismatrix(legendFontSize) && isfloat(legendFontSize) )
+                        disp(' ... ERROR: the "legendFontSize" option input was not valid, using default instead');
+                        legendFontSize = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'legendfontweight'
+                    legendFontWeight = inputSettings{iTemp,2};
+                    % If is is not a memeber then ignore it
+                    if ~ismember( legendFontWeight , Visualisation.fontWeightOptions )
+                        disp(' ... ERROR: the "legendFontWeight" option input was not valid, using default instead');
+                        legendFontWeight = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'legendlocation'
+                    legendLocation = inputSettings{iTemp,2};
+                    % If is is not a memeber then ignore it
+                    if ~ismember( lower(legendLocation) , Visualisation.legendLocationOptions )
+                        disp(' ... ERROR: the "legendLocation" option input was not valid, using default instead');
+                        legendLocation = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'legendinterpreter'
+                    legendInterpreter = inputSettings{iTemp,2};
+                    % If is is not a memeber then ignore it
+                    if ~ismember( lower(legendInterpreter) , Visualisation.interpretterOptions )
+                        disp(' ... ERROR: the "legendInterpreter" option input was not valid, using default instead');
+                        legendInterpreter = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'titlestring'
+                    titleString = inputSettings{iTemp,2};
+                    % If is is not a memeber then ignore it
+                    if ~ischar( titleString )
+                        disp(' ... ERROR: the "titleString" option input was not valid, using default instead');
+                        titleString = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'titlefontsize'
+                    titleFontSize = inputSettings{iTemp,2};
+                    % If is is not a 1-by-1 double then ignore it
+                    if ~( isscalar(titleFontSize) && ismatrix(titleFontSize) && isfloat(titleFontSize) )
+                        disp(' ... ERROR: the "titleFontSize" option input was not valid, using default instead');
+                        titleFontSize = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'titlefontweight'
+                    titleFontWeight = inputSettings{iTemp,2};
+                    % If is is not a memeber then ignore it
+                    if ~( ischar( titleFontWeight ) && ismember( titleFontWeight , Visualisation.fontWeightOptions ) )
+                        disp(' ... ERROR: the "titleFontWeight" option input was not valid, using default instead');
+                        titleFontWeight = [];
+                    end
+                    
+                    
+                    
+                    
+                % ------------------------------- %
+                case 'titlecolour'
+                    % If is is not a memeber or a 3-by-1 double, then
+                    % ignore it
+                    titleColour = inputSettings{iTemp,2};
+                    if ~(    ismember( lower(titleColour) , Visualisation.colourOptions ) ...
+                          || ( isvector(titleColour) && ismatrix(titleColour) && length(titleColour) == 3 && isfloat(titleColour) ) ...
+                       )
+                        disp(' ... ERROR: the "titleColour" option input was not valid, using default instead');
+                        titleColour = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'xlabelstring'
+                    xLabelString = inputSettings{iTemp,2};
+                    % If is is not a memeber then ignore it
+                    if ~ischar( xLabelString )
+                        disp(' ... ERROR: the "xLabel" option input was not valid, using default instead');
+                        xLabelString = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'ylabelstring'
+                    yLabelString = inputSettings{iTemp,2};
+                    % If is is not a memeber then ignore it
+                    if ~ischar( yLabelString )
+                        disp(' ... ERROR: the "yLabel" option input was not valid, using default instead');
+                        yLabelString = [];
+                    end
+                    
+                    
+                    
+                % ------------------------------- %
+                case 'xlabelcolour'
+                    % If is is not a memeber or a 3-by-1 double, then
+                    % ignore it
+                    xLabelColour = inputSettings{iTemp,2};
+                    if (    ~ismember( lower(xLabelColour) , Visualisation.colourOptions ) ...
+                         || ~( isvector(xLabelColour) && ismatrix(xLabelColour) && length(xLabelColour) == 3 && isfloat(xLabelColour) ) ...
+                       )
+                        disp(' ... ERROR: the "xLabelColour" option input was not valid, using default instead');
+                        xLabelColour = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'ylabelcolour'
+                    % If is is not a memeber or a 3-by-1 double, then
+                    % ignore it
+                    yLabelColour = inputSettings{iTemp,2};
+                    if (    ~ismember( lower(yLabelColour) , Visualisation.colourOptions ) ...
+                         || ~( isvector(yLabelColour) && ismatrix(yLabelColour) && length(yLabelColour) == 3 && isfloat(yLabelColour) ) ...
+                       )
+                        disp(' ... ERROR: the "yLabelColour" option input was not valid, using default instead');
+                        yLabelColour = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'labelfontsize'
+                    labelFontSize = inputSettings{iTemp,2};
+                    % If is is not a 1-by-1 double then ignore it
+                    if ~( isscalar(labelFontSize) && ismatrix(labelFontSize) && isfloat(labelFontSize) )
+                        disp(' ... ERROR: the "labelFontSize" option input was not valid, using default instead');
+                        labelFontSize = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'labelfontweight'
+                    labelFontWeight = inputSettings{iTemp,2};
+                    % If is is not a member then ignore it
+                    if ~( ischar(labelFontWeight) && ismember( lower(labelFontWeight) , Visualisation.fontWeightOptions ) )
+                        disp(' ... ERROR: the "labelFontWeight" option input was not valid, using default instead');
+                        labelFontWeight = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'xgridonoff'
+                    xGridOnOff = inputSettings{iTemp,2};
+                    % If is is not a member then ignore it
+                    if ~( ischar(xGridOnOff) && ismember( lower(xGridOnOff) , Visualisation.onOffOptions ) )
+                        disp(' ... ERROR: the "xGridOnOff" option input was not valid, using default instead');
+                        xGridOnOff = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'ygridonoff'
+                    yGridOnOff = inputSettings{iTemp,2};
+                    % If is is not a member then ignore it
+                    if ~( ischar(yGridOnOff) && ismember( lower(yGridOnOff) , Visualisation.onOffOptions ) )
+                        disp(' ... ERROR: the "yGridOnOff" option input was not valid, using default instead');
+                        yGridOnOff = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'xgridstyle'
+                    
+                    
+                    
+                % ------------------------------- %
+                case 'ygridstyle'
+                    
+                    
+                    
+                % ------------------------------- %
+                case 'xgridminor'
+                    
+                    
+                    
+                % ------------------------------- %
+                case 'ygridminor'
+                    
+                    
+                    
+                % ------------------------------- %
+                case 'xgridminorstyle'
+                    
+                    
+                    
+                % ------------------------------- %
+                case 'ygridminorstyle'
+                    
+                    
+            
+            otherwise         
+                disp([' ... ERROR: Invalid optional argument, "',inputSettings{iTemp},'"' ]);
+                disp( '            This argument is skipped and the default used instead' );  
+            end
+            % END OF: switch varargin{c}
+        end
+        % END OF: for c=1:length(varargin)
+    end
+    % END OF: if (~isempty(varargin))
+    
+    
+    %% PUT IN THE DEFAULTS FOR ANYTHING THAT WAS LEFT EMPTY
+    if isempty(lineColourIndex)
+        lineColourIndex = default_lineColourIndex;
+    end
+    if isempty(lineWidth)
+        lineWidth = default_lineWidth;
+    end
+    if isempty(markerIndex)
+        markerIndex = default_markerIndex;
+    end
+    if isempty(legendStrings)
+        legendStrings = default_legendStrings;
+    end
+    if isempty(legendFontSize)
+        legendFontSize = default_legendFontSize;
+    end
+    if isempty(legendFontWeight)
+        legendFontWeight = default_legendFontWeight;
+    end
+    if isempty(legendLocation)
+        legendLocation = default_legendLocation;
+    end
+    if isempty(legendInterpreter)
+        legendInterpreter = default_legendInterpreter;
+    end
+    if isempty(titleString)
+        titleString = default_titleString;
+    end
+    if isempty(titleFontSize)
+        titleFontSize = default_titleFontSize;
+    end
+    if isempty(titleFontWeight)
+        titleFontWeight = default_titleFontWeight;
+    end
+    if isempty(titleColour)
+        titleColour = default_titleColour;
+    end
+    if isempty(xLabelString)
+        xLabelString = default_xLabelString;
+    end
+    if isempty(yLabelString)
+        yLabelString = default_yLabelString;
+    end
+    if isempty(xLabelColour)
+        xLabelColour = default_xLabelColour;
+    end
+    if isempty(yLabelColour)
+        yLabelColour = default_yLabelColour;
+    end
+    if isempty(labelFontSize)
+        labelFontSize = default_labelFontSize;
+    end
+    if isempty(labelFontWeight)
+        labelFontWeight = default_labelFontWeight;
+    end
+    if isempty(xGridOnOff)
+        xGridOnOff = default_xGridOnOff;
+    end
+    if isempty(yGridOnOff)
+        yGridOnOff = default_yGridOnOff;
+    end
+    
+    
+    %% ----------------------------------------------------------------- %%
+    %% PLOT THE DATA
+    % Pre-allocate a vector for the handle to each line
+    hLine = zeros(numLinesToPlot,1);
+    
+    % Plot the data
+    hold on;
+    for iLine = 1:numLinesToPlot
+        % Get the colour for this line
+        thisColour = Visualisation.getDefaultColourForIndex( lineColourIndex(iLine) );
+        % Specify the line width
+        thisLineWidth = lineWidth( iLine );
+        % Specify the mark
+        thisMarker = Visualisation.getDefaultMarkerForIndex( markerIndex(iLine) );
+        
+        % Plot the line
+        hLine(iLine) = plot( hAxes, data_x, data_y(iLine,:) , 'color' , thisColour , 'LineWidth' , thisLineWidth , 'marker' , thisMarker);
+    end
+    hold off;
+    
+    % Label a few things
+    % Set some properties of the axes
+    
+    hTitle = title(hAxes,titleString);
+    set(hTitle,'Color',titleColour);
+    set(hTitle,'FontSize',titleFontSize);
+    set(hTitle,'FontWeight',titleFontWeight);
+    
+    hXLabel = xlabel(hAxes,xLabelString);
+    hYLabel = ylabel(hAxes,yLabelString);
+    
+    set(hXLabel,'Color',xLabelColour);
+    set(hYLabel,'Color',yLabelColour);
+    
+    set(hXLabel,'FontSize',labelFontSize);
+    set(hYLabel,'FontSize',labelFontSize);
+    
+    set(hXLabel,'FontWeight',labelFontWeight);
+    set(hYLabel,'FontWeight',labelFontWeight);
+    
+    set(hAxes,'XGrid',xGridOnOff);
+    set(hAxes,'YGrid',yGridOnOff);
+    
+    set(hAxes,'GridColor',[0.5,0.5,0.5]);
+    
+    
+    
+    % Make it only integer ticks
+    %if (display_xTickLabel)     set(hAxFObj,'XTick',(1:numCases)');
+    %else                        set(hAxFObj,'XTickLabel','');       end;
+    
+    % LEGEND
+    if ~isempty(legendStrings)
+        hLegend1 = legend(hAxes, hLine, legendStrings, 'Location', legendLocation);
+        
+        set(hLegend1,'Interpreter',legendInterpreter);
+        set(hLegend1,'FontSize',legendFontSize);
+        set(hLegend1,'FontWeight',legendFontWeight);
+        
+        
+        %newPosition = [0.125 0.02 0.25 0.07];
+        %newUnits = 'normalized';
+        %set(hLegend1,'Position', newPosition,'Units', newUnits );
+    end
+    
+    
+    
+    
+    
+    
+	
+end
+% END OF FUNCTION

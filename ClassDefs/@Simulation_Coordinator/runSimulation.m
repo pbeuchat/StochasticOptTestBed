@@ -94,13 +94,37 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
     
     %% ----------------------------------------------------------------- %%
     %% RUN THE SIMULATION
+    
+    % This is the "inner" most loop other than the controller, and likely
+    % the slowest, so we expect the control to display nothing at each
+    % iteration and show the user some useful progress bar.
+    progBarWidthPer10Percent = 5;
+    progBarWidth = 10 * progBarWidthPer10Percent;
+    progBarPercentPerMark = 100/progBarWidth;
+    disp(' ... Progress bar of the time horizon:');
+    fprintf('0');
+    for iTemp = 1:10
+        for iTemp = 1:progBarWidthPer10Percent-1
+            fprintf('-');
+        end
+        if iTemp ~= 10
+            fprintf('|');
+        end
+    end
+    fprintf('100\n');
+    
+    % Put the first marker to say that we are 0% complete
+    fprintf('|');
+    nextProgPrint = progBarPercentPerMark;
+    
+    
     % Step through each of the "Local" controllers
     for iTime = 1 : timeDuration
         
         % ------------------------ %
-        % Some debugging code
+        % Some debugging code to label the start of a step
         %fprintf(' %03d ',iTime);
-        disp(iTime);
+        %disp(iTime);
         % ------------------------ %
         
         % Get the time step for this itertion
@@ -126,9 +150,9 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
         end
         
         % Get the control action to apply
-        %tic;
+        thisStartTime_Control = clock;
         [this_u , this_compTime_per_ss ] = computeControlAction( obj.controlCoord , this_time , this_x , prev_xi , this_stageCost , this_stageCost_per_ss , this_prediction , statsRequired_mask , timeHorizon );
-        result_controlComputationTime( 1 , iTime ) = 0.1;%toc;
+        result_controlComputationTime( 1 , iTime ) = etime(clock,thisStartTime_Control);
         result_controlComputationTime_per_ss( : , iTime ) = this_compTime_per_ss;
         
         
@@ -154,11 +178,20 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
         end
         
         
+        % ------------------------ %
+        % Updating the current percentage complete
+        thisProg = double(iTime) / double(timeDuration) * 100;
+        while thisProg >= nextProgPrint
+            fprintf('|');
+            nextProgPrint = nextProgPrint + progBarPercentPerMark;
+        end
+        % ------------------------ %
+        
     end
     % END OF: "for iTime = 1 : timeDuration"
     
     % ------------------------ %
-    % Some debugging code
+    % Part of printing out the current percentage
     fprintf('\n');
     % ------------------------ %
     
@@ -291,11 +324,12 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
     numDataNames = iDataName;
     
     
-    % Step through the data and save it
-    for iDataName = 1:numDataNames
-        save( [savePath , savedDataNames{iDataName} , '.mat'] , '-struct' ,  'returnResults' , savedDataNames{iDataName} , '-v7.3' )
-    end
-    
+    % Step through the data and save it (if the save path is not emtpty
+    if ~isempty(savePath)
+        for iDataName = 1:numDataNames
+            save( [savePath , savedDataNames{iDataName} , '.mat'] , '-struct' ,  'returnResults' , savedDataNames{iDataName} , '-v7.3' )
+        end
+    end    
     
     
     %% SET THAT THE SIMULATION WAS SUCCESSFUL IF WE MADE IT HERE

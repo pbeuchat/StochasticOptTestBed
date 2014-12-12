@@ -54,6 +54,8 @@ classdef Control_OneStepPred_Local < Control_LocalController
         
         % --------------------------------------------------------------- %
         % VARIABLES SPECIFIC TO THIS CONTROLLER
+        optYalmip;
+        
         %P@cell;
         %p@cell;
         %s@cell;

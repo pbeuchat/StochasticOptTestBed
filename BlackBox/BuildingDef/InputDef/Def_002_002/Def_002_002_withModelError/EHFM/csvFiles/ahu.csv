@@ -1,0 +1,1 @@
+AHU_specification,key,value,,hasERC,0,,ERCefficiency,0.8,,hasEvapCooler,0,,EvapCoolerEfficiency,0.8,,hasHeater,0,,hasCooler,0,,has_AHU_Tin,0,,,,,,,airflow_specification,zone_identifier,flow_fraction,from_identifier,Z0001,0.2,AHU,Z0002,0.2,AHU,Z0003,0.2,AHU,Z0004,0.2,AHU,Z0005,0.2,AHU

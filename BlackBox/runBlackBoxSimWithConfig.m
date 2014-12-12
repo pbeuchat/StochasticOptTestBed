@@ -3,7 +3,7 @@
 %  ---------     runBlackBoxSimWithConfig.m
 %  ---------------------------------------------------------------------  %
 %  ---------------------------------------------------------------------  %
-function [returnAllResults] = runBlackBoxSimWithConfig(inputBlackBoxInstructions)
+function [returnAllResults, object_system, object_disturbance] = runBlackBoxSimWithConfig(inputBlackBoxInstructions)
 
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
@@ -24,6 +24,9 @@ checkForFields( inputBlackBoxInstructions , fieldsToCheckFor );
 % Get the system Type and ID requested
 sysType     = inputBlackBoxInstructions.systemType;
 sysID       = inputBlackBoxInstructions.systemIDRequest;
+sysOptions  = inputBlackBoxInstructions.systemOptions;
+ 
+
 
 % Get the Full File Path to the Black Box location on this machine
 bbFullPath = inputBlackBoxInstructions.fullPath;
@@ -39,6 +42,11 @@ timeUnits           = inputBlackBoxInstructions.timeUnits;
 
 % Get the save results flag
 flag_saveResults    = inputBlackBoxInstructions.flag_saveResults;
+
+% Get the perform control simulations flag
+flag_performControlSimulations      = inputBlackBoxInstructions.flag_performControlSimulations;
+% Get the flag for whether to return the various object or not
+flag_returnObjectsToWorkspace       = inputBlackBoxInstructions.flag_returnObjectsToWorkspace;
 
 %% --------------------------------------------------------------------- %%
 %% HANDLE THE DIFFERENT UNITS THE THE TIME COULD HAVE BEEN SPECIFIED IN
@@ -62,13 +70,13 @@ end
 
 %% --------------------------------------------------------------------- %%
 %% LOAD THE BUILDING MODEL REQUESTED
-tic; % Start the timer
+timerStart = clock; % Start the timer
 % Keep the user updated
 disp('******************************************************************');
 disp([' Black-Box: Loading the "',sysType,'"-type model requested']);
 disp('            and wrapping it together as a "Progress Model Engine" class');
 % Load the building
-[bbBuilding , bbX0 , bbConstraints , bbCosts , bbDisturbances ,  ] = load_forBlackBox_BuildingModel( sysID , bbFullPath );
+[bbBuilding , bbX0 , bbConstraints , bbCosts ] = load_forBlackBox_BuildingModel( sysID , bbFullPath , sysOptions );
 
 clear buildingModelStruct;
 buildingModelStruct.building        = bbBuilding;
@@ -101,10 +109,10 @@ costDef = requestCostDefObject( sysModel );
 myProgModelEng = ProgressModelEngine(sysModel,sysType);
 
 % Store the time taken for this section
-timedResults.loadModel = toc;
+timedResults.loadModel = etime(clock,timerStart);
 %% --------------------------------------------------------------------- %%
 %% LOAD THE DISTURBANCE MODEL REQUESTED
-tic;
+timerStart = clock;
 % Keep the user updated
 disp('******************************************************************');
 disp(' Black-Box: Loading the disturbance model requested');
@@ -112,8 +120,8 @@ disp('            and wrapping it together as a "Distrubance Coordinator" class'
 
 % Instantiate a "Disturbance Coordinator" object
 % This requires the identifier for the disturbance model to be used
-thisDistIdentifier  = '001';
-thisRecomputeStats  = 0;
+thisDistIdentifier  = '002_001';
+thisRecomputeStats  = false;
 distCoord           = Disturbance_Coordinator(thisDistIdentifier);
 
 statsRequired = {'mean','cov','bounds_boxtype'};
@@ -125,10 +133,15 @@ if ~thisSuccess
 end
 
 % Store the time taken for this section
-timedResults.loadDisturbance = toc;
+timedResults.loadDisturbance = etime(clock,timerStart);
+
+%% --------------------------------------------------------------------- %%
+%% ALL CONTROL SIMULATION REQUIRED STEPS CAN BE SKIPPED IF NOT REQUESTED
+if flag_performControlSimulations
+
 %% --------------------------------------------------------------------- %%
 %% INITIALISE A GLOBAL CONTROL COORDINATOR FOR EACH CONTROLLER SPEC
-tic;
+timerStart = clock;
 % This simply creates an array of "Control_GlobalCoordinator" objects and
 % initialise each one with ONLY the specifications
 % Keep the user updated
@@ -164,10 +177,10 @@ end
 
 
 % Store the time taken for this section
-timedResults.initCtrl_Coord = toc;
+timedResults.initCtrl_Coord = etime(clock,timerStart);
 %% --------------------------------------------------------------------- %%
 %% INITIALISE THE LOCAL CONTROLLER INTERFACE
-tic;
+timerStart = clock;
 % This is done via the Global Coordinator, and invloves calling the
 % "Initialise Handle"
 % Keep the user updated
@@ -191,12 +204,12 @@ for iController = 1:numControlTechniques
 end
 
 % Store the time taken for this section
-timedResults.initCtrl_Controllers = toc;
+timedResults.initCtrl_Controllers = etime(clock,timerStart);
 %% --------------------------------------------------------------------- %%
 %% SIMULATE EACH CONTROLLER ON THE SAME BUILDING MODEL AND DISTURBANCE SCENARIO
 
 %% First Initialise all the specifications for the simiultation
-tic;
+timerStart = clock;
 % Instantiating a "Simulation Object" for each controller
 % Keep the user updated
 disp('******************************************************************');
@@ -245,7 +258,7 @@ end
 
 
 % Store the time taken for this section
-timedResults.initSimulationObject = toc;
+timedResults.initSimulationObject = etime(clock,timerStart);
 
 %% Before running the Simulations, inform the user of the overall initialisation time
 timedResults.initTotal =   timedResults.loadModel ...
@@ -266,7 +279,7 @@ if flag_saveResults
     % Get the Root Path for where to save everything
     savePath_Root = constants_MachineSpecific.saveDataPath;
 
-    % Path for Save Disturbance Data
+    % Path for Save Simulations Results Data
     savePath_Results = [savePath_Root,'savedResults/'];
     if ~(exist(savePath_Results,'dir') == 7)
         mkdir(savePath_Results);
@@ -276,9 +289,9 @@ if flag_saveResults
     [~, ~, currDateStr, currTimeStr] = getCurrentTimeStrings();
 
     % Save Path for the time of this run
-    savePath_Results_thistime = [ savePath_Results , currDateStr , '_' , currTimeStr ,'/' ];
-    if ~(exist(savePath_Results_thistime,'dir') == 7)
-        mkdir(savePath_Results_thistime);
+    savePath_Results_thisTime = [ savePath_Results , currDateStr , '_' , currTimeStr ,'/' ];
+    if ~(exist(savePath_Results_thisTime,'dir') == 7)
+        mkdir(savePath_Results_thisTime);
     end
 end
 
@@ -286,9 +299,7 @@ end
 
 
 %% NOW RUN THE SIMULATIONS
-tic;
-prevTime = 0;
-thisTime = 0;
+timerStart = clock;
 % Keep the user updated
 disp('******************************************************************');
 disp(' Black-Box: Running the simulation for each contoller on the same');
@@ -300,26 +311,33 @@ allDataFileNames    = cell( numControlTechniques , 1 );
 
 % Iterated through the controller specs
 for iController = 1:numControlTechniques
+    % Start a timer for this control technique
+    thisStartTime = clock;
+    
     % Use the previously started timer
     thisControllerSpec = controllerSpecArray{iController};
     
     % Create a folder to save the results for this Control Technique
     if flag_saveResults
-        savePath_Results_thistime_thisTechnique = [ savePath_Results_thistime , controllerSpecArray{iController,1}.saveFolderName ,'/' ];
-        if ~(exist(savePath_Results_thistime_thisTechnique,'dir') == 7)
-            mkdir(savePath_Results_thistime_thisTechnique);
+        savePath_Results_thisTime_thisTechnique = [ savePath_Results_thisTime , controllerSpecArray{iController,1}.saveFolderName ,'/' ];
+        if ~(exist(savePath_Results_thisTime_thisTechnique,'dir') == 7)
+            mkdir(savePath_Results_thisTime_thisTechnique);
         end
+    else
+        savePath_Results_thisTime_thisTechnique = [];
     end
     
     
     % Run the simulation
-    [thisCompletedSuccessfully , allResults{iController,1} , savedDataFileNames] = runSimulation( mySimCoordArray(iController,1) , savePath_Results_thistime_thisTechnique );
+    [thisCompletedSuccessfully , allResults{iController,1} , savedDataFileNames] = runSimulation( mySimCoordArray(iController,1) , savePath_Results_thisTime_thisTechnique );
     allDataFileNames{iController,1} = savedDataFileNames;
     
     % If completed successfully then store the names of the files saved
     % And put the reesults into one big struct
     if thisCompletedSuccessfully
-        save( [savePath_Results_thistime,'savedDataFileNames.mat'] , 'savedDataFileNames' , '-v7.3' );
+        if flag_saveResults
+            save( [savePath_Results_thisTime,'savedDataFileNames.mat'] , 'savedDataFileNames' , '-v7.3' );
+        end
         
     % If not completed successfully, inform the user
     else
@@ -332,14 +350,10 @@ for iController = 1:numControlTechniques
         disp(['            classNameGlobal:   ',thisControllerSpec.classNameGlobal ]);
     end
     % Store the time taken for this section
-    totalTime = toc;
-    thisTime = totalTime - prevTime;
+    thisTime = etime(clock,thisStartTime);
     % Give the user a little bit of info
-    disp([' ... INFO: The ',thisControllerSpec.label ,' was run for ',num2str((timeIndex_end-timeIndex_start+1)),' time steps, this was completed in ',num2str(thisTime),' seconds']);
+    disp([' ... INFO: ',num2str(thisTime),' seconds elapsed using the "',thisControllerSpec.label ,'" control technique run for ',num2str((timeIndex_end-timeIndex_start+1)),' time steps']);
 
-    % Update the previous time just before looping around to the next
-    % iteration
-    prevTime = toc;
 end
 
 % This loop naturally suits parallelisation, see this links for some
@@ -352,18 +366,17 @@ end
 
 
 % Store the time taken for this section
-timedResults.runAllSimulations = toc;
-% Give the user a little bit of info
+timedResults.runAllSimulations = etime(clock,timerStart);
+% Give the user a little bit more info for the cumulative time
+disp(' ');
 disp([' ... INFO: ',num2str(numControlTechniques),' controllers were run for ',num2str((timeIndex_end-timeIndex_start+1)),' time steps each, this was completed in ',num2str(timedResults.runAllSimulations),' seconds']);
 %% --------------------------------------------------------------------- %%
 %% NOW PLOT THE RESULTS
-tic;
+timerStart = clock;
 % Keep the user updated
 disp('******************************************************************');
 disp(' Black-Box: Plotting the simulation results');
-tic;
 
-figure;
 
 % Iterated through the controller specs
 for iController = 1:numControlTechniques
@@ -371,11 +384,41 @@ for iController = 1:numControlTechniques
     Visualisation.visualise_singleController( controllerSpecArray{iController,1} , allResults{iController,1} , allDataFileNames{iController,1} );
 end
 
+% Store the time taken for this section
+timedResults.plotResults = etime(clock,timerStart);
+%% --------------------------------------------------------------------- %%
+%% ELSE: if NOT "flag_performControlSimulations", then do some BOOK KEEPING to make things work smoothly
+else
+    returnAllResults = [];
+    
+    
+end
+% END OF: "if flag_performControlSimulations"
 
 
 %% --------------------------------------------------------------------- %%
 %% PUT TOGETHER THE RETURN VARIABLES
-returnAllResults = [];
+
+% Either as empty or with the actual data depending on the flag
+if flag_returnObjectsToWorkspace
+
+    returnAllResults = [];
+    
+    object_system = sysModel;
+    
+    object_disturbance = distCoord;
+    
+else
+    clear returnAllResults;
+    returnAllResults = [];
+    
+    clear object_system;
+    object_system = [];
+    
+    clear object_disturbance;
+    object_disturbance = [];
+    
+end
 
 
 end

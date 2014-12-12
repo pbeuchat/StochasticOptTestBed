@@ -45,7 +45,7 @@ function [u , computationTime_per_ss , diagnostics] = computeControlAction( obj 
     % Step through each of the "Local" controllers
     for iCtrl = 1 : obj.numControllers
         % Start the timer for this sub-system
-        %tic;
+        thisStartTime = clock;
         
         % Get the mask for this controller
         thisMask_x   = mask_x_local(  : , iCtrl );
@@ -66,7 +66,7 @@ function [u , computationTime_per_ss , diagnostics] = computeControlAction( obj 
         u(thisMask_u,1) = computeControlAction( obj.localControllerArray(iCtrl) , currTime , this_x , this_xi , stageCost , stageCost_per_ss(:,iCtrl) , this_prediction);
         
         % End the time for this sub-system
-        computationTime_per_ss( iCtrl , 1 ) = 0.1;%toc;
+        computationTime_per_ss( iCtrl , 1 ) = etime(clock,thisStartTime);
     end
     
     % Put the error flag in to the return variable

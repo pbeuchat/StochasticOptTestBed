@@ -36,8 +36,20 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     n_u  = obj.stateDef.n_u;
     n_xi = obj.stateDef.n_xi;
     
-    x_lower = myConstraints.x_rect_lower;
-    x_upper = myConstraints.x_rect_upper;
+    %x_lower = myConstraints.x_rect_lower;
+    %x_upper = myConstraints.x_rect_upper;
+    
+    internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
+
+    x_lower = 20*internalStates + 14 * ~internalStates;
+    x_upper = 23*internalStates + 18 * ~internalStates;
+
+    
+    
+    % TODO: this is a hack
+    %x_lower = 0 * ones(n_x,1);
+    %x_upper = 50 * ones(n_x,1);
+    
     u_lower = myConstraints.u_rect_lower;
     u_upper = myConstraints.u_rect_upper;
     
@@ -57,15 +69,27 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
         % Reset the iteration counter to one
         obj.iterationCounter = uint32(1);
     
-        % Initialise the values needed for the first iteration
-        obj.P{obj.statsPredictionHorizon+1} = sparse( [],[],[], double(n_x) , 1 , 0 );
-        obj.p{obj.statsPredictionHorizon+1} = sparse( [],[],[], double(n_x) , 1 , 0 );
-        obj.s{obj.statsPredictionHorizon+1} = sparse( [],[],[], 1 , 1 , 0 );
+        % Initialise the TERMINAL VALUE FUNCITON needed for the first
+        % iteration
+        % To be a zero value function
+        %obj.P{obj.statsPredictionHorizon+1} = sparse( [],[],[], double(n_x) , 1 , 0 );
+        %obj.p{obj.statsPredictionHorizon+1} = sparse( [],[],[], double(n_x) , 1 , 0 );
+        %obj.s{obj.statsPredictionHorizon+1} = sparse( [],[],[], 1 , 1 , 0 );
 
+        % To be purely the comfort cost
+        obj.P{obj.statsPredictionHorizon+1} = Q;
+        obj.p{obj.statsPredictionHorizon+1} = q;
+        obj.s{obj.statsPredictionHorizon+1} = c;
+        
+        % Print out a few things for where we are at:
+        %mainfprintf('T=');
 
         % Now iterate backwards through the time steps
         for iTime = obj.statsPredictionHorizon : -1 : 1
-
+            
+            % Print this time step
+            %fprintf('%8d',iTime);
+            
             % Get the first and second moment from the input prediciton struct
             thisRange = ((iTime-1)*n_xi+1) : (iTime*n_xi);
             thisExi     = predictions.mean(thisRange,1);
@@ -83,7 +107,13 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
             obj.p{iTime,1} = pnew;
             obj.s{iTime,1} = snew;
 
+            % Delete this time step with backspaces
+            %fprintf(' \b\b\b\b\b\b\b\b');
+            
         end
+        
+        % Delete "T=" with backspaces
+        %fprintf('\b\b');
     end
     
     % Get the value function coefficiens to use for this time step
@@ -102,11 +132,11 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     
     thisObj =   myCosts.r' * u ...
               + x' * myCosts.Q * x + myCosts.q' * x + myCosts.c ...
-              + u' * Bu'*diag(thisP)*Bu * u ...
-              + (2*x'*A'*diag(thisP) + 2*Exi'*Bxi'*diag(thisP) + thisp') * Bu * u ...
-              + x'*A'*diag(thisP)*A*x ...
-              + trace( Bxi'*diag(thisP)*Bxi*Exixi ) ...
-              + 2*x'*A'*diag(thisP)*Bxi*Exi ...
+              + u' * Bu'*thisP*Bu * u ...
+              + (2*x'*A'*thisP + 2*Exi'*Bxi'*thisP + thisp') * Bu * u ...
+              + x'*A'*thisP*A*x ...
+              + trace( Bxi'*thisP*Bxi*Exixi ) ...
+              + 2*x'*A'*thisP*Bxi*Exi ...
               + thisp'*A*x ...
               + thisp'*Bxi*Exi ...
               + thiss;
@@ -117,13 +147,18 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
         % Inform the user that we are about to call the solver
     %disp([' ... calling solver now (calling "',thisSolverStr,'" via Yalmip)'])
     
+    % Define the options
+    thisOptions          = sdpsettings;
+    thisOptions.debug    = false;
+    thisOptions.verbose  = false;
+    
     % Call the solver via Yalmip
     % SYNTAX: diagnostics = solvesdp(Constraints,Objective,options)
-    diagnostics = solvesdp(thisCons,thisObj);
+    diagnostics = solvesdp(thisCons,thisObj,thisOptions);
 
     % Interpret the results
     if diagnostics.problem == 0
-        disp(' ... the optimisation formulation was Feasible and has been solved')
+        %disp(' ... the optimisation formulation was Feasible and has been solved')
     elseif diagnostics.problem == 1
         disp(' ... the optimisation formulation was Infeasible');
         error(' Terminating :-( See previous messages and ammend');

@@ -49,53 +49,79 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     Exi     = predictions.mean(thisRange,1);
     Exixi   = predictions.cov(thisRange,thisRange);
     
-    % For the comfort score
-    comfortRef = 22.5*[ones(7,1) ; zeros(n_x-7,1) ];
-    xref = comfortRef;
-    scalingOfComfortRelativeToEnergy = 1000;
+    Exixi=Exi*Exi';
     
-    thisI = blkdiag(speye(7),speye(n_x-7));
+    if isempty(obj.optYalmip)
     
-    
-    % Now formulate the optimisation problem to solve for u
-    u = sdpvar( double(n_u) , 1 , 'full' );
-    
-    thisObj =   myCosts.r' * u ...
-              + scalingOfComfortRelativeToEnergy * ( ...
-                  x' * A'*thisI*A * x ...
-                + u' * Bu'*thisI*Bu * u ...
-                + trace( Bxi'*thisI*Bxi*Exixi ) ...
-                + 2*x'*A'*thisI*Bu * u ...
-                + 2*x'*A'*thisI*Bxi*Exi ...
-                + 2*Exi'*Bxi'*thisI*Bu * u ...
-                - 2 * xref' *A*x ...
-                - 2 * xref' *Bu*u ...
-                -2 * xref' *Bxi*Exi ...
-                + xref'*xref ...
-              );
-    
-	thisCons = ( myConstraints.u_all_A * u <= myConstraints.u_all_b );
-          
-    
-        % Inform the user that we are about to call the solver
-    %disp([' ... calling solver now (calling "',thisSolverStr,'" via Yalmip)'])
-    
-    % Call the solver via Yalmip
-    % SYNTAX: diagnostics = solvesdp(Constraints,Objective,options)
-    diagnostics = solvesdp(thisCons,thisObj);
+        % For the comfort score
+        num_x_to_control = 42;
+        comfortRef = 22.5*[ones(num_x_to_control,1) ; zeros(n_x-num_x_to_control,1) ];
+        xref = comfortRef;
+        %scalingOfComfortRelativeToEnergy = 100000;
+        %thisI = blkdiag(speye(num_x_to_control),speye(n_x-num_x_to_control));
 
-    % Interpret the results
-    if diagnostics.problem == 0
-        disp(' ... the optimisation formulation was Feasible and has been solved')
-    elseif diagnostics.problem == 1
-        disp(' ... the optimisation formulation was Infeasible');
-        error(' Terminating :-( See previous messages and ammend');
-    else
-        disp(' ... the optimisation formulation was strange, it was neither "Feasible" nor "Infeasible", something else happened...');
-        error(' Terminating :-( See previous messages and ammend');
+
+        % Now formulate the optimisation problem to solve for u
+        %toControl = ~[1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
+        toControl = [ ones(7,1) ; zeros(35,1) ];
+        %num_x_to_cotnrol = length(toControl);
+        %thisI = diag(toControl);
+
+        %x_masked = toControl .* x;
+        xref = toControl .* xref;
+
+        % Define the yalmip variable
+        u_opt = sdpvar( double(n_u) , 1 , 'full' );
+        
+        % Define the yalmip variable for the optimizer
+        x_opt = sdpvar( double(n_x) , 1 , 'full' );
+        
+        % Compute the state update equation
+        xplus_opt = A*x_opt + Bu * u_opt + Bxi * Exi;
+
+        % Compute the objective function
+        thisObj_opt = (xplus_opt.*toControl - xref)' * (xplus_opt.*toControl - xref);
+        
+        % Copmute the Constraints
+        thisCons_opt = ( myConstraints.u_all_A * u_opt <= myConstraints.u_all_b );
+        
+        % Define the options
+        thisOptions = sdpsettings;
+        thisOptions.debug    = false;
+        thisOptions.verbose  = false;
+        
+        % Create the "optimised" Yalmip function
+        obj.optYalmip = optimizer(thisCons_opt,thisObj_opt,thisOptions,x_opt,u_opt);
+
+        
     end
+    
+    
+    % Inform the user that we are about to call the solver
+    %disp([' ... calling solver now (calling "',thisSolverStr,'" via Yalmip)'])
+    % Call the solver via Yalmip
+    
+    % Using the "optimised" Yalmip object to speed up the code
+    u = obj.optYalmip{x};
 
-    u = double( u );
+    % SYNTAX: diagnostics = solvesdp(Constraints,Objective,options)
+    %diagnostics = solvesdp(thisCons,thisObj,thisOptions);
+    
+    % Interpret the results
+%     if diagnostics.problem == 0
+%         % Display nothing if it works
+%         %disp(' ... the optimisation formulation was Feasible and has been solved')
+%     elseif diagnostics.problem == 1
+%         disp(' ... the optimisation formulation was Infeasible');
+%         error(' Terminating :-( See previous messages and ammend');
+%     else
+%         disp(' ... the optimisation formulation was strange, it was neither "Feasible" nor "Infeasible", something else happened...');
+%         disp('     The following info was provided from Yalmip about the problem:');
+%         disp( diagnostics.info );
+%         error(' Terminating :-( See previous messages and ammend');
+%     end
+
+    %u = double( u );
     temp = 1;
     
 end

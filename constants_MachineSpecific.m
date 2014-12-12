@@ -48,13 +48,13 @@ classdef constants_MachineSpecific
             %addpath('/Users/pbeuchat/Documents/MATLAB/tbxmanager/');
             %tbxmanager restorepath;
 
-            %addpath('/Library/gurobi562/mac64/matlab');
-            %setenv GRB_LICENSE_FILE '/Users/pbeuchat/Documents/MATLAB/Gurobi/gurobi.lic'
+            addpath('/Library/gurobi600/mac64/matlab');
+            setenv GRB_LICENSE_FILE '/Users/pbeuchat/opt/gurobi/gurobi.lic'
 
-            %addpath(genpath('/Library/mosek/7/'));
-            %setenv MOSEKLM_LICENSE_FILE '/Users/pbeuchat/Documents/MATLAB/mosek/mosek.lic'
+            addpath(genpath('/Users/pbeuchat/opt/mosek/7/'));
+            setenv MOSEKLM_LICENSE_FILE '/Users/pbeuchat/opt/mosek/mosek.lic'
 
-            addpath(genpath('/Users/pbeuchat/Documents/MATLAB/sdpt3'));
+            %addpath(genpath('/Users/pbeuchat/Documents/MATLAB/sdpt3'));
         end
         % END OF: "function addPaths()"
         

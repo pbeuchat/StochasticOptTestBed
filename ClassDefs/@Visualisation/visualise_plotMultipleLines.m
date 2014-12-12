@@ -51,6 +51,8 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     % We declare them all as empty here, parse through the "varargin", and
     % then set those that are still empty to their default
     
+    
+    %% INITIALISE ALL THE VARIABLES
     % Line details
     lineColourIndex         = [];
     lineWidth               = [];
@@ -87,7 +89,7 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
 	xGridMinorStyle         = [];
 	yGridMinorStyle         = [];
     
-    % Specify also in one place the defaults for each of the above
+    %% Specify also in one place the defaults for each of the above
     % Line defaults
     default_lineColourIndex = ones( numLinesToPlot , 1 );
     default_lineWidth = Visualisation.lineWidthDefault * ones( numLinesToPlot , 1 );
@@ -124,7 +126,7 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
 	default_xGridMinorStyle         = ':';
 	default_yGridMinorStyle         = ':';
     
-    % Now parse through the "VARiable ARGuments IN" cell array (i.e.
+    %% Now parse through the "VARiable ARGuments IN" cell array (i.e.
     % "varargin")
     if (~isempty(varargin))
         % Check if the number of extra arguments is more than expected
@@ -138,11 +140,11 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                 case 'linecolourindex'
                     lineColourIndex = inputSettings{iTemp,2};
                     % If entered as a singleton, increase it to a vector
-                    if ( size(lineColourIndex,1) == 1 && size(lineColourIndex,2) == 1 && ndims(lineColourIndex) == 2 )
+                    if ( isscalar(lineColourIndex) && ismatrix(lineColourIndex) )
                         lineColourIndex = repmat(lineColourIndex,numLinesToPlot,1);
                     end
                     % Check it is the right size
-                    if ~( length(lineColourIndex) == numLinesToPlot && min(size(lineColourIndex)) == 1 && ndims(lineColourIndex) == 2 )
+                    if ~( length(lineColourIndex) == numLinesToPlot && isvector(lineColourIndex) )
                         disp(' ... ERROR: the "LineColourIndex" option input was not a compatible size, using the default instead');
                         lineColourIndex = [];
                     end
@@ -151,11 +153,11 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                 case 'linewidth'
                     lineWidth = inputSettings{iTemp,2};
                     % If entered as a singleton, increase it to a vector
-                    if ( size(lineWidth,1) == 1 && size(lineWidth,2) == 1 && ndims(lineWidth) == 2 )
+                    if ( isscalar(lineWidth) && ismatrix(lineWidth) )
                         lineWidth = repmat(lineWidth,numLinesToPlot,1);
                     end
                     % Check it is the right size
-                    if ~( length(lineWidth) == numLinesToPlot && min(size(lineWidth)) == 1 && ndims(lineWidth) == 2 )
+                    if ~( length(lineWidth) == numLinesToPlot && min(size(lineWidth)) == 1 && ismatrix(lineWidth) )
                         disp(' ... ERROR: the "lineWidth" option input was not a compatible size, using the default instead');
                         lineWidth = [];
                     end
@@ -164,11 +166,11 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                 case 'markerindex'
                     markerIndex = inputSettings{iTemp,2};
                     % If entered as a singleton, increase it to a vector
-                    if ( size(markerIndex,1) == 1 && size(markerIndex,2) == 1 && ndims(markerIndex) == 2 )
+                    if ( isscalar(markerIndex) && ismatrix(markerIndex) )
                         markerIndex = repmat(markerIndex,numLinesToPlot,1);
                     end
                     % Check it is the right size
-                    if ~( length(markerIndex) == numLinesToPlot && min(size(markerIndex)) == 1 && ndims(markerIndex) == 2 )
+                    if ~( length(markerIndex) == numLinesToPlot && min(size(markerIndex)) == 1 && ismatrix(markerIndex) )
                         disp(' ... ERROR: the "markerIndex" option input was not a compatible size, using the default instead');
                         markerIndex = [];
                     end
@@ -179,13 +181,13 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                     legendStrings = inputSettings{iTemp,2};
                     % If is is not a cell array of strings then ignore
                     if ~iscellstr( legendStrings )
-                        disp(' ... ERROR: the "legendstrings" option input was not a cell array of strings and can not be used');
+                        disp(' ... ERROR: the "legendStrings" option input was not a cell array of strings and can not be used');
                         disp('            No legend will be displayed');
                         legendStrings = [];
                     end
                     % Check it is the right size
-                    if ~( length(legendstrings) == numLinesToPlot && min(size(legendstrings)) == 1 && ndims(legendstrings) == 2 )
-                        disp(' ... ERROR: the "legendstrings" option input was not a compatible size');
+                    if ~( length(legendStrings) == numLinesToPlot && isvector(legendStrings) )
+                        disp(' ... ERROR: the "legendStrings" option input was not a compatible size');
                         disp('            No legend will be displayed');
                         legendStrings = [];
                     end
@@ -195,7 +197,7 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                 case 'legendfontsize'
                     legendFontSize = inputSettings{iTemp,2};
                     % If is is not a 1-by-1 double then ignore it
-                    if ~( size(legendFontSize,1) == 1 && size(legendFontSize,2) == 1 && ndims(legendFontSize) == 2 && isfloat(legendFontSize) )
+                    if ~( isscalar(legendFontSize) && ismatrix(legendFontSize) && isfloat(legendFontSize) )
                         disp(' ... ERROR: the "legendFontSize" option input was not valid, using default instead');
                         legendFontSize = [];
                     end
@@ -204,7 +206,7 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                 % ------------------------------- %
                 case 'legendfontweight'
                     legendFontWeight = inputSettings{iTemp,2};
-                    % If is is not a 1-by-1 double then ignore it
+                    % If is is not a memeber then ignore it
                     if ~ismember( legendFontWeight , Visualisation.fontWeightOptions )
                         disp(' ... ERROR: the "legendFontWeight" option input was not valid, using default instead');
                         legendFontWeight = [];
@@ -214,8 +216,8 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                 % ------------------------------- %
                 case 'legendlocation'
                     legendLocation = inputSettings{iTemp,2};
-                    % If is is not a 1-by-1 double then ignore it
-                    if ~ismember( legendLocation , Visualisation.legendLocationOptions )
+                    % If is is not a memeber then ignore it
+                    if ~ismember( lower(legendLocation) , Visualisation.legendLocationOptions )
                         disp(' ... ERROR: the "legendLocation" option input was not valid, using default instead');
                         legendLocation = [];
                     end
@@ -224,8 +226,8 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                 % ------------------------------- %
                 case 'legendinterpreter'
                     legendInterpreter = inputSettings{iTemp,2};
-                    % If is is not a 1-by-1 double then ignore it
-                    if ~ismember( legendInterpreter , Visualisation.legendInterpretterOptions )
+                    % If is is not a memeber then ignore it
+                    if ~ismember( lower(legendInterpreter) , Visualisation.interpretterOptions )
                         disp(' ... ERROR: the "legendInterpreter" option input was not valid, using default instead');
                         legendInterpreter = [];
                     end
@@ -233,14 +235,19 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                     
                 % ------------------------------- %
                 case 'titlestring'
-                    
+                    titleString = inputSettings{iTemp,2};
+                    % If is is not a memeber then ignore it
+                    if ~ischar( titleString )
+                        disp(' ... ERROR: the "titleString" option input was not valid, using default instead');
+                        titleString = [];
+                    end
                     
                     
                 % ------------------------------- %
                 case 'titlefontsize'
                     titleFontSize = inputSettings{iTemp,2};
                     % If is is not a 1-by-1 double then ignore it
-                    if ~( size(titleFontSize,1) == 1 && size(titleFontSize,2) == 1 && ndims(titleFontSize) == 2 && isfloat(titleFontSize) )
+                    if ~( isscalar(titleFontSize) && ismatrix(titleFontSize) && isfloat(titleFontSize) )
                         disp(' ... ERROR: the "titleFontSize" option input was not valid, using default instead');
                         titleFontSize = [];
                     end
@@ -249,8 +256,8 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                 % ------------------------------- %
                 case 'titlefontweight'
                     titleFontWeight = inputSettings{iTemp,2};
-                    % If is is not a 1-by-1 double then ignore it
-                    if ~ismember( titleFontWeight , Visualisation.fontWeightOptions )
+                    % If is is not a memeber then ignore it
+                    if ~( ischar( titleFontWeight ) && ismember( titleFontWeight , Visualisation.fontWeightOptions ) )
                         disp(' ... ERROR: the "titleFontWeight" option input was not valid, using default instead');
                         titleFontWeight = [];
                     end
@@ -260,35 +267,69 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                     
                 % ------------------------------- %
                 case 'titlecolour'
-                    
+                    % If is is not a memeber or a 3-by-1 double, then
+                    % ignore it
+                    titleColour = inputSettings{iTemp,2};
+                    if ~(      ismember( lower(titleColour) , Visualisation.colourOptions ) ...
+                          || ( isvector(titleColour) && ismatrix(titleColour) && length(titleColour) == 3 && isfloat(titleColour) ) ...
+                       )
+                        disp(' ... ERROR: the "titleColour" option input was not valid, using default instead');
+                        titleColour = [];
+                    end
                     
                     
                 % ------------------------------- %
-                case 'xlabel'
-                    
+                case 'xlabelstring'
+                    xLabelString = inputSettings{iTemp,2};
+                    % If is is not a memeber then ignore it
+                    if ~ischar( xLabelString )
+                        disp(' ... ERROR: the "xLabel" option input was not valid, using default instead');
+                        xLabelString = [];
+                    end
                     
                     
                 % ------------------------------- %
-                case 'ylabel'
-                    
+                case 'ylabelstring'
+                    yLabelString = inputSettings{iTemp,2};
+                    % If is is not a memeber then ignore it
+                    if ~ischar( yLabelString )
+                        disp(' ... ERROR: the "yLabel" option input was not valid, using default instead');
+                        yLabelString = [];
+                    end
                     
                     
                     
                 % ------------------------------- %
                 case 'xlabelcolour'
-                    
+                    % If is is not a memeber or a 3-by-1 double, then
+                    % ignore it
+                    xLabelColour = inputSettings{iTemp,2};
+                    if ~(       ismember( lower(xLabelColour) , Visualisation.colourOptions ) ...
+                          ||  ( isvector(xLabelColour) && ismatrix(xLabelColour) && length(xLabelColour) == 3 && isfloat(xLabelColour) ) ...
+                       )
+                        disp(' ... ERROR: the "xLabelColour" option input was not valid, using default instead');
+                        xLabelColour = [];
+                    end
                     
                     
                 % ------------------------------- %
                 case 'ylabelcolour'
-                    
+                    % If is is not a memeber or a 3-by-1 double, then
+                    % ignore it
+                    yLabelColour = inputSettings{iTemp,2};
+                    if ~(       ismember( lower(yLabelColour) , Visualisation.colourOptions ) ...
+                          ||  ( isvector(yLabelColour) && ismatrix(yLabelColour) && length(yLabelColour) == 3 && isfloat(yLabelColour) ) ...
+                       )
+                        disp(' ... ERROR: the "yLabelColour" option input was not valid, using default instead');
+                        yLabelColour = [];
+                    end
                     
                     
                 % ------------------------------- %
                 case 'labelfontsize'
                     labelFontSize = inputSettings{iTemp,2};
                     % If is is not a 1-by-1 double then ignore it
-                    if ~( size(labelFontSize,1) == 1 && size(labelFontSize,2) == 1 && ndims(labelFontSize) == 2 && isfloat(labelFontSize) )
+                    if ~( isscalar(labelFontSize) && ismatrix(labelFontSize) && isfloat(labelFontSize) )
                         disp(' ... ERROR: the "labelFontSize" option input was not valid, using default instead');
                         labelFontSize = [];
                     end
@@ -297,21 +338,31 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                 % ------------------------------- %
                 case 'labelfontweight'
                     labelFontWeight = inputSettings{iTemp,2};
-                    % If is is not a 1-by-1 double then ignore it
-                    if ~ismember( labelFontWeight , Visualisation.fontWeightOptions )
+                    % If is is not a member then ignore it
+                    if ~( ischar(labelFontWeight) && ismember( lower(labelFontWeight) , Visualisation.fontWeightOptions ) )
                         disp(' ... ERROR: the "labelFontWeight" option input was not valid, using default instead');
                         labelFontWeight = [];
                     end
                     
                     
                 % ------------------------------- %
-                case 'xgrid'
-                    
+                case 'xgridonoff'
+                    xGridOnOff = inputSettings{iTemp,2};
+                    % If is is not a member then ignore it
+                    if ~( ischar(xGridOnOff) && ismember( lower(xGridOnOff) , Visualisation.onOffOptions ) )
+                        disp(' ... ERROR: the "xGridOnOff" option input was not valid, using default instead');
+                        xGridOnOff = [];
+                    end
                     
                     
                 % ------------------------------- %
-                case 'ygrid'
-                    
+                case 'ygridonoff'
+                    yGridOnOff = inputSettings{iTemp,2};
+                    % If is is not a member then ignore it
+                    if ~( ischar(yGridOnOff) && ismember( lower(yGridOnOff) , Visualisation.onOffOptions ) )
+                        disp(' ... ERROR: the "yGridOnOff" option input was not valid, using default instead');
+                        yGridOnOff = [];
+                    end
                     
                     
                 % ------------------------------- %
@@ -354,6 +405,8 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     end
     % END OF: if (~isempty(varargin))
     
+    
+    %% PUT IN THE DEFAULTS FOR ANYTHING THAT WAS LEFT EMPTY
     if isempty(lineColourIndex)
         lineColourIndex = default_lineColourIndex;
     end
@@ -363,7 +416,57 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     if isempty(markerIndex)
         markerIndex = default_markerIndex;
     end
-    
+    if isempty(legendStrings)
+        legendStrings = default_legendStrings;
+    end
+    if isempty(legendFontSize)
+        legendFontSize = default_legendFontSize;
+    end
+    if isempty(legendFontWeight)
+        legendFontWeight = default_legendFontWeight;
+    end
+    if isempty(legendLocation)
+        legendLocation = default_legendLocation;
+    end
+    if isempty(legendInterpreter)
+        legendInterpreter = default_legendInterpreter;
+    end
+    if isempty(titleString)
+        titleString = default_titleString;
+    end
+    if isempty(titleFontSize)
+        titleFontSize = default_titleFontSize;
+    end
+    if isempty(titleFontWeight)
+        titleFontWeight = default_titleFontWeight;
+    end
+    if isempty(titleColour)
+        titleColour = default_titleColour;
+    end
+    if isempty(xLabelString)
+        xLabelString = default_xLabelString;
+    end
+    if isempty(yLabelString)
+        yLabelString = default_yLabelString;
+    end
+    if isempty(xLabelColour)
+        xLabelColour = default_xLabelColour;
+    end
+    if isempty(yLabelColour)
+        yLabelColour = default_yLabelColour;
+    end
+    if isempty(labelFontSize)
+        labelFontSize = default_labelFontSize;
+    end
+    if isempty(labelFontWeight)
+        labelFontWeight = default_labelFontWeight;
+    end
+    if isempty(xGridOnOff)
+        xGridOnOff = default_xGridOnOff;
+    end
+    if isempty(yGridOnOff)
+        yGridOnOff = default_yGridOnOff;
+    end
     
     
     %% ----------------------------------------------------------------- %%
@@ -388,22 +491,48 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     
     % Label a few things
     % Set some properties of the axes
-    set(hAxes,'XGrid','on');
-    set(hAxes,'YGrid','on');
-    set(hAxes,'FontSize',16);
+    
+    hTitle = title(hAxes,titleString);
+    set(hTitle,'Color',titleColour);
+    set(hTitle,'FontSize',titleFontSize);
+    set(hTitle,'FontWeight',titleFontWeight);
+    
+    hXLabel = xlabel(hAxes,xLabelString);
+    hYLabel = ylabel(hAxes,yLabelString);
+    
+    set(hXLabel,'Color',xLabelColour);
+    set(hYLabel,'Color',yLabelColour);
+    
+    set(hXLabel,'FontSize',labelFontSize);
+    set(hYLabel,'FontSize',labelFontSize);
+    
+    set(hXLabel,'FontWeight',labelFontWeight);
+    set(hYLabel,'FontWeight',labelFontWeight);
+    
+    set(hAxes,'XGrid',xGridOnOff);
+    set(hAxes,'YGrid',yGridOnOff);
+    
+    set(hAxes,'GridColor',[0.5,0.5,0.5]);
+    
+    
+    
     % Make it only integer ticks
     %if (display_xTickLabel)     set(hAxFObj,'XTick',(1:numCases)');
     %else                        set(hAxFObj,'XTickLabel','');       end;
-    % Add the title and axis label
-    %title( inputControllerSpecs.label );
-    xlabel('Time [index]');
-    ylabel('State, $x$');
+    
     % LEGEND
-    %hLegend1 = legend(hAxes, hLine, labelPerDim{1}(1:7), 'Location', 'SouthOutside');
-    %newPosition = [0.125 0.02 0.25 0.07];
-    %newUnits = 'normalized';
-    %set(hLegend1,'Position', newPosition,'Units', newUnits, 'interpreter','latex');
-    %set(hLegend1,'interpreter','none');
+    if ~isempty(legendStrings)
+        hLegend1 = legend(hAxes, hLine, legendStrings, 'Location', legendLocation);
+        
+        set(hLegend1,'Interpreter',legendInterpreter);
+        set(hLegend1,'FontSize',legendFontSize);
+        set(hLegend1,'FontWeight',legendFontWeight);
+        
+        
+        %newPosition = [0.125 0.02 0.25 0.07];
+        %newUnits = 'normalized';
+        %set(hLegend1,'Position', newPosition,'Units', newUnits );
+    end
     
     
     

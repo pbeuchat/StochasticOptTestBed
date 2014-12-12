@@ -58,27 +58,52 @@ cd(thisFullPath);
 %   'building'
 %   '...'
 
-% For 'building's, the "systemIDRequest" should be a string of length 3,
+% For 'building's, the "systemIDRequest" should be a string of length 7,
 % that selects from the following:
-% '001' = a small 8 room building
-% '002' = ...
-% '003' = ...
+% '001_001' = a small 1 room building
+% '002_001' = a small 7 room, 2 storey building
+% '003_001' = a single floor in the Basel OptiControl 2 Building
 
 systemType          = 'building';
-systemIDRequest     = '001';
+systemIDRequest     = '002_001';
+
+
+% Some options for what to do with the system that is loaded
+sysOptions.displaySystemDetails         = false;
+sysOptions.drawSystem                   = false;
+sysOptions.discretisationMethod         = 'normal';
+
+
 
 
 
 %% SPECIFY THE TIME HORIZON FOR WHICH TO RUN THE SIMULATIONS
 
 timeStart       = 1;
-timeHorizon     = 24*4*10;% (24*4) * 4;
+timeHorizon     = 12;%24*4*1;% (24*4) * 4;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
 %% SPECIFY WHETHER THE SIMULATION RESULTS SHOULD BE SAVED FOR NOT
 
-flag_saveSimResults = true;
+flag_saveSimResults = false;        % "true" or "false"
+
+
+%% SPECIFY WHETHER THE CONTROL SIMULATIONS SHOULD BE RUN OR NOT
+% This option can be used if the user only wants to plot the system or
+% interogate other details about the system or disturbance
+
+flag_performControlSimulations = true;        % "true" or "false"
+
+
+%% SPECIFY WHETHER THE VARIOUS OBJECT SHOULD BE RETURNED TO THE WORKSPACE OR NOT
+% This option can be used if the user only wants the restuls, system, and
+% disturbance object to be returned to the workspace so that they can be
+% interogated
+
+flag_returnObjectsToWorkspace = false;        % "true" or "false"
+
+
 
 
 %% SPECIFY THE CONTROLLERS TO BE SIMULATED ON THE TEST-BED
@@ -243,43 +268,44 @@ numCntr = 0;
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
-% % -----------------------------------
-% % Add a Controller Spec
-% numCntr = numCntr + 1;
-% % Mandatory Specifications
-% cntrSpecs{numCntr}.label            = 'Diagonal Only Approx Value Function';
-% cntrSpecs{numCntr}.legend           = 'ADP - Diag Only';
-% cntrSpecs{numCntr}.saveFolderName   = 'ADP_DiagOnly';
-% cntrSpecs{numCntr}.modelFree        = false;
-% cntrSpecs{numCntr}.trueModelBased   = true;
-% cntrSpecs{numCntr}.classNameLocal   = 'Control_DiagOnly_Local';
-% cntrSpecs{numCntr}.classNameGlobal  = 'Control_DiagOnly_Global';
-% cntrSpecs{numCntr}.globalInit       = true;
-% % Optional Specifications
-% cntrSpecs{numCntr}.description      = 'A controller that restricts the approximate value function to be purely diag';
-% thisVararginLocal                   = 'one';
-% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-% thisVararginGlobal                  = 'two';
-% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
-
 % -----------------------------------
 % Add a Controller Spec
 numCntr = numCntr + 1;
 % Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'Using 1-step predicition only';
-cntrSpecs{numCntr}.legend           = 'Naive - One Step Prediciton';
-cntrSpecs{numCntr}.saveFolderName   = 'OneStepPred';
+cntrSpecs{numCntr}.label            = 'Diagonal Only Approx Value Function';
+cntrSpecs{numCntr}.legend           = 'ADP - Diag Only';
+cntrSpecs{numCntr}.saveFolderName   = 'ADP_DiagOnly';
 cntrSpecs{numCntr}.modelFree        = false;
 cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_OneStepPred_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_OneStepPred_Global';
+cntrSpecs{numCntr}.classNameLocal   = 'Control_DiagOnly_Local';
+cntrSpecs{numCntr}.classNameGlobal  = 'Control_DiagOnly_Global';
 cntrSpecs{numCntr}.globalInit       = true;
 % Optional Specifications
-cntrSpecs{numCntr}.description      = 'A controller that simply minimises the cost at every step based on the prediciton for the next step';
+cntrSpecs{numCntr}.description      = 'A controller that restricts the approximate value function to be purely diag';
 thisVararginLocal                   = 'one';
 cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
 thisVararginGlobal                  = 'two';
 cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+ 
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Using 1-step predicition only';
+% cntrSpecs{numCntr}.legend           = 'Naive - One Step Prediciton';
+% cntrSpecs{numCntr}.saveFolderName   = 'OneStepPred';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_OneStepPred_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_OneStepPred_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A controller that simply minimises the cost at every step based on the prediciton for the next step';
+% thisVararginLocal                   = 'one';
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 % % -----------------------------------
@@ -333,6 +359,7 @@ blackBoxInstructions.fullPath           = thisFullPath;
 
 blackBoxInstructions.systemType         = systemType;
 blackBoxInstructions.systemIDRequest    = systemIDRequest;
+blackBoxInstructions.systemOptions      = sysOptions;
 
 blackBoxInstructions.controllers        = cell(numCntr,1);
 blackBoxInstructions.controllers(:,1)   = cntrSpecs(1:numCntr,1);
@@ -344,9 +371,12 @@ blackBoxInstructions.timeUnits          = timeUnits;
 
 blackBoxInstructions.flag_saveResults   = flag_saveSimResults;
 
+blackBoxInstructions.flag_performControlSimulations    = flag_performControlSimulations;
+blackBoxInstructions.flag_returnObjectsToWorkspace     = flag_returnObjectsToWorkspace;
+
 
 % Initialise some variables to contain the results
-allResults = runBlackBoxSimWithConfig(blackBoxInstructions);
+[allResults, object_system, object_disturbance]  = runBlackBoxSimWithConfig(blackBoxInstructions);
 
 disp(' '); disp(' ');
 disp('------------------------------------------------------------------');
@@ -355,9 +385,9 @@ disp(' Black-Box has finished running and all results returned to main.m');
 
 %% --------------------------------------------------------------------- %%
 %% PLOT SOME COMPARITIVE RESULTS
-disp(' '); disp(' ');
-disp('------------------------------------------------------------------');
-disp(' Now plotting some comparitive results');
+%disp(' '); disp(' ');
+%disp('------------------------------------------------------------------');
+%disp(' Now plotting some comparitive results');
 %plotAll(allResults);
 
 

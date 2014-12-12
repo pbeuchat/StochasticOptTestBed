@@ -1,0 +1,1 @@
+identifier,description,material_identifiers,thickness,conv_coeff_adjacent_A,conv_coeff_adjacent_BC0001,ExtWall,M0007,0.25,convCoeff_WallExt,convCoeff_WallIntC0002,IntWall_Concrete,M0007,0.25,convCoeff_WallInt,convCoeff_WallIntC0003,ExtCeiling,M0007,0.25,convCoeff_CeilingExt,convCoeff_CeilingIntC0004,IntFloor,M0007,0.25,convCoeff_FloorADB,convCoeff_FloorlInt
