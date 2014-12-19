@@ -135,7 +135,11 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
         result_time(2,iTime) = this_time.abs_hours;
         
         % Get the disturbance sample for this time
-        this_xi = getDisturbanceSampleForOneTimeStep( obj.distCoord , this_time.index );
+        if obj.flag_precomputedDisturbancesAvailable
+            this_xi = obj.precomputedDisturbances(:,this_time.index);
+        else
+            this_xi = getDisturbanceSampleForOneTimeStep( obj.distCoord , this_time.index );
+        end
         
         % Get the disturbance statisitcs for this time
         if flag_getPredictions

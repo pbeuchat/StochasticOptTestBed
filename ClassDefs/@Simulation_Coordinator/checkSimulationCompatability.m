@@ -77,6 +77,30 @@ function returnIsCompatible = checkSimulationCompatability( obj , flag_throwErro
     end
     
     
+    %% IF PRE-COMPUTED DISTURBANCE DATA WAS SUPLIED, THEN CHECK THAT IT IS COMPATIBLE
+    if obj.flag_precomputedDisturbancesAvailable
+        % Check that it is not empty
+        if ~isempty( obj.precomputedDisturbances )
+            % Get the size of the data
+            [ tempHeight , tempWidth ] = size( obj.precomputedDisturbances );
+            % Check that the height agrees with "n_xi" and that the width
+            % agrees with the time duration
+            tempDuration = obj.simTimeIndex_end - obj.simTimeIndex_start;
+            if (tempHeight ~= n_xi_accordingToPlant) || (tempWidth ~= tempDuration)
+                disp( ' ... ERROR: the size of the "precomputedDisturbances" was not as expected' );
+                disp(['            size(obj.precomputedDisturbances) = ',num2str(tempHeight),' -by- ',num2str(tempWidth) ]);
+                disp(['            size( expected )                  = ',num2str(n_xi_accordingToPlant),' -by- ',num2str(tempDuration) ]);
+            end
+        else
+            disp( ' ... ERROR: the flag specifies to use Precopmuted Disturbance Data' );
+            disp( '            BUT the "precomputedDisturbances" property is empty' );
+            disp( '            HENCE changing the flag to "false"' );
+            obj.flag_precomputedDisturbancesAvailable = false;
+        end
+        
+    end
+    
+    
     %% Set the flag of the Simulation Coordinator Object
     obj.flag_componentsAreCompatible = returnIsCompatible;
     

@@ -58,7 +58,7 @@ classdef Control_DiagOnly_Local < Control_LocalController
         p@cell;
         s@cell;
         
-        computeVEveryNumSteps@uint32 = uint32(6);
+        computeVEveryNumSteps@uint32 = uint32(1);
         
         iterationCounter@uint32;
         

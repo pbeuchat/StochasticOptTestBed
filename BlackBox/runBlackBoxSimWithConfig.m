@@ -48,6 +48,12 @@ flag_performControlSimulations      = inputBlackBoxInstructions.flag_performCont
 % Get the flag for whether to return the various object or not
 flag_returnObjectsToWorkspace       = inputBlackBoxInstructions.flag_returnObjectsToWorkspace;
 
+% Get the plotting flags:
+flag_plotResults                        = inputBlackBoxInstructions.flag_plotResults;
+flag_plotResultsPerController           = inputBlackBoxInstructions.flag_plotResultsPerController;
+flag_plotResultsControllerComparison    = inputBlackBoxInstructions.flag_plotResultsControllerComparison;
+
+
 %% --------------------------------------------------------------------- %%
 %% HANDLE THE DIFFERENT UNITS THE THE TIME COULD HAVE BEEN SPECIFIED IN
 
@@ -120,7 +126,7 @@ disp('            and wrapping it together as a "Distrubance Coordinator" class'
 
 % Instantiate a "Disturbance Coordinator" object
 % This requires the identifier for the disturbance model to be used
-thisDistIdentifier  = '002_001';
+thisDistIdentifier  = '002_002';
 thisRecomputeStats  = false;
 distCoord           = Disturbance_Coordinator(thisDistIdentifier);
 
@@ -309,6 +315,9 @@ disp('            Building Model and Disturbance Scenarios');
 allResults          = cell( numControlTechniques , 1 );
 allDataFileNames    = cell( numControlTechniques , 1 );
 
+% Initialise a flag required
+passedSameDisturbanceToAllSimulators = false;
+
 % Iterated through the controller specs
 for iController = 1:numControlTechniques
     % Start a timer for this control technique
@@ -332,6 +341,7 @@ for iController = 1:numControlTechniques
     [thisCompletedSuccessfully , allResults{iController,1} , savedDataFileNames] = runSimulation( mySimCoordArray(iController,1) , savePath_Results_thisTime_thisTechnique );
     allDataFileNames{iController,1} = savedDataFileNames;
     
+    
     % If completed successfully then store the names of the files saved
     % And put the reesults into one big struct
     if thisCompletedSuccessfully
@@ -354,6 +364,39 @@ for iController = 1:numControlTechniques
     % Give the user a little bit of info
     disp([' ... INFO: ',num2str(thisTime),' seconds elapsed using the "',thisControllerSpec.label ,'" control technique run for ',num2str((timeIndex_end-timeIndex_start+1)),' time steps']);
 
+    
+    % TO ENSURE THAT EVERY CONTROLLER SEES THE SAME DISTURBANCE
+    % This is also for some computational efficiency because it "should" be
+    % quicker than starting with the same seed and generating the same
+    % random number that are from the same sequence
+    if ~passedSameDisturbanceToAllSimulators && (numControlTechniques > 1)
+        % If the field exists
+        if isfield( allResults{iController,1} , 'xi' )
+            % Then get the disturbance sequence that was used
+            tempXi = allResults{iController,1}.xi.data;
+            % A flag for whether to throw errors or not
+            temp_flag_throwError = false;
+            % Now step through all the remaining Simulations and add this
+            % same disturbance sequence to their property
+            for iTemp = (iController+1) : numControlTechniques
+                % Add the data
+                specifyPrecomputedDisturbances( mySimCoordArray(iTemp,1) , tempXi );
+                % Check the compatibility
+                returnIsCompatible = checkSimulationCompatability( mySimCoordArray(iTemp,1) , temp_flag_throwError );
+                % If the compatibility check failed
+                if ~returnIsCompatible
+                    % then remove the disturbance data
+                    specifyPrecomputedDisturbances( mySimCoordArray(iTemp,1) , flase );
+                    % and check the compatability again
+                    checkSimulationCompatability( mySimCoordArray(iTemp,1) , temp_flag_throwError );
+                end
+            end
+        end
+        % Set the flag so that we don't do this again
+        passedSameDisturbanceToAllSimulators = true;
+    end
+    % END OF: "if passedSameDisturbanceToAllSimulators && (numControlTechniques > 1)"
+    
 end
 
 % This loop naturally suits parallelisation, see this links for some
@@ -373,16 +416,37 @@ disp([' ... INFO: ',num2str(numControlTechniques),' controllers were run for ',n
 %% --------------------------------------------------------------------- %%
 %% NOW PLOT THE RESULTS
 timerStart = clock;
-% Keep the user updated
-disp('******************************************************************');
-disp(' Black-Box: Plotting the simulation results');
 
+% Only plot results if requested to do so
+if flag_plotResults
+    
+    % Keep the user updated
+    disp('******************************************************************');
+    disp(' Black-Box: Plotting the simulation results');
 
-% Iterated through the controller specs
-for iController = 1:numControlTechniques
-    % Visualise the results for each controller
-    Visualisation.visualise_singleController( controllerSpecArray{iController,1} , allResults{iController,1} , allDataFileNames{iController,1} );
+    % PLOT THE PER-CONTROLLER RESULTS
+    if flag_plotResultsPerController
+        % Iterated through the controller specs
+        for iController = 1:numControlTechniques
+            % Visualise the results for each controller
+            Visualisation.visualise_singleController( controllerSpecArray{iController,1} , allResults{iController,1} , allDataFileNames{iController,1} );
+        end
+    end
+    % END OF: "if flag_plotResultsPerController"
+    
+    % PLOT THE A COMPARISON OF THE CONTROLLER RESULTS
+    if flag_plotResultsControllerComparison
+        % Don't bother calling the plotting function if only 1 control
+        % technique was simulated...
+        if numControlTechniques > 1
+            % Visualise the comparative results for ALL controller
+            Visualisation.visualise_singleController( controllerSpecArray{iController,1} , allResults{iController,1} , allDataFileNames{iController,1} );
+        end
+        
+    end
+
 end
+% END OF: "if flag_plotResultsPerControllerflag_plotResults"
 
 % Store the time taken for this section
 timedResults.plotResults = etime(clock,timerStart);

@@ -92,6 +92,9 @@ classdef bbConstants
         
         
         
+        % STRINGS RELATED TO CATEGORISATION OF THE LABEL OF DATA
+        uncategorised_label@string           = 'uncategorised';
+        
         % Fundamental Data-Type memory size
         double_sizeIn_bits                 = 64;
         double_sizeIn_bytes                = 8;

@@ -64,6 +64,14 @@ classdef Control_OneStepPred_Local < Control_LocalController
         
         %iterationCounter@uint32;
         
+        % Model matrices (this is to allow for a different discreteisation
+        % to be used compared to that from the one contained in the "model"
+        % property
+        A@double;
+        Bu@double;
+        Bxi@double;
+        
+        
     end
 
     

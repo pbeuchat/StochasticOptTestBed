@@ -64,9 +64,14 @@ classdef Simulation_Coordinator < handle
         simTimeIndex_start@uint32; %   = uint32(1);
         simTimeIndex_end@uint32; %     = uint32(1);
         
-        % Parameters for specifying what data to save
+        % Parameters for specifying whether to save data and what data to
+        % save
         flag_SaveResults@logical = false;
         
+        % A pre-computed stream of uncertainties to ensure a fair
+        % comparison
+        flag_precomputedDisturbancesAvailable@logical = false;
+        precomputedDisturbances@double;
     end
     
     
@@ -166,11 +171,28 @@ classdef Simulation_Coordinator < handle
     
     methods (Static = false , Access = public)
         
+        % FUNCTION DEF
         returnIsCompatible = checkSimulationCompatability( obj , flag_throwError );
         
+        % FUNCTION DEF
         returnIsReady = checkSimulationIsReadyToRun( obj , flag_throwError );
         
         
+        % FUNCTION: to specify the Precomputed Disturbance Data
+        function [ ] = specifyPrecomputedDisturbances( obj , inputDisturbances )
+            % Blinds store the input data, and let the compatibility checks
+            % confirm the format of the data
+            if isfloat( inputDisturbances )
+                obj.precomputedDisturbances = inputDisturbances;
+                obj.flag_precomputedDisturbancesAvailable = true;
+            else
+                disp( ' ... ERROR: the Precomputed Disturbance data input was not of class "float" and hence cannot be used');
+                obj.flag_precomputedDisturbancesAvailable = false;
+            end
+        end
+        
+        
+        % FUNCTION: to specify the key simulation parameters
         function [ ] = specifySimulationParameters(obj, inputTimeIndex_start , inputTimeIndex_end , inputFlagSaveResults)
             obj.simTimeIndex_start  = uint32( inputTimeIndex_start );
             obj.simTimeIndex_end    = uint32( inputTimeIndex_end );
@@ -178,6 +200,7 @@ classdef Simulation_Coordinator < handle
         end
         
         
+        % FUNCTION DEF
         [returnCompletedSuccessfully , returnResults , savedDataNames] = runSimulation( obj , savePath );
         
         

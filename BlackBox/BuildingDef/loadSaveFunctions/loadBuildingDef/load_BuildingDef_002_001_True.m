@@ -31,6 +31,7 @@ function [B , returnX0 , returnConstraintParams, returnCostParams, returnV, retu
 
 flag_displaySystem      = inputSysOptions.displaySystemDetails;
 flag_drawSystem         = inputSysOptions.drawSystem;
+flag_plotSparisity      = inputSysOptions.plotContTimeModelSparisity;
 discretisationMethod    = inputSysOptions.discretisationMethod;
 
 
@@ -67,9 +68,14 @@ if (flag_displaySystem || flag_drawSystem)
         B.drawBuilding([],[],tempHandle);
 
         % 2-D plot of Building
-        disp('     -> Drawing a 2-D floorplan of the building');
+        disp('     -> Drawing a 2-D floorplan of the building - for floor number 1');
         tempHandle = figure;
-        B.drawBuilding([],{'Floorplan'},tempHandle);
+        B.drawBuilding({'Z0001','Z0002','Z0003'},{'Floorplan'},tempHandle);
+        
+        disp('     -> Drawing a 2-D floorplan of the building - for floor number 2');
+        tempHandle = figure;
+        B.drawBuilding({'Z0004','Z0005','Z0006','Z0007'},{'Floorplan'},tempHandle);
+        
 
         % Drawing parts of the building can be done by a cell array of zone group and/or zone identifiers
         % SYNTAX:
@@ -79,42 +85,152 @@ end
 
 
 
+
+%% --------------------------------------------------------------------- %%
+%% 2) PLOT CONINUOUS TIME SPARSITY
+
+if flag_plotSparisity
+
+    % Set the default interpreter to "latex"
+    set(0, 'defaultTextInterpreter', 'latex');
+    tempFontSize = 24;
+    
+    
+    % First plot the A and B matrices is one plot
+    A_cont = B.building_model.continuous_time_model.A;
+    Bu_cont = B.building_model.continuous_time_model.Bu;
+    Bxi_cont = B.building_model.continuous_time_model.Bv;
+    
+    % Create the figure
+    thisFig = figure('position',[100 100 1200 700]);
+    set(thisFig,'color','w')
+    
+    % Space things a bit nicely so that the matrices will be a similar
+    % height
+    temp_n_x   = size(A_cont   ,2);
+    temp_n_u   = size(Bu_cont  ,2);
+    temp_n_xi  = size(Bxi_cont ,2);
+    temp_n_tot = temp_n_x + temp_n_u + temp_n_xi;
+    
+    lsp = 0.01;
+    csp = 0.01;
+    rsp = 0.05;
+    axbuff = 0.05;
+    axwtot = 1.0-lsp-2*csp-rsp-3*axbuff;
+    
+    tsp = 0.08;
+    bsp = 0.12;
+    axh = 1-tsp-bsp;
+    
+    A_w     = axbuff + axwtot * (temp_n_x  / temp_n_tot);
+    Bu_w    = axbuff + axwtot * (temp_n_u  / temp_n_tot);
+    Bxi_w   = axbuff + axwtot * (temp_n_xi / temp_n_tot);
+    
+    % Plot the A matrix in the first position
+    %subplot(1,3,1);
+    thisAxes_A = axes('position',[lsp,bsp, A_w ,axh]);
+    spy(A_cont);
+    title('$A$','fontsize',tempFontSize);
+    set(thisAxes_A,'fontsize',tempFontSize);
+    % Plot the Bu matrix in the second position
+    %subplot(1,3,2);
+    thisAxes_Bu = axes('position',[lsp+A_w+csp,bsp, Bu_w ,axh]);
+    spy(Bu_cont);
+    title('$B_u$','fontsize',tempFontSize);
+    set(thisAxes_Bu,'fontsize',tempFontSize);
+    % Plot the Bxi matrix in the third position
+    %subplot(1,3,3);
+    thisAxes_Bxi = axes('position',[lsp+A_w+csp+Bu_w+csp,bsp, Bxi_w ,axh]);
+    spy(Bxi_cont);
+    title('$B_xi$','fontsize',tempFontSize);
+    set(thisAxes_Bxi,'fontsize',tempFontSize);
+    
+end
+
+
+
 %% --------------------------------------------------------------------- %%
 %% 2) PERFORM THE DISCRETISATION
 disp('     -> Perform the discretisation');
 
-% --------------------------------------- %
-% USING BRCM:
-% the BRCM ".discretize()" function implements the following:
-%       A_discrete = expm( A_continuous );
-%       B_discrete = A_continuous \ (A_discrete - I) * B_continuous;
-% Where B = [Bu , Bv , Bvu , Bxu ] for both continous and discrete
-% This is in general not structure preserving
+
+% SPECIFY THE DISCRETISATION TIME
 Ts_hrs = 0.25;
 B.building_model.setDiscretizationStep(Ts_hrs);
-B.building_model.discretize();
-
-
 
 % --------------------------------------- %
-% BY "HAND"
-% Access of full continous model matrices, and then implement a
-% discretisation technique that is structure preserving
-% contTime_A     = B.building_model.continuous_time_model.A;
-% contTime_Bu    = B.building_model.continuous_time_model.Bu;
-% contTime_Bv    = B.building_model.continuous_time_model.Bv;
-% contTime_Bvu   = B.building_model.continuous_time_model.Bvu;
-% contTime_Bxu   = B.building_model.continuous_time_model.Bxu;
-% 
-% contTime_Sys = ss( contTime_A , contTime_B, 0 , 0 );
-% 
-% deltaT = Ts_hrs;
-% 
-% discTime_Euler_A = speye(size(conTimeA,1)) + contTime_A * deltaT;
-% discTime_Euler_B = speye(size(conTimeA,1)) + contTime_A * deltaT;
+% BY "HAND" - using the "FORWARD EULER" discretisation technique
+if strcmp( discretisationMethod , 'euler' )
 
-% Now save this back into the "B" building object under the discrete model
-% property
+    
+    % Access of full continous model matrices, and then implement a
+    % discretisation technique that is structure preserving
+    contTime_A     = B.building_model.continuous_time_model.A;
+    contTime_Bu    = B.building_model.continuous_time_model.Bu;
+    contTime_Bv    = B.building_model.continuous_time_model.Bv;
+    contTime_Bvu   = B.building_model.continuous_time_model.Bvu;
+    contTime_Bxu   = B.building_model.continuous_time_model.Bxu;
+    % 
+    % contTime_Sys = ss( contTime_A , contTime_B, 0 , 0 );
+    % 
+    % deltaT = Ts_hrs;
+    % 
+    % discTime_Euler_A = speye(size(conTimeA,1)) + contTime_A * deltaT;
+    % discTime_Euler_B = speye(size(conTimeA,1)) + contTime_A * deltaT;
+    
+    
+    % COMPUTE THE EIGENVALUES OF THE CONTINOUS TIME SYSTEM
+    eigenValuesContTime = eig(contTime_A);
+    
+    % First check that the real part of all the eigenvalues are negative
+    if any( real(eigenValuesContTime) >= 0 )
+        disp(' ... NOTE: the continous time system has eigen-values with real part >= 0');
+        disp('           Hence the "forward euler discretisation" will NOT be stable');
+    end
+    
+    % Now find the largest discretisation time that can be used for Forward
+    % Euler discretisation, based on:
+    % h_0 = max_h { h , s.t. |1+h*\lambda| = 1 }
+    h_per_eig = -2 .* real(eigenValuesContTime) ./ ( real(eigenValuesContTime).^2 + imag(eigenValuesContTime).^2 );
+    
+    h0 = min( h_per_eig );
+    
+    % Check if the discretisation time chosen is less than "h0" or not
+    secondsPerHour = 60 * 60;
+    Ts_seconds = Ts_hrs * secondsPerHour;
+    if Ts_seconds > h0
+        disp( ' ... NOTE: the discretisation time specified is larger than the maximum');
+        disp( '           discretisation time that will maintain stability of forward euler discretisation');
+    end
+    
+    B.building_model.setDiscretizationStep(0.5*h0/secondsPerHour);
+    
+    % NOW PERFORM THE "FORWARD EULER" DISCRETISATION
+    %discTime_A  = speye(size(contTime_A,1))  + contTime_A  * Ts_seconds;
+    %discTime_Bu = speye(size(contTime_Bu,1)) + contTime_Bu * Ts_seconds;
+    %discTime_Bv = speye(size(contTime_Bv,1)) + contTime_Bv * Ts_seconds;
+    
+    %discTime_Bvu = contTime_Bvu;
+    %discTime_Bxu = contTime_Bxu;
+    
+    % Now save this back into the "B" building object under the discrete model
+    % property
+    B.building_model.discretise_viaForwardEuler();
+    
+    
+else
+    
+    % --------------------------------------- %
+    % USING BRCM:
+    % the BRCM ".discretize()" function implements the following:
+    %       A_discrete = expm( A_continuous );
+    %       B_discrete = A_continuous \ (A_discrete - I) * B_continuous;
+    % Where B = [Bu , Bv , Bvu , Bxu ] for both continous and discrete
+    % This is in general not structure preserving
+    B.building_model.discretize();
+
+end
+
 
 
 
@@ -165,13 +281,13 @@ constraintsByHand.u_rect_upper = u_radiator_max * ones( n_u , 1);
 
 % For the coupling resourse constraint
 constraintsByHand.u_poly_A = sparse( ones(1,n_u) , 1:n_u , ones(n_u,1) , 1 , n_u , n_u );
-constraintsByHand.u_poly_b = n_u * u_radiator_max * 1.2;
+constraintsByHand.u_poly_b = n_u * u_radiator_max * 1.1;
 
 constraintsByHand.u_poly_label = { 'resource' };
 
 
 %% --------------------------------------------------------------------- %%
-%% 8) GENERATE COST DESCRIPTION
+%% COSTS - GENERATE COST DESCRIPTION
 disp('     8) Generate cost description');
 
 
@@ -250,7 +366,7 @@ costsByHand.subCosts_label    = {'energy';'comfort'};
 
 
 %% --------------------------------------------------------------------- %%
-%% SPECIFY THE INITIAL CONDITION
+%% x0 - SPECIFY THE INITIAL CONDITION
 n_x = size( B.building_model.discrete_time_model.A  , 2 );
 %x0 = 16 * ones( n_x , 1 );
 
@@ -258,7 +374,10 @@ n_x = size( B.building_model.discrete_time_model.A  , 2 );
 internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
 
 %x0 = 22.5*internalStates + 16 * ~internalStates;
-x0 = 20*internalStates + 16 * ~internalStates;
+x0 = 21.5*internalStates + 16 * ~internalStates;
+%x0 = 20.0*internalStates + 16 * ~internalStates;
+%x0 = 30*internalStates + 16 * ~internalStates;
+
 
 %% PUT TOGETHER THE RETURN VARIABLES
 returnX0                    = x0;

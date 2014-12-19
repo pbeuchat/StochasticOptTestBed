@@ -41,6 +41,12 @@ classdef StateDef < matlab.mixin.Copyable
         label_u@cell    = cell(0,0);
         label_xi@cell   = cell(0,0);
         
+        % Categories for the above, this was introduced to allow grouping
+        % of similar variables for plotting purposes
+        category_x@cell     = cell(0,0);
+        category_u@cell     = cell(0,0);
+        category_xi@cell    = cell(0,0);
+        
         % The number of sub-systems
         n_ss@uint32 = uint32(0);
         

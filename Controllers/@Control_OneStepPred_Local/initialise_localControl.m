@@ -34,6 +34,40 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
     %obj.s = cell( obj.statsPredictionHorizon+1 , 1 );
     
     %obj.iterationCounter = obj.computeVEveryNumSteps;
+    
+    % Initialise a flag for whether to use the discrete model from the
+    % "inputModel" or not
+    flag_useInputModelDiscreteTimeModel = true;
+    
+    % Check is a discretisation method" property is defined for the
+    % "VARiable ARGuments INput"
+    if isfield(vararginLocal,'discretisationMethod')
+        % If the option was set to "euler" then update the model to be used
+        if strcmp(vararginLocal.discretisationMethod , 'euler')
+            % Get the discretisation time step from the "inputModel"
+            secondsPerHours = 60 * 60;
+            Ts_seconds = inputModel.building.building_model.Ts_hrs * secondsPerHours;
+            
+            temp_n_x = size( inputModel.building.building_model.continuous_time_model.A , 1 );
+            
+            obj.A    =  speye(temp_n_x) + sparse( inputModel.building.building_model.continuous_time_model.A   .* Ts_seconds );
+            obj.Bu   =                    sparse( inputModel.building.building_model.continuous_time_model.Bu  .* Ts_seconds );
+            obj.Bxi  =                    sparse( inputModel.building.building_model.continuous_time_model.Bv  .* Ts_seconds );
+            
+            % Set the flag to prevent this been over-written
+            flag_useInputModelDiscreteTimeModel = false;
+        end
+    end
+    
+    
+    % Use the discrete time model from the "inputModel" variable if
+    % required
+    if flag_useInputModelDiscreteTimeModel
+        obj.A    =  sparse(  inputModel.building.building_model.discrete_time_model.A   );
+        obj.Bu   =  sparse(  inputModel.building.building_model.discrete_time_model.Bu  );
+        obj.Bxi  =  sparse(  inputModel.building.building_model.discrete_time_model.Bv  );
+    end
+    
             
 end
 % END OF FUNCTION

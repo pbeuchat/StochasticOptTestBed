@@ -12,13 +12,13 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
 
  
     %% Extract the system matrices from the model
-    myBuilding      = obj.model.building;
+    %myBuilding      = obj.model.building;
     myCosts         = obj.model.costDef;
     myConstraints   = obj.model.constraintDef;
     
-    A       = sparse( myBuilding.building_model.discrete_time_model.A   );
-    Bu      = sparse( myBuilding.building_model.discrete_time_model.Bu  );
-    Bxi     = sparse( myBuilding.building_model.discrete_time_model.Bv  );
+    A       = obj.A;
+    Bu      = obj.Bu;
+    Bxi     = obj.Bxi;
     %Bxu     = myBuilding.building_model.discrete_time_model.Bxu;
     %Bxiu    = myBuilding.building_model.discrete_time_model.Bvu;
     
