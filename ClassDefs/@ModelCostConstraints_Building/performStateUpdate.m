@@ -53,6 +53,9 @@ function [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( ob
     l(1,1)    = l(2,1) + l(3,1);
     
     
+    l_temp = computeCost( obj.costDef , x , u , xi , currentTime );
+    
+    
     
     
     

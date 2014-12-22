@@ -172,6 +172,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
     % END OF: "methods"
     
     
+    %% methods (Static = false , Access = public)
     methods (Static = false , Access = public)
         % Define functions directly implemented here:
         % -----------------------------------------------
@@ -217,9 +218,19 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         
         
         
-    end % END OF: "methods (Static = false , Access = private)"
+    end % END OF: "methods (Static = false , Access = public)"
     
     
+    %% methods (Static = true , Access = public)
+    methods (Static = true , Access = public)
+        % FUNCTION: to build a "StateDef" object for this type of model
+        returnStateDef = buildStateDefObjectFromBuildingObject( B , x0 );
+        
+    end
+    % END OF: "methods (Static = false , Access = private)"
+    
+    
+    %% methods (Static = false , Access = private)
     methods (Static = false , Access = private)
         % Define functions implemented in other files:
         % -----------------------------------------------
@@ -242,6 +253,8 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
     end
     % END OF: "methods (Static = false , Access = private)"
 
+    
+    
     
 end
 

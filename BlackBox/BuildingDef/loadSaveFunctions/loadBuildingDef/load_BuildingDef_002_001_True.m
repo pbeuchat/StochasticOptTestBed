@@ -234,8 +234,34 @@ end
 
 
 
+
 %% --------------------------------------------------------------------- %%
-%% 3) GENERATE CONSTRAINT DESCRIPTION
+%% 3) x0 - SPECIFY THE INITIAL CONDITION
+disp('     -> "Reading" the specified initial condition');
+%n_x = size( B.building_model.discrete_time_model.A  , 2 );
+%x0 = 16 * ones( n_x , 1 );
+
+
+internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
+
+%x0 = 22.5*internalStates + 16 * ~internalStates;
+x0 = 21.5*internalStates + 16 * ~internalStates;
+%x0 = 20.0*internalStates + 16 * ~internalStates;
+%x0 = 30*internalStates + 16 * ~internalStates;
+
+
+%% --------------------------------------------------------------------- %%
+%% 4) BUILD A STATE DEFINITION OBJECT
+disp('     -> Build a "State Definition" object');
+% This is all automatically extracted from the properties of the "B"
+% building object, and requires the initial condition to be specified
+stateDefObject = ModelCostConstraints_Building.buildStateDefObjectFromBuildingObject( B , x0 );
+
+
+
+
+%% --------------------------------------------------------------------- %%
+%% 5) GENERATE CONSTRAINT DESCRIPTION
 disp('     -> Generate constraint description');
 
 % --------------------------------------- %
@@ -288,7 +314,7 @@ constraintsByHand.u_poly_label = { 'resource' };
 
 %% --------------------------------------------------------------------- %%
 %% COSTS - GENERATE COST DESCRIPTION
-disp('     8) Generate cost description');
+disp('     -> Generate cost description');
 
 
 % --------------------------------------- %
@@ -319,7 +345,8 @@ costParameters.Rad.costPerJouleHeated = 10;
 % Get the cost vector
 cu = B.building_model.getCostVector(costParameters);
 
-cu = 0*cu;
+%cu = 0*cu;
+
 
 % If the building_model B.building_model should be saved to use the model in another place, it is necessary that the Classes folder 
 % is on the path, otherwise the saved data can not be loaded correctly. If only the matrices are needed, then just 
@@ -364,19 +391,43 @@ costsByHand.subCosts_label    = {'energy';'comfort'};
 
 
 
+%% Put the costs together into the the format required
+% Specify the number of Cost Components that are summed together to make up
+% the total costs
+% i.e. the cost components are the objectives in a multi-objective
+% optimisation and the total cost is the objective in a single objective
+% optimisation given a particular set of scalings
+% This split into components is used to generate plots of a Pareto Front
+% and make Pareto type comparisons of different methods
 
-%% --------------------------------------------------------------------- %%
-%% x0 - SPECIFY THE INITIAL CONDITION
-n_x = size( B.building_model.discrete_time_model.A  , 2 );
-%x0 = 16 * ones( n_x , 1 );
+costComponents_num      = uint32(2);
+costComponents_label    = {'energy';'comfort'};
+costComponents_scaling  = ones( costComponents_num , 1);
+
+% The cost components should be individually defined to allow for clear
+% separation of the costs
+
+% NOTE: can't instatiate an empty array of the correct type because they
+% could all be different types inherritting from the same "CostComponent",
+% super class
+%costComponentArray = CostComponent.empty(costComponents_num,0);
+clear costComponentArray;
+
+% Now fill in each element of the array:
+%  -> The "energy" cost, a linear function of the input only
+costComponentArray(1,1) = CostComponent_Linear( sparse([],[],[],n_x,1,0) , cu , sparse([],[],[],1,1,0) , stateDefObject );
+
+%  -> The "comfort" cost, a quadratic cost of the states
+costComponentArray(2,1) = CostComponent_Linear( sparse([],[],[],n_x,1,0) , cu , sparse([],[],[],1,1,0) , stateDefObject );
 
 
-internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
+% Then the cost components should be wrappen together into a "Cost
+% Definition" object
+costDefObject = CostDef( stateDefObject , costComponents_num , costComponents_label , costComponentArray );
 
-%x0 = 22.5*internalStates + 16 * ~internalStates;
-x0 = 21.5*internalStates + 16 * ~internalStates;
-%x0 = 20.0*internalStates + 16 * ~internalStates;
-%x0 = 30*internalStates + 16 * ~internalStates;
+
+
+
 
 
 %% PUT TOGETHER THE RETURN VARIABLES
