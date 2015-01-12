@@ -1,4 +1,4 @@
-classdef CostComponent_Linear < CostComponent
+classdef CostComponent_Quadratic < CostComponent
 % This class keeps track of the state, input and disturbance defintions for
 % a pariticular porblem instance
 % ----------------------------------------------------------------------- %
@@ -39,7 +39,16 @@ classdef CostComponent_Linear < CostComponent
         % FUNCTION TYPE:
         
         % The Linear Cost Component is based on the function:
-        %   cost = q' * x  +  r' * u  +  c
+        %   cost = x' * Q * x  +  u' * R * u  +  2 * u' * S * x  +  q' * x  +  r' * u  +  c
+        
+        % Matrix for quadratic costs in the state
+        Q@double;
+        
+        % Matrix for quadratic costs in the input
+        R@double;
+        
+        % Matrix for quadratic costs in the state -by- input
+        S@double;
         
         % Vector for linear costs in the state
         q@double;
@@ -63,6 +72,7 @@ classdef CostComponent_Linear < CostComponent
         % "component" costs
         subSystemCostsArray@CostComponent;
         flag_hasSubComponentCosts@logical = false;
+
         
     end
     
@@ -73,7 +83,7 @@ classdef CostComponent_Linear < CostComponent
         % Define functions directly implemented here:
         % -----------------------------------------------
         % FUNCTION: the CONSTRUCTOR method for this class
-        function obj = CostComponent_Linear( input_q , input_r , input_c , inputStateDef )
+        function obj = CostComponent_Quadratic( input_Q , input_R , input_S , input_q , input_r , input_c , inputStateDef )
             % Allow the Constructor method to pass through when called with
             % no nput arguments (required for the "empty" object array
             % creator)
@@ -83,6 +93,30 @@ classdef CostComponent_Linear < CostComponent
                 % size of the cost function coefficients. This is done
                 % because no checking will be performed in the
                 % "computeCostComponent" function to avoid slow down
+                
+                % Check that "Q" is of size "n_x -by- n_x"
+                if ~( (size(input_Q,1) == inputStateDef.n_x) && (size(input_Q,2) == inputStateDef.n_x) && ismatrix(input_Q) )
+                    disp( ' ... ERROR: the quadratic state coefficinet, "Q", is not the expected size');
+                    disp(['            size(Q)            = ',num2str(size(input_Q,1)),' -by- ',num2str(size(input_Q,2)) ]);
+                    disp(['            size("expected")   = ',num2str(inputStateDef.n_x),' -by- ',num2str(inputStateDef.n_x) ]);
+                    error(bbConstants.errorMsg);
+                end
+                
+                % Check that "R" is of size "n_u -by- n_u"
+                if ~( (size(input_R,1) == inputStateDef.n_u) && (size(input_R,2) == inputStateDef.n_u) && ismatrix(input_R) )
+                    disp( ' ... ERROR: the quadratic input coefficinet, "R", is not the expected size');
+                    disp(['            size(R)            = ',num2str(size(input_R,1)),' -by- ',num2str(size(input_R,2)) ]);
+                    disp(['            size("expected")   = ',num2str(inputStateDef.n_u),' -by- ',num2str(inputStateDef.n_u) ]);
+                    error(bbConstants.errorMsg);
+                end
+                
+                % Check that "S" is of size "n_u -by- n_x"
+                if ~( (size(input_S,1) == inputStateDef.n_u) && (size(input_S,2) == inputStateDef.n_x) && ismatrix(input_S) )
+                    disp( ' ... ERROR: the quadratic state-by-input coefficinet, "S", is not the expected size');
+                    disp(['            size(S)            = ',num2str(size(input_S,1)),' -by- ',num2str(size(input_S,2)) ]);
+                    disp(['            size("expected")   = ',num2str(inputStateDef.n_u),' -by- ',num2str(inputStateDef.n_x) ]);
+                    error(bbConstants.errorMsg);
+                end
                 
                 % Check that "q" is of size "n_x -by- 1"
                 if ~( (size(input_q,1) == inputStateDef.n_x) && (size(input_q,2) == 1) && isvector(input_q) )
@@ -108,16 +142,29 @@ classdef CostComponent_Linear < CostComponent
                     error(bbConstants.errorMsg);
                 end
                 
+                % Make the matrices sparse if they are not already
+                if ~issparse(input_Q)
+                    input_Q = sparse( input_Q );
+                end
+                if ~issparse(input_R)
+                    input_R = sparse( input_R );
+                end
+                if ~issparse(input_S)
+                    input_S = sparse( input_S );
+                end
+                
                 % Store the co-efficients in the appropriate properties
+                obj.Q       = input_Q;
+                obj.R       = input_R;
+                obj.S       = input_S;
                 obj.q       = input_q;
                 obj.r       = input_r;
                 obj.c       = input_c;
                 
                 obj.stateDef = inputStateDef;
-
-                obj.n_ss     = inputStateDef.n_ss;
                 
-                obj.functionType = 'linear';
+                obj.functionType = 'quadratic';
+                
                 
             end
             % END OF: "if nargin > 0"

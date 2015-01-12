@@ -1,4 +1,4 @@
-classdef CostComponent_Linear < CostComponent
+classdef CostComponent_PerSubSystem < CostComponent
 % This class keeps track of the state, input and disturbance defintions for
 % a pariticular porblem instance
 % ----------------------------------------------------------------------- %
@@ -13,7 +13,7 @@ classdef CostComponent_Linear < CostComponent
 
     properties(Hidden,Constant)
         % Name of this class for displaying relevant messages
-        thisClassName@string = 'CostComponent_Linear';
+        thisClassName@string = 'CostComponent_PerSubSystem';
         
         % DEFINED IN THE SUPER-CLASS (but not as Abstract)
         % Name of this class for displaying relevant messages
@@ -38,31 +38,16 @@ classdef CostComponent_Linear < CostComponent
         % ALL THESE PROPERTIES HERE ARE REQUIRED FOR THIS PARTICULAR
         % FUNCTION TYPE:
         
-        % The Linear Cost Component is based on the function:
-        %   cost = q' * x  +  r' * u  +  c
-        
-        % Vector for linear costs in the state
-        q@double;
-        
-        % Vector for linear costs in the input
-        r@double;
-        
-        % Scalar for cost constants
-        c@double;
-        
         % The state definition object
         stateDef@StateDef;
 
-        % The number of sub-systems defined directly from the "stateDef"
-        % odject
-        n_ss@uint32;
-        
-        % An Array for the "Cost Component" contributed by each sub-system
+        % An Array for the "Cost Component" class objects contributed by 
+        % each sub-system
         % NOTE: that this is not generic, but is specific to the sub-system
         % definition that was used to specify the coefficients of the
         % "component" costs
         subSystemCostsArray@CostComponent;
-        flag_hasSubComponentCosts@logical = false;
+        numSubSystemCosts@uint32;
         
     end
     
@@ -73,16 +58,22 @@ classdef CostComponent_Linear < CostComponent
         % Define functions directly implemented here:
         % -----------------------------------------------
         % FUNCTION: the CONSTRUCTOR method for this class
-        function obj = CostComponent_Linear( input_q , input_r , input_c , inputStateDef )
+        function obj = CostComponent_Linear( inputCostArray , inputStateDef )
             % Allow the Constructor method to pass through when called with
             % no nput arguments (required for the "empty" object array
             % creator)
             if nargin > 0
                 
-                % The "state definition" object is used here to check the
-                % size of the cost function coefficients. This is done
-                % because no checking will be performed in the
-                % "computeCostComponent" function to avoid slow down
+                % The "state definition" object is used here to check that
+                % the size of the "inputCostArray" is consistent with the
+                % number of sub-systems defined in the "State Definition"
+                % object.
+                % Recalling that when a controller is initialised it has
+                % the oppurtunity to change the "number of sub-systems"
+                % ("n_ss") property of the "State Definition", but the
+                % "Cost Definition" should be constructed at the same time
+                % as the system definition being construct, hence the
+                % "n_ss" is expected to agree at this stage
                 
                 % Check that "q" is of size "n_x -by- 1"
                 if ~( (size(input_q,1) == inputStateDef.n_x) && (size(input_q,2) == 1) && isvector(input_q) )
@@ -92,32 +83,22 @@ classdef CostComponent_Linear < CostComponent
                     error(bbConstants.errorMsg);
                 end
                 
-                % Check that "r" is of size "n_u -by- 1"
-                if ~( (size(input_r,1) == inputStateDef.n_u) && (size(input_r,2) == 1) && isvector(input_r) )
-                    disp( ' ... ERROR: the linear input coefficinet, "r", is not the expected size');
-                    disp(['            size(r)            = ',num2str(size(input_r,1)),' -by- ',num2str(size(input_r,2)) ]);
-                    disp(['            size("expected")   = ',num2str(inputStateDef.n_u),' -by- 1' ]);
+                % Check that "inputCostArray" is of size "n_ss -by- 1"
+                if ~( (size(inputCostArray,1) == inputStateDef.n_ss) && (size(inputCostArray,2) == 1) && isvector(input_r) )
+                    disp( ' ... ERROR: the input Sub-System Costs Array is not the expected size');
+                    disp(['            size(inputCostArray)   = ',num2str(size(inputCostArray,1)),' -by- ',num2str(size(inputCostArray,2)) ]);
+                    disp(['            size("expected")       = ',num2str(inputStateDef.n_ss),' -by- 1' ]);
                     error(bbConstants.errorMsg);
                 end
                 
-                % Check that "c" is of size "1 -by- 1"
-                if ~( isscalar(input_c) )
-                    disp( ' ... ERROR: the constant, "c", is not a scalar');
-                    disp(['            size(c)            = ',num2str(size(input_c,1)),' -by- ',num2str(size(input_c,2)) ]);
-                    disp( '            size("expected")   = 1 -by- 1' );
-                    error(bbConstants.errorMsg);
-                end
                 
                 % Store the co-efficients in the appropriate properties
-                obj.q       = input_q;
-                obj.r       = input_r;
-                obj.c       = input_c;
+                obj.subSystemCostsArray = inputCostArray;
+                obj.numSubSystemCosts   = uint32( size(inputCostArray,1) );
                 
                 obj.stateDef = inputStateDef;
-
-                obj.n_ss     = inputStateDef.n_ss;
                 
-                obj.functionType = 'linear';
+                obj.functionType = 'persubsystem';
                 
             end
             % END OF: "if nargin > 0"

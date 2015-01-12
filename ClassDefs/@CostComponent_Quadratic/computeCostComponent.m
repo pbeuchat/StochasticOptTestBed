@@ -13,13 +13,16 @@ function [returnCost , returnCostPerSubSystem] = computeCostComponent( obj , x ,
 %                 because it is called at every iteration
 % ----------------------------------------------------------------------- %
 
+    returnCost =         x' * obj.Q' * x  ...
+                  +      u' * obj.R' * u  ...
+                  +  2 * u' * obj.S  * x  ...
+                  +  obj.q' * x  ...
+                  +  obj.r' * u  ...
+                  +  obj.c;
 
-    returnCost = obj.q' * x + obj.r' * u + obj.c;
-
-    returnCostPerSubSystem = sparse([],[],[], obj.n_ss , 1 , 0);
+    returnCostPerSubSystem = sparse([],[],[], obj.n_ss , 1 , 0);;
     
 
 end
 % END OF FUNCTION
-
 

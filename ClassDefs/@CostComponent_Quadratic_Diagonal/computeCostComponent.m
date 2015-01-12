@@ -14,12 +14,15 @@ function [returnCost , returnCostPerSubSystem] = computeCostComponent( obj , x ,
 % ----------------------------------------------------------------------- %
 
 
-    returnCost = obj.q' * x + obj.r' * u + obj.c;
+    returnCost =     obj.Q' * x.^2  ...
+                  +  obj.R' * u.^2  ...
+                  +  obj.q' * x  ...
+                  +  obj.r' * u  ...
+                  +  obj.c;
 
     returnCostPerSubSystem = sparse([],[],[], obj.n_ss , 1 , 0);
     
 
 end
 % END OF FUNCTION
-
 

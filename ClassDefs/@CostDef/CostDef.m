@@ -24,20 +24,22 @@ classdef CostDef < handle
         % degraded...
         
         % The type of cost function
-        type@string;
+%         type@string;
         
         % The parameters of the cost function:
         %   -> For both Linear and Quadratic costs
-        c@double;
-        q@double;
-        r@double;
-        Q@double;
-        R@double;
-        S@double;
+%         c@double;
+%         q@double;
+%         r@double;
+%         Q@double;
+%         R@double;
+%         S@double;
         
         % Flags for where the cost can be separated per-sub-system
-        flag_separable@logical = false;
+%         flag_separable@logical = false;
         
+        % These properties allows for other objects to know how many
+        % "additive components" make up the "single objective"
         % This object also allows for information about part of the cost to
         % be computed and passed around
         subCosts_num@uint32;
@@ -125,18 +127,6 @@ classdef CostDef < handle
             obj.subCosts_label          = inputSubCosts_label;
             obj.costComponentsArray     = inputCostComponentsArray;
             
-            
-            %obj.type            = funcType;
-            
-            %obj.c               = c;
-            %obj.q               = q;
-            %obj.r               = r;
-            %obj.Q               = Q;
-            %obj.R               = R;
-            %obj.S               = S;
-            
-            
-            
         end
         % END OF: "function [..] = ProgressModelEngine(...)"
         
@@ -223,16 +213,29 @@ classdef CostDef < handle
         % Define functions directly implemented here:
         % -----------------------------------------------
         % FUNCTION: Compute the Cost by compute the cost of each component
-        function returnCost = computeCost( obj , x , u , xi , currentTime )
-            % Initialise return vector
+        function [returnCost , returnCostPerSubSystem] = computeCost( obj , x , u , xi , currentTime )
+            % Initialise return vector for the "system-wide" costs
             returnCost = zeros( obj.numSubCosts+1 , 1 );
+            % Initialise return cell array for the "per-sub-system" costs
+            returnCostPerSubSystem = cell( obj.numSubCosts+1 , 1 );
+
             % Iterate should the number of Cost Components
             for iCost = 1 : obj.numSubCosts
                 % Compute the cost for this component
-                returnCost( iCost+1 , 1 ) = computeCostComponent( obj.costComponentsArray(iCost,1) , x , u , xi , currentTime );
+                [ returnCost( iCost+1 , 1 ) , returnCostPerSubSystem{ iCost+1 , 1 } ] = computeCostComponent( obj.costComponentsArray(iCost,1) , x , u , xi , currentTime );
             end
             % Put in the total as the sum of the components
             returnCost(1,1) = sum( returnCost(2:obj.numSubCosts,1) );
+
+            % Putting in the total for each sub-system is more tedious
+            % because it requires the assumption that every Cost Component
+            % (e.g. energy and comfort) returns a "CostPerSubSystem" vector
+            % of the same length
+            returnCostPerSubSystem{1,1} = sparse([],[],[], length(returnCostPerSubSystem{2,1}) , 1 , 0 );
+            for iCost = 1 : obj.numSubCosts
+                returnCostPerSubSystem{1,1} = returnCostPerSubSystem{iCost=1,1};
+            end
+
         end
         
         % END OF: "function [...] = xxx(...)"

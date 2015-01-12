@@ -1,6 +1,8 @@
 classdef (Abstract) CostComponent < matlab.mixin.Heterogeneous
 % This class keeps track of the state, input and disturbance defintions for
 % a pariticular porblem instance
+% The "matlab.mixin.Heterogeneous" inherritence class allow of an array to
+% be created from a variety of sub-classes
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
@@ -16,13 +18,13 @@ classdef (Abstract) CostComponent < matlab.mixin.Heterogeneous
         thisAbstractClassName@string = 'CostComponent';
     end
    
-    properties (Access = public)
+    properties (Access = public , Abstract = true)
         % Very few properties should have public access, otherwise the
         % concept and benefits of Object-Orientated-Programming will be
         % degraded...
         
-        % The type of cost function
-        type@string;
+        % The function type of cost function
+        functionType@string;
         
     end
     
@@ -68,7 +70,7 @@ classdef (Abstract) CostComponent < matlab.mixin.Heterogeneous
     methods (Static = false , Access = public)
         
         % FUNCTION: to compute the cost component
-        returnCost = computeCostComponent( obj , x , u , xi , currentTime );
+        [returnCost , returnCostPerSubSystem] = computeCostComponent( obj , x , u , xi , currentTime );
         
     end
     % END OF: "methods (Static = false , Access = public)"
