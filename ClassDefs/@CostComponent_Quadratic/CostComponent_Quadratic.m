@@ -13,7 +13,7 @@ classdef CostComponent_Quadratic < CostComponent
 
     properties(Hidden,Constant)
         % Name of this class for displaying relevant messages
-        thisClassName@string = 'CostComponent_Linear';
+        thisClassName@string = 'CostComponent_Quadratic';
         
         % DEFINED IN THE SUPER-CLASS (but not as Abstract)
         % Name of this class for displaying relevant messages
@@ -163,6 +163,8 @@ classdef CostComponent_Quadratic < CostComponent
                 
                 obj.stateDef = inputStateDef;
                 
+                obj.n_ss     = inputStateDef.n_ss;
+                
                 obj.functionType = 'quadratic';
                 
                 
@@ -183,8 +185,25 @@ classdef CostComponent_Quadratic < CostComponent
     
     methods (Static = false , Access = public)
         
+        % Define functions implemented in other files:
+        % -----------------------------------------------
         % FUNCTION: to compute the cost component
         [returnCost , returnCostPerSubSystem] = computeCostComponent( obj , x , u , xi , currentTime );
+        
+        % Define functions directly implemented here:
+        % -----------------------------------------------
+        % FUNCTION: to return the cost coefficients as a struct
+        function returnCoefficients = getCostCoefficients( obj , currentTime )
+            % Return all the coefficients and the calling function will
+            % parse and use them apropriately
+            returnCoefficients.Q = obj.Q;
+            returnCoefficients.R = obj.R;
+            returnCoefficients.S = obj.S;
+            returnCoefficients.q = obj.q;
+            returnCoefficients.r = obj.r;
+            returnCoefficients.c = obj.c;
+            
+        end
         
     end
     % END OF: "methods (Static = false , Access = public)"

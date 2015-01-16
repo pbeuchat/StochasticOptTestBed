@@ -82,11 +82,11 @@ disp('******************************************************************');
 disp([' Black-Box: Loading the "',sysType,'"-type model requested']);
 disp('            and wrapping it together as a "Progress Model Engine" class');
 % Load the building
-[bbBuilding , bbX0 , bbConstraints , bbCosts ] = load_forBlackBox_BuildingModel( sysID , bbFullPath , sysOptions );
+[bbBuilding , bbX0 , bbConstraints , bbCostDef ] = load_forBlackBox_BuildingModel( sysID , bbFullPath , sysOptions );
 
 clear buildingModelStruct;
 buildingModelStruct.building        = bbBuilding;
-buildingModelStruct.costs           = bbCosts;
+buildingModelStruct.costDef         = bbCostDef;
 buildingModelStruct.constraints     = bbConstraints;
 buildingModelStruct.x0              = bbX0;
 
@@ -106,7 +106,9 @@ stateDef = requestStateDefObject( sysModel );
 % Extract the "ConstraintDef" definition object
 constraintDef = requestConstraintDefObject( sysModel );
 
-% Extract the "ConstraintDef" definition object
+% NOTE: This was moved into the "load_forBlackBox_BuildingModel" function
+% Extract the "CostDef" definition object
+%costDef = requestCostDefObject( sysModel );
 costDef = requestCostDefObject( sysModel );
 
 

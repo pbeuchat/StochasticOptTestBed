@@ -13,25 +13,14 @@ function [returnCost , returnCostPerSubSystem] = computeCostComponent( obj , x ,
 %                 because it is called at every iteration
 % ----------------------------------------------------------------------- %
 
-    % Initialise the return cost to be zero
-    returnCost = 0;
-    returnCostPerSubSystem = zeros(obj.subSystemCosts_num,1);
+    returnCost =         x' * obj.Q' * x  ...
+                  +  obj.q' * x  ...
+                  +  obj.c;
 
-    % Step through each of the "Sub-Systems" as defined by the size of the
-    % "subSystemCosts_array" array
-    for iSubSys = 1 : obj.subSystemCosts_num
-        % Compute the cost for this component
-        % Assuming that each element of the "obj.subSystemCost_array" is a
-        % primary type of "CostComponent" element and hence returns only a
-        % "returnCost" accompanied by an empty "returnCostPerSubSystem"
-        [thisReturnCost , ~] = computeCostComponent( obj.subSystemCosts_array(iSubSys,1) , x , u , xi , currentTime );
-        % Use this cost as required
-        returnCostPerSubSystem(iSubSys,1) = thisReturnCost;
-        returnCost = returnCost + thisReturnCost;
-    end
-
+    %returnCostPerSubSystem = sparse([],[],[], double(obj.n_ss) , 1 , 0);
+    returnCostPerSubSystem = [];
+    
 
 end
 % END OF FUNCTION
-
 

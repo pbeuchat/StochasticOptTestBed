@@ -119,7 +119,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
                 % Now check "inputBuilding" has the required properties
                 % An "inputModel" of type "building" should have:
                 %  ".building"  , ".costs"  ,  ".constraints"
-                inputBuildingFields = {'building','costs','constraints','x0'};
+                inputBuildingFields = {'building','costDef','constraints','x0'};
                 checkBuilding = checkForFields(inputBuilding,inputBuildingFields);
                 if ~checkBuilding
                     disp( ' ... ERROR: The "inputBuilding" variable was a struct but did not have the correct fields');
@@ -135,7 +135,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
 
                 % Store the inputs into the properties of this "obj"
                 obj.building            = copy(inputBuilding.building);
-                obj.costParams          = inputBuilding.costs;
+                obj.costDef             = inputBuilding.costDef;
                 obj.constraintParams    = inputBuilding.constraints;
                 obj.x0                  = inputBuilding.x0;
                 
@@ -211,8 +211,9 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         % FUNCTION: to build a "CostDef" object from the model
         %       > This function is defined in the SUPER-CLASS as ABSTRACT
         function returnCostDef = requestCostDefObject( obj )
-            returnCostDef = buildAndReturnCostDefObject( obj );
-            obj.costDef = returnCostDef;
+            %returnCostDef = buildAndReturnCostDefObject( obj );
+            %obj.costDef = returnCostDef;
+            returnCostDef = obj.costDef;
         end
         % END OF: "function [...] = requestCostDefObject(...)"
         

@@ -3,7 +3,7 @@
 %  ---------     load_BuildingDef_002_001_True.m
 %  ---------------------------------------------------------------------  %
 %  ---------------------------------------------------------------------  %
-function [B , returnX0 , returnConstraintParams, returnCostParams, returnV, returnTmax , returnDims] = load_BuildingDef_002_001_True( inputBuildingIdentifierString, bbFullPath , inputSysOptions )
+function [B , returnX0 , returnConstraintParams, returnCostDefObject, returnV, returnTmax , returnDims] = load_BuildingDef_002_001_True( inputBuildingIdentifierString, bbFullPath , inputSysOptions )
 
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
@@ -413,12 +413,33 @@ costComponents_scaling  = ones( costComponents_num , 1);
 %costComponentArray = CostComponent.empty(costComponents_num,0);
 clear costComponentArray;
 
+
+% Create the "energy" cost as a component array of the linear costs for
+% each sub-system
+for i_ss = 1:7
+    this_cu = sparse( i_ss , 1 , cu(i_ss,1) , n_u , 1 , 1);
+    costComponentArray_energy(i_ss,1) = CostComponent_Linear( sparse([],[],[],n_x,1,0) , this_cu , sparse([],[],[],1,1,0) , stateDefObject );
+end
+
+
+% Create the "comfort" cost as a component array of the linear costs for
+% each sub-system
+x_ref = 22.5;
+for i_ss = 1:7
+    this_Q = sparse( i_ss , i_ss , 1         , n_x , n_x , 1);
+    this_q = sparse( i_ss , 1    , -2*x_ref  , n_x , 1   , 1);
+    this_c = sparse( 1    , 1    , x_ref^2   , 1   , 1   , 1);
+    costComponentArray_comfort(i_ss,1) = CostComponent_Quadratic_StateOnly( this_Q , this_q , this_c , stateDefObject );
+end
+
+
 % Now fill in each element of the array:
 %  -> The "energy" cost, a linear function of the input only
-costComponentArray(1,1) = CostComponent_Linear( sparse([],[],[],n_x,1,0) , cu , sparse([],[],[],1,1,0) , stateDefObject );
+costComponentArray(1,1) = CostComponent_PerSubSystem( costComponentArray_energy , stateDefObject );
 
 %  -> The "comfort" cost, a quadratic cost of the states
-costComponentArray(2,1) = CostComponent_Linear( sparse([],[],[],n_x,1,0) , cu , sparse([],[],[],1,1,0) , stateDefObject );
+costComponentArray(2,1) = CostComponent_PerSubSystem( costComponentArray_comfort , stateDefObject );
+
 
 
 % Then the cost components should be wrappen together into a "Cost
@@ -433,7 +454,7 @@ costDefObject = CostDef( stateDefObject , costComponents_num , costComponents_la
 %% PUT TOGETHER THE RETURN VARIABLES
 returnX0                    = x0;
 returnConstraintParams      = constraintsByHand;
-returnCostParams            = costsByHand;
+returnCostDefObject         = costDefObject;
 
 % These are some placeholders that were not yet necessary
 returnV                     = [];

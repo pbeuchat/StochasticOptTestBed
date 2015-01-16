@@ -13,7 +13,7 @@ function returnIsValid = checkValidity(obj)
     % .building
     % .costParams
     % .constraintParams
-    if ( isempty(obj.building) || isempty(obj.costParams) || isempty(obj.constraintParams) )
+    if ( isempty(obj.building) || isempty(obj.costDef) || isempty(obj.constraintParams) )
        disp( ' ... ERROR: The private properties of the instantiated object of class "Building_ModelCostConstraints" are not all filled in' );
        error(bbConstants.errorMsg);
     end

@@ -81,7 +81,7 @@ sysOptions.discretisationMethod         = 'default';  % 'default','euler','expm'
 %% SPECIFY THE TIME HORIZON FOR WHICH TO RUN THE SIMULATIONS
 
 timeStart       = 1;
-timeHorizon     = 24*4*10;% (24*4) * 4;
+timeHorizon     = 12;%24*4*0.25;% (24*4) * 4;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
@@ -111,7 +111,7 @@ flag_returnObjectsToWorkspace = false;        % "true" or "false"
 % completely, or if the used only wishes to see certain catagories or plots
 
 flag_plotResults                        = true;
-flag_plotResultsPerController           = false;
+flag_plotResultsPerController           = true;
 flag_plotResultsControllerComparison    = false;
 
 
@@ -203,60 +203,60 @@ numCntr = 0;
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
-cntrSpecs{numCntr}.legend           = 'Constant Local';
-cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
-cntrSpecs{numCntr}.modelFree        = true;
-cntrSpecs{numCntr}.trueModelBased   = [];
-cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
-cntrSpecs{numCntr}.classNameGlobal  = [];
-cntrSpecs{numCntr}.globalInit       = false;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
-thisVararginLocal                   = 0;        % This is the constant control action that will be applied
-cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-cntrSpecs{numCntr}.vararginGlobal   = [];
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
+% cntrSpecs{numCntr}.legend           = 'Constant Local';
+% cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = [];
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
+% cntrSpecs{numCntr}.classNameGlobal  = [];
+% cntrSpecs{numCntr}.globalInit       = false;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
+% thisVararginLocal                   = 0;        % This is the constant control action that will be applied
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% cntrSpecs{numCntr}.vararginGlobal   = [];
 
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
-cntrSpecs{numCntr}.legend           = 'Constant Local';
-cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
-cntrSpecs{numCntr}.modelFree        = true;
-cntrSpecs{numCntr}.trueModelBased   = [];
-cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
-cntrSpecs{numCntr}.classNameGlobal  = [];
-cntrSpecs{numCntr}.globalInit       = false;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
-thisVararginLocal                   = 10;        % This is the constant control action that will be applied
-cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-cntrSpecs{numCntr}.vararginGlobal   = [];
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
+% cntrSpecs{numCntr}.legend           = 'Constant Local';
+% cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = [];
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
+% cntrSpecs{numCntr}.classNameGlobal  = [];
+% cntrSpecs{numCntr}.globalInit       = false;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
+% thisVararginLocal                   = 10;        % This is the constant control action that will be applied
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% cntrSpecs{numCntr}.vararginGlobal   = [];
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
-cntrSpecs{numCntr}.legend           = 'Constant Local';
-cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
-cntrSpecs{numCntr}.modelFree        = true;
-cntrSpecs{numCntr}.trueModelBased   = [];
-cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
-cntrSpecs{numCntr}.classNameGlobal  = [];
-cntrSpecs{numCntr}.globalInit       = false;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
-thisVararginLocal                   = 20;        % This is the constant control action that will be applied
-cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-cntrSpecs{numCntr}.vararginGlobal   = [];
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
+% cntrSpecs{numCntr}.legend           = 'Constant Local';
+% cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = [];
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
+% cntrSpecs{numCntr}.classNameGlobal  = [];
+% cntrSpecs{numCntr}.globalInit       = false;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
+% thisVararginLocal                   = 20;        % This is the constant control action that will be applied
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% cntrSpecs{numCntr}.vararginGlobal   = [];
 
 
 % % -----------------------------------
@@ -362,6 +362,24 @@ cntrSpecs{numCntr}.vararginGlobal   = [];
 % thisVararginMain                    = 'two';
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginMain;
 
+% -----------------------------------
+% Add a Controller Spec
+numCntr = numCntr + 1;
+% Mandatory Specifications
+cntrSpecs{numCntr}.label            = 'ADP Centralised Linear Sys';
+cntrSpecs{numCntr}.legend           = 'ADP_Cent_LinSys';
+cntrSpecs{numCntr}.modelFree        = false;
+cntrSpecs{numCntr}.trueModelBased   = true;
+cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_LinearDynamics_Local';
+cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_LinearDynamics_Global';
+cntrSpecs{numCntr}.globalInit       = true;
+% Optional Specifications
+cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture for Linear Dynamics';
+thisVararginLocal                   = 'one';
+cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+thisVararginMain                    = 'two';
+cntrSpecs{numCntr}.vararginGlobal   = thisVararginMain;
+
 
 % % -----------------------------------
 % % Add a Controller Spec
@@ -369,11 +387,11 @@ cntrSpecs{numCntr}.vararginGlobal   = [];
 % % Mandatory Specifications
 % cntrSpecs{numCntr}.label            = 'Model Free';
 % cntrSpecs{numCntr}.legend           = 'ModelFree';
-% cntrSpecs{numCntr}.modelFree        = 1;
-% cntrSpecs{numCntr}.trueModelBased   = 0;
-% cntrSpecs{numCntr}.classNameLocal   = str2func( 'Control_ModelFree' );
-% cntrSpecs{numCntr}.classNameGlobal  = str2func( 'Control_ModelFree' );
-% cntrSpecs{numCntr}.globalInit       = 0;
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = false;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ModelFree';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ModelFree';
+% cntrSpecs{numCntr}.globalInit       = false;
 % % Optional Specifications
 % cntrSpecs{numCntr}.description      = 'Model Free Controller';
 % thisVararginLocal                   = 'three';

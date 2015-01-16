@@ -136,8 +136,22 @@ classdef CostComponent_Linear < CostComponent
     
     methods (Static = false , Access = public)
         
+        % Define functions implemented in other files:
+        % -----------------------------------------------
         % FUNCTION: to compute the cost component
         [returnCost , returnCostPerSubSystem] = computeCostComponent( obj , x , u , xi , currentTime );
+        
+        % Define functions directly implemented here:
+        % -----------------------------------------------
+        % FUNCTION: to return the cost coefficients as a struct
+        function returnCoefficients = getCostCoefficients( obj , currentTime )
+            % Return all the coefficients and the calling function will
+            % parse and use them apropriately
+            returnCoefficients.q = obj.q;
+            returnCoefficients.r = obj.r;
+            returnCoefficients.c = obj.c;
+            
+        end
         
     end
     % END OF: "methods (Static = false , Access = public)"

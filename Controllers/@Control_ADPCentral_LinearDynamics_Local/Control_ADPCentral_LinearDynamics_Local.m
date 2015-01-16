@@ -1,4 +1,4 @@
-classdef Control_DiagOnly_Local < Control_LocalController
+classdef Control_ADPCentral_LinearDynamics_Local < Control_LocalController
 % This class runs the local control algorithms
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
@@ -67,7 +67,7 @@ classdef Control_DiagOnly_Local < Control_LocalController
     
     methods
         % This is the "CONSTRUCTOR" method
-        function obj = Control_DiagOnly_Local( input_idnum , inputStateDef , inputConstraintDef , inputGlobalControlObject)
+        function obj = Control_ADPCentral_LinearDynamics_Local( input_idnum , inputStateDef , inputConstraintDef , inputGlobalControlObject)
             % Allow the Constructor method to pass through when called with
             % no nput arguments (required for the "empty" object array
             % creator)
