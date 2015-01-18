@@ -199,8 +199,8 @@ if strcmp( discretisationMethod , 'euler' )
     secondsPerHour = 60 * 60;
     Ts_seconds = Ts_hrs * secondsPerHour;
     if Ts_seconds > h0
-        disp( ' ... NOTE: the discretisation time specified is larger than the maximum');
-        disp( '           discretisation time that will maintain stability of forward euler discretisation');
+        disp( ' ... NOTE: the discretisation time specified is larger than the maximum discretisation time');
+        disp( '           that would maintain stability of forward euler discretisation');
     end
     
     B.building_model.setDiscretizationStep(0.5*h0/secondsPerHour);

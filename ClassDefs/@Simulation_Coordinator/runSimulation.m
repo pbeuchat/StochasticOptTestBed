@@ -51,9 +51,10 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
     timeStartIndex  = obj.simTimeIndex_start;
     timeEndIndex    = obj.simTimeIndex_end;
     timeDuration    = timeEndIndex - timeStartIndex;
+    timeHoursPerInc = obj.progModelEng.t_perInc_hrs;
 
     % Pre-allocate a "thisTime" struct
-    this_time = struct( 'index' , 0 , 'abs_hours' , 0 , 'abs_increment' , 0.25 );
+    this_time = struct( 'index' , 0 , 'abs_hours' , 0 , 'abs_increment_hrs' , timeHoursPerInc );
 
     %% PRE-ALLOCATE VARIABLE FOR STORING THE RESULTS
     % Initiliase variables for storing the State, Input and Disturbance
@@ -63,7 +64,7 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
     result_xi = zeros( obj.stateDef.n_xi , timeDuration );
     % Initiliase a variable for storing the per-Stage-Cost
     result_cost = zeros( numCostValues , timeDuration + 1);
-    result_cost_per_ss = zeros( numCostValues , obj.stateDef.n_ss , timeDuration + 1);
+    result_cost_per_ss = zeros( numCostValues , obj.stateDef.n_ss_original , timeDuration + 1);
     
     result_controlComputationTime = zeros( 1 , timeDuration );
     result_controlComputationTime_per_ss = zeros( obj.stateDef.n_ss , timeDuration );
@@ -129,7 +130,7 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
         
         % Get the time step for this itertion
         this_time.index      = timeStartIndex + (iTime - 1);
-        this_time.abs_hours  = this_time.index * 0.25;
+        this_time.abs_hours  = double(this_time.index) * timeHoursPerInc;
         
         result_time(1,iTime) = this_time.index;
         result_time(2,iTime) = this_time.abs_hours;
@@ -208,7 +209,7 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
     
     % Store the terminal time
     result_time(1,timeDuration+1) = timeStartIndex + timeDuration;
-    result_time(2,timeDuration+1) = (timeStartIndex + timeDuration) * 0.25;
+    result_time(2,timeDuration+1) = (timeStartIndex + timeDuration) * timeHoursPerInc;
     
     
     %% ----------------------------------------------------------------- %%

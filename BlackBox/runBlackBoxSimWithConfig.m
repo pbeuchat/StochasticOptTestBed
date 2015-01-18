@@ -52,6 +52,7 @@ flag_returnObjectsToWorkspace       = inputBlackBoxInstructions.flag_returnObjec
 flag_plotResults                        = inputBlackBoxInstructions.flag_plotResults;
 flag_plotResultsPerController           = inputBlackBoxInstructions.flag_plotResultsPerController;
 flag_plotResultsControllerComparison    = inputBlackBoxInstructions.flag_plotResultsControllerComparison;
+plotResults_unitsForTimeAxis            = inputBlackBoxInstructions.plotResults_unitsForTimeAxis;
 
 
 %% --------------------------------------------------------------------- %%
@@ -426,12 +427,17 @@ if flag_plotResults
     disp('******************************************************************');
     disp(' Black-Box: Plotting the simulation results');
 
+    
+    % BUILD A STRUCT WITH THE SELECTED OPTIONS FOR THE PLOTTING
+    clear plotOptions;
+    plotOptions.unitsForTimeAxis = plotResults_unitsForTimeAxis;
+    
     % PLOT THE PER-CONTROLLER RESULTS
     if flag_plotResultsPerController
         % Iterated through the controller specs
         for iController = 1:numControlTechniques
             % Visualise the results for each controller
-            Visualisation.visualise_singleController( controllerSpecArray{iController,1} , allResults{iController,1} , allDataFileNames{iController,1} );
+            Visualisation.visualise_singleController( controllerSpecArray{iController,1} , allResults{iController,1} , allDataFileNames{iController,1} , plotOptions );
         end
     end
     % END OF: "if flag_plotResultsPerController"
@@ -442,7 +448,7 @@ if flag_plotResults
         % technique was simulated...
         if numControlTechniques > 1
             % Visualise the comparative results for ALL controller
-            Visualisation.visualise_singleController( controllerSpecArray{iController,1} , allResults{iController,1} , allDataFileNames{iController,1} );
+            Visualisation.visualise_singleController( controllerSpecArray{iController,1} , allResults{iController,1} , allDataFileNames{iController,1} , plotOptions );
         end
         
     end

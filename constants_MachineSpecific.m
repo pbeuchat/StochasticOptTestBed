@@ -45,14 +45,24 @@ classdef constants_MachineSpecific
             %% ANY OPTIMISERS REQUIRED FOR CONTROLLER COMPUTATIONS
             % Example: addpath(genpath('/Users/pbeuchat/Documents/MATLAB/tbxmanager/toolboxes/brcm/v1.01'));
 
+            % ----------------------------------------------------------- %
+            % FOR PAUL BEUCHAT'S iMac Retina 5K
             %addpath('/Users/pbeuchat/Documents/MATLAB/tbxmanager/');
             %tbxmanager restorepath;
 
-            addpath('/Library/gurobi600/mac64/matlab');
-            setenv GRB_LICENSE_FILE '/Users/pbeuchat/opt/gurobi/gurobi.lic'
+            %addpath('/Library/gurobi600/mac64/matlab');
+            %setenv GRB_LICENSE_FILE '/Users/pbeuchat/opt/gurobi/gurobi.lic'
 
-            addpath(genpath('/Users/pbeuchat/opt/mosek/7/'));
-            setenv MOSEKLM_LICENSE_FILE '/Users/pbeuchat/opt/mosek/mosek.lic'
+            %addpath(genpath('/Users/pbeuchat/opt/mosek/7/'));
+            %setenv MOSEKLM_LICENSE_FILE '/Users/pbeuchat/opt/mosek/mosek.lic'
+            
+            % ----------------------------------------------------------- %
+            % FOR PAUL BEUCHAT'S Mac Book Pro
+            %addpath('/Library/gurobi562/mac64/matlab');
+            %setenv GRB_LICENSE_FILE '/Users/pbeuchat/Documents/MATLAB/Gurobi/gurobi.lic'
+            
+            addpath(genpath('/Library/mosek/7/'));
+            setenv MOSEKLM_LICENSE_FILE '/Users/pbeuchat/Documents/MATLAB/mosek/mosek.lic'
 
             %addpath(genpath('/Users/pbeuchat/Documents/MATLAB/sdpt3'));
         end

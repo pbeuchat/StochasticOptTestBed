@@ -96,7 +96,7 @@ classdef Visualisation < handle
         
     methods (Static = true , Access = public)
         
-        [ ] = visualise_singleController( inputControllerSpecs , inputDataStruct , inputPropertyNames );
+        [ ] = visualise_singleController( inputControllerSpecs , inputDataStruct , inputPropertyNames , plotOptions );
         
         [ ] = visualise_multipleControllers( inputControllerSpecs , inputDataStruct , inputPropertyNames );
         

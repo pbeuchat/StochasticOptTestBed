@@ -22,12 +22,15 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     %Bxu     = myBuilding.building_model.discrete_time_model.Bxu;
     %Bxiu    = myBuilding.building_model.discrete_time_model.Bvu;
     
-    Q       = myCosts.Q;
-    R       = myCosts.R;
-    S       = myCosts.S;
-    q       = myCosts.q;
-    r       = myCosts.r;
-    c       = myCosts.c;
+    % Get the coefficients for a quadratic cost
+    [costCoeff , flag_allCostComponentsIncluded] = getCostCoefficients_uptoQuadratic( myCosts , currentTime );
+
+    Q       = costCoeff.Q;
+    R       = costCoeff.R;
+    S       = costCoeff.S;
+    q       = costCoeff.q;
+    r       = costCoeff.r;
+    c       = costCoeff.c;
     
     
     n_x  = obj.stateDef.n_x;

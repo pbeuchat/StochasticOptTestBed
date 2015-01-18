@@ -41,6 +41,14 @@ classdef CostDef < handle
         % The array of "Cost Components"
         costComponentsArray@CostComponent;
         
+        % The number of sub-systems defined directly from the "stateDef"
+        % odject
+        % It is IMPORTANT to use this property instead of
+        % "obj.stateDef.n_ss" because the "stateDef" object is common
+        % across many classes and may change during the execution of the
+        % code
+        n_ss@uint32;
+        
     end
     
     
@@ -113,6 +121,8 @@ classdef CostDef < handle
             obj.subCosts_label          = inputSubCosts_label;
             obj.costComponentsArray     = inputCostComponentsArray;
             
+            obj.n_ss                    = inputStateDef.n_ss;
+            
         end
         % END OF: "function [..] = ProgressModelEngine(...)"
         
@@ -142,12 +152,14 @@ classdef CostDef < handle
             % Initialise return vector for the "system-wide" costs
             returnCost = zeros( obj.subCosts_num+1 , 1 );
             % Initialise return cell array for the "per-sub-system" costs
-            returnCostPerSubSystem = cell( obj.subCosts_num+1 , 1 );
+            %returnCostPerSubSystem = cell( obj.subCosts_num+1 , 1 );
+            returnCostPerSubSystem = zeros( obj.subCosts_num+1 , obj.n_ss );
 
             % Iterate through the number of Cost Components
             for iCost = 1 : obj.subCosts_num
                 % Compute the cost for this component
-                [ returnCost( iCost+1 , 1 ) , returnCostPerSubSystem{ iCost+1 , 1 } ] = computeCostComponent( obj.costComponentsArray(iCost,1) , x , u , xi , currentTime );
+                [ returnCost( iCost+1 , 1 ) , thisCostPerSubSystem ] = computeCostComponent( obj.costComponentsArray(iCost,1) , x , u , xi , currentTime );
+                returnCostPerSubSystem( iCost+1 , : ) = thisCostPerSubSystem';
             end
             % Put in the total as the sum of the components
             returnCost(1,1) = sum( returnCost(2:obj.subCosts_num+1,1) );
@@ -156,10 +168,11 @@ classdef CostDef < handle
             % because it requires the assumption that every Cost Component
             % (e.g. energy and comfort) returns a "CostPerSubSystem" vector
             % of the same length
-            returnCostPerSubSystem{1,1} = sparse([],[],[], length(returnCostPerSubSystem{2,1}) , 1 , 0 );
-            for iCost = 1 : obj.subCosts_num
-                returnCostPerSubSystem{1,1} = returnCostPerSubSystem{1,1} + returnCostPerSubSystem{iCost+1,1};
-            end
+            returnCostPerSubSystem(1,:) = sum( returnCostPerSubSystem( 2:(obj.subCosts_num+1) , : ) , 1 );
+            %returnCostPerSubSystem{1,1} = sparse([],[],[], length(returnCostPerSubSystem{2,1}) , 1 , 0 );
+            %for iCost = 1 : obj.subCosts_num
+            %    returnCostPerSubSystem{1,1} = returnCostPerSubSystem{1,1} + returnCostPerSubSystem{iCost+1,1};
+            %end
 
         end
         % END OF: "function [...] = computeCost(...)"

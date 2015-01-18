@@ -59,6 +59,7 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     markerIndex             = [];
     
     % Legend details
+    legendOnOff             = [];
     legendStrings           = [];
     legendFontSize          = [];
     legendFontWeight        = [];
@@ -82,13 +83,13 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     % Grid details
 	xGridOnOff              = [];
 	yGridOnOff              = [];
-	xGridStyle              = [];
-	yGridStyle              = [];
+    gridColour              = [];
+	gridStyle               = [];
 	xGridMinorOnOff         = [];
 	yGridMinorOnOff         = [];
-	xGridMinorStyle         = [];
-	yGridMinorStyle         = [];
-    
+    gridMinorColour         = [];
+	gridMinorStyle          = [];
+	
     %% Specify also in one place the defaults for each of the above
     % Line defaults
     default_lineColourIndex = ones( numLinesToPlot , 1 );
@@ -96,6 +97,7 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     default_markerIndex = zeros( numLinesToPlot , 1 );
     
     % Legend defaults
+    default_legendOnOff             = 'off';
     default_legendStrings           = [];
     default_legendFontSize          = 10;
     default_legendFontWeight        = 'normal';
@@ -119,13 +121,13 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     % Grid defaults
 	default_xGridOnOff              = 'on';
 	default_yGridOnOff              = 'on';
-	default_xGridStyle              = '--';
-	default_yGridStyle              = '--';
+    default_gridColor               = 'black';
+	default_gridStyle               = '--';
 	default_xGridMinorOnOff         = 'off';
 	default_yGridMinorOnOff         = 'off';
-	default_xGridMinorStyle         = ':';
-	default_yGridMinorStyle         = ':';
-    
+    default_gridMinorColor          = 'black';
+	default_gridMinorStyle          = ':';
+	
     %% Now parse through the "VARiable ARGuments IN" cell array (i.e.
     % "varargin")
     if (~isempty(varargin))
@@ -174,22 +176,36 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                         disp(' ... ERROR: the "markerIndex" option input was not a compatible size, using the default instead');
                         markerIndex = [];
                     end
+                 
+                    
+                % ------------------------------- %
+                case 'legendonoff'
+                    legendOnOff = inputSettings{iTemp,2};
+                    % If is is not a member then ignore it
+                    if ~( ischar(legendOnOff) && ismember( lower(legendOnOff) , Visualisation.onOffOptions ) )
+                        disp(' ... ERROR: the "legendOnOff" option input was not valid, using default instead');
+                        legendOnOff = [];
+                    end
                     
                     
                 % ------------------------------- %
                 case 'legendstrings'
                     legendStrings = inputSettings{iTemp,2};
-                    % If is is not a cell array of strings then ignore
-                    if ~iscellstr( legendStrings )
-                        disp(' ... ERROR: the "legendStrings" option input was not a cell array of strings and can not be used');
-                        disp('            No legend will be displayed');
-                        legendStrings = [];
-                    end
-                    % Check it is the right size
-                    if ~( length(legendStrings) == numLinesToPlot && isvector(legendStrings) )
-                        disp(' ... ERROR: the "legendStrings" option input was not a compatible size');
-                        disp('            No legend will be displayed');
-                        legendStrings = [];
+                    % If it is empty then there is nothing to check and a
+                    % legend will not be plotted anyway
+                    if ~isempty(legendStrings)
+                        % If is is not a cell array of strings then ignore
+                        if ~iscellstr( legendStrings )
+                            disp(' ... ERROR: the "legendStrings" option input was not a cell array of strings and can not be used');
+                            disp('            No legend will be displayed');
+                            legendStrings = [];
+                        end
+                        % Check it is the right size
+                        if ~( length(legendStrings) == numLinesToPlot && isvector(legendStrings) )
+                            disp(' ... ERROR: the "legendStrings" option input was not a compatible size');
+                            disp('            No legend will be displayed');
+                            legendStrings = [];
+                        end
                     end
                     
                     
@@ -270,11 +286,16 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                     % If is is not a memeber or a 3-by-1 double, then
                     % ignore it
                     titleColour = inputSettings{iTemp,2};
-                    if ~(      ismember( lower(titleColour) , Visualisation.colourOptions ) ...
-                          || ( isvector(titleColour) && ismatrix(titleColour) && length(titleColour) == 3 && isfloat(titleColour) ) ...
-                       )
-                        disp(' ... ERROR: the "titleColour" option input was not valid, using default instead');
-                        titleColour = [];
+                    if ischar(titleColour)
+                        if ~ismember( lower(titleColour) , Visualisation.colourOptions )
+                            disp(' ... ERROR: the "titleColour" option input was not valid, using default instead');
+                            titleColour = [];
+                        end
+                    else
+                        if ~( isvector(titleColour) && ismatrix(titleColour) && length(titleColour) == 3 && isfloat(titleColour) )
+                            disp(' ... ERROR: the "titleColour" option input was not valid, using default instead');
+                            titleColour = [];
+                        end
                     end
                     
                     
@@ -304,11 +325,16 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                     % If is is not a memeber or a 3-by-1 double, then
                     % ignore it
                     xLabelColour = inputSettings{iTemp,2};
-                    if ~(       ismember( lower(xLabelColour) , Visualisation.colourOptions ) ...
-                          ||  ( isvector(xLabelColour) && ismatrix(xLabelColour) && length(xLabelColour) == 3 && isfloat(xLabelColour) ) ...
-                       )
-                        disp(' ... ERROR: the "xLabelColour" option input was not valid, using default instead');
-                        xLabelColour = [];
+                    if ischar(xLabelColour)
+                        if ~ismember( lower(xLabelColour) , Visualisation.colourOptions )
+                            disp(' ... ERROR: the "xLabelColour" option input was not valid, using default instead');
+                            xLabelColour = [];
+                        end
+                    else
+                        if ~( isvector(xLabelColour) && ismatrix(xLabelColour) && length(xLabelColour) == 3 && isfloat(xLabelColour) )
+                            disp(' ... ERROR: the "xLabelColour" option input was not valid, using default instead');
+                            xLabelColour = [];
+                        end
                     end
                     
                     
@@ -317,11 +343,16 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                     % If is is not a memeber or a 3-by-1 double, then
                     % ignore it
                     yLabelColour = inputSettings{iTemp,2};
-                    if ~(       ismember( lower(yLabelColour) , Visualisation.colourOptions ) ...
-                          ||  ( isvector(yLabelColour) && ismatrix(yLabelColour) && length(yLabelColour) == 3 && isfloat(yLabelColour) ) ...
-                       )
-                        disp(' ... ERROR: the "yLabelColour" option input was not valid, using default instead');
-                        yLabelColour = [];
+                    if ischar(yLabelColour)
+                        if ~ismember( lower(yLabelColour) , Visualisation.colourOptions )
+                            disp(' ... ERROR: the "yLabelColour" option input was not valid, using default instead');
+                            yLabelColour = [];
+                        end
+                    else
+                        if ~( isvector(yLabelColour) && ismatrix(yLabelColour) && length(yLabelColour) == 3 && isfloat(yLabelColour) )
+                            disp(' ... ERROR: the "yLabelColour" option input was not valid, using default instead');
+                            yLabelColour = [];
+                        end
                     end
                     
                     
@@ -366,35 +397,82 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                     
                     
                 % ------------------------------- %
-                case 'xgridstyle'
-                    
-                    
-                    
-                % ------------------------------- %
-                case 'ygridstyle'
-                    
-                    
-                    
-                % ------------------------------- %
-                case 'xgridminor'
-                    
-                    
-                    
-                % ------------------------------- %
-                case 'ygridminor'
-                    
-                    
-                    
-                % ------------------------------- %
-                case 'xgridminorstyle'
-                    
+                case 'gridcolour'
+                    % If is is not a memeber or a 3-by-1 double, then
+                    % ignore it
+                    gridColour = inputSettings{iTemp,2};
+                    if ischar(gridColour)
+                        if ~ ismember( lower(gridColour) , Visualisation.colourOptions )
+                            disp(' ... ERROR: the "gridColor" option input was not valid, using default instead');
+                            gridColour = [];
+                        end
+                    else
+                        if ~( isvector(gridColour) && ismatrix(gridColour) && length(gridColour) == 3 && isfloat(gridColour) )
+                            disp(' ... ERROR: the "gridColour" option input was not valid, using default instead');
+                            gridColour = [];
+                        end
+                    end
                     
                     
                 % ------------------------------- %
-                case 'ygridminorstyle'
+                case 'gridstyle'
+                    gridStyle = inputSettings{iTemp,2};
+                    % If is is not a member then ignore it
+                    if ~( ischar(gridStyle) && ismember( gridStyle , Visualisation.gridStyleOptions ) )
+                        disp(' ... ERROR: the "gridStyle" option input was not valid, using default instead');
+                        gridStyle = [];
+                    end
                     
                     
-            
+                % ------------------------------- %
+                case 'xgridminoronoff'
+                    xGridMinorOnOff = inputSettings{iTemp,2};
+                    % If is is not a member then ignore it
+                    if ~( ischar(xGridMinorOnOff) && ismember( lower(xGridMinorOnOff) , Visualisation.onOffOptions ) )
+                        disp(' ... ERROR: the "xGridMinorOnOff" option input was not valid, using default instead');
+                        xGridMinorOnOff = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'ygridminoronoff'
+                    yGridMinorOnOff = inputSettings{iTemp,2};
+                    % If is is not a member then ignore it
+                    if ~( ischar(yGridMinorOnOff) && ismember( lower(yGridMinorOnOff) , Visualisation.onOffOptions ) )
+                        disp(' ... ERROR: the "yGridMinorOnOff" option input was not valid, using default instead');
+                        yGridMinorOnOff = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'gridminorcolour'
+                    % If is is not a memeber or a 3-by-1 double, then
+                    % ignore it
+                    gridMinorColour = inputSettings{iTemp,2};
+                    if ischar(gridMinorColour)
+                        if ~ismember( lower(gridMinorColour) , Visualisation.colourOptions )
+                            disp(' ... ERROR: the "gridColor" option input was not valid, using default instead');
+                            gridMinorColour = [];
+                        end
+                    else
+                        if ~( isvector(gridMinorColour) && ismatrix(gridMinorColour) && length(gridMinorColour) == 3 && isfloat(gridMinorColour) )
+                            disp(' ... ERROR: the "gridColor" option input was not valid, using default instead');
+                            gridMinorColour = [];
+                        end
+                    end
+
+                    
+                
+                % ------------------------------- %
+                case 'gridminorstyle'
+                    gridMinorStyle = inputSettings{iTemp,2};
+                    % If is is not a member then ignore it
+                    if ~( ischar(gridMinorStyle) && ismember( gridMinorStyle , Visualisation.gridStyleOptions ) )
+                        disp(' ... ERROR: the "gridMinorStyle" option input was not valid, using default instead');
+                        gridMinorStyle = [];
+                    end
+                    
+                    
             otherwise         
                 disp([' ... ERROR: Invalid optional argument, "',inputSettings{iTemp},'"' ]);
                 disp( '            This argument is skipped and the default used instead' );  
@@ -415,6 +493,9 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     end
     if isempty(markerIndex)
         markerIndex = default_markerIndex;
+    end
+    if isempty(legendOnOff)
+        legendOnOff = default_legendOnOff;
     end
     if isempty(legendStrings)
         legendStrings = default_legendStrings;
@@ -467,6 +548,24 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     if isempty(yGridOnOff)
         yGridOnOff = default_yGridOnOff;
     end
+    if isempty(gridColour)
+        gridColour = default_gridColor;
+    end
+    if isempty(gridStyle)
+        gridStyle = default_gridStyle;
+    end
+    if isempty(xGridMinorOnOff)
+        xGridMinorOnOff = default_xGridMinorOnOff;
+    end
+    if isempty(yGridMinorOnOff)
+        yGridMinorOnOff = default_yGridMinorOnOff;
+    end
+    if isempty(gridMinorColour)
+        gridMinorColour = default_gridMinorColor;
+    end
+    if isempty(gridMinorStyle)
+        gridMinorStyle = default_gridMinorStyle;
+    end
     
     
     %% ----------------------------------------------------------------- %%
@@ -512,7 +611,26 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     set(hAxes,'XGrid',xGridOnOff);
     set(hAxes,'YGrid',yGridOnOff);
     
-    set(hAxes,'GridColor',[0.5,0.5,0.5]);
+    if isprop(hAxes,'GridColor')
+        set(hAxes,'GridColor',gridColour);
+    else
+        set(hAxes,'XColor',gridColour);
+        set(hAxes,'YColor',gridColour);
+    end
+    
+    set(hAxes,'GridLineStyle',gridStyle);
+    
+    set(hAxes,'XMinorGrid',xGridMinorOnOff);
+    set(hAxes,'YMinorGrid',yGridMinorOnOff);
+    
+    if isprop(hAxes,'MinorGridColor')
+        set(hAxes,'MinorGridColor',gridMinorColour);
+    else
+        set(hAxes,'XColor',gridMinorColour);
+        set(hAxes,'YColor',gridMinorColour);
+    end
+    
+    set(hAxes,'MinorGridLineStyle',gridMinorStyle);
     
     
     
@@ -521,7 +639,7 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     %else                        set(hAxFObj,'XTickLabel','');       end;
     
     % LEGEND
-    if ~isempty(legendStrings)
+    if ~isempty(legendStrings) && strcmp(legendOnOff,'on')
         hLegend1 = legend(hAxes, hLine, legendStrings, 'Location', legendLocation);
         
         set(hLegend1,'Interpreter',legendInterpreter);

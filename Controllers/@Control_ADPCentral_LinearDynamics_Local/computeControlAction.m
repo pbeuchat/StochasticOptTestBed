@@ -34,6 +34,8 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     r       = costCoeff.r;
     c       = costCoeff.c;
     
+    r = 0*r;
+    
     % Display an error message if all Cost Components are not included
     if not(flag_allCostComponentsIncluded)
         disp( ' ... ERROR: not all of the cost components could be retireived');

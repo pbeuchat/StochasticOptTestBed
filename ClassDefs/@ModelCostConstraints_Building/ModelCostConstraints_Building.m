@@ -41,6 +41,9 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         % A flag showing if the model is valid or not
         isValid@logical = false;
         
+        % The Absolute Time elapsed per time step
+        t_perInc_hrs@double;
+        
         % PROPERTIES REQUIRED FOR BUILDINGS
         % These sort of have to be public
         % Building Model
@@ -142,6 +145,9 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
                 % Check that the model is valid, and store the result
                 returnIsValid   = checkValidity(obj);
                 obj.isValid     = returnIsValid;
+                
+                % Store the time increment elaspsed per discrete time step
+                obj.t_perInc_hrs = inputBuilding.building.building_model.Ts_hrs;
                 
                 
                 % TO SPEED UP THE "performStateUpdate" FUNCTION

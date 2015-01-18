@@ -81,7 +81,7 @@ sysOptions.discretisationMethod         = 'default';  % 'default','euler','expm'
 %% SPECIFY THE TIME HORIZON FOR WHICH TO RUN THE SIMULATIONS
 
 timeStart       = 1;
-timeHorizon     = 12;%24*4*0.25;% (24*4) * 4;
+timeHorizon     = 24;%24*4*0.25;% (24*4) * 4;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
@@ -114,6 +114,7 @@ flag_plotResults                        = true;
 flag_plotResultsPerController           = true;
 flag_plotResultsControllerComparison    = false;
 
+plotResults_unitsForTimeAxis            = 'hours';        % "steps"  or "days" or "hours" or "minutes" or "seconds"
 
 
 
@@ -375,10 +376,15 @@ cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_LinearDynamics_Global'
 cntrSpecs{numCntr}.globalInit       = true;
 % Optional Specifications
 cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture for Linear Dynamics';
-thisVararginLocal                   = 'one';
+
+clear thisVararginLocal;
+thisVararginLocal.predHorizon               = 12;
+thisVararginLocal.computeEveryNumStep       = 6;
+thisVararginLocal.ADPMethos                 = 'samplingWithLeastSquaresFit';       % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+
 cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-thisVararginMain                    = 'two';
-cntrSpecs{numCntr}.vararginGlobal   = thisVararginMain;
+thisVararginGlobal                  = 'two';
+cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 % % -----------------------------------
@@ -431,6 +437,7 @@ blackBoxInstructions.flag_returnObjectsToWorkspace     = flag_returnObjectsToWor
 blackBoxInstructions.flag_plotResults                        = flag_plotResults;
 blackBoxInstructions.flag_plotResultsPerController           = flag_plotResultsPerController;
 blackBoxInstructions.flag_plotResultsControllerComparison    = flag_plotResultsControllerComparison;
+blackBoxInstructions.plotResults_unitsForTimeAxis            = plotResults_unitsForTimeAxis;
 
 % Initialise some variables to contain the results
 [allResults, object_system, object_disturbance]  = runBlackBoxSimWithConfig(blackBoxInstructions);
