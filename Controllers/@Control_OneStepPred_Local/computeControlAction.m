@@ -32,6 +32,7 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     r       = costCoeff.r;
     c       = costCoeff.c;
     
+    r = 0 * r;
     
     n_x  = obj.stateDef.n_x;
     n_u  = obj.stateDef.n_u;
@@ -52,26 +53,27 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     Exi     = predictions.mean(thisRange,1);
     Exixi   = predictions.cov(thisRange,thisRange);
     
-    Exixi=Exi*Exi';
+    %Exixi=Exi*Exi';
     
     if isempty(obj.optYalmip)
     
-        % For the comfort score
-        num_x_to_control = 42;
-        comfortRef = 22.5*[ones(num_x_to_control,1) ; zeros(n_x-num_x_to_control,1) ];
-        xref = comfortRef;
-        %scalingOfComfortRelativeToEnergy = 100000;
-        %thisI = blkdiag(speye(num_x_to_control),speye(n_x-num_x_to_control));
-
-
-        % Now formulate the optimisation problem to solve for u
-        %toControl = ~[1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
-        toControl = [ ones(7,1) ; zeros(35,1) ];
-        %num_x_to_cotnrol = length(toControl);
-        %thisI = diag(toControl);
-
-        %x_masked = toControl .* x;
-        xref = toControl .* xref;
+%         % For the comfort score
+%         num_x_to_control = 42;
+%         comfortRef = 22.5*[ones(num_x_to_control,1) ; zeros(n_x-num_x_to_control,1) ];
+%         xref = comfortRef;
+%         
+%         %scalingOfComfortRelativeToEnergy = 100000;
+%         %thisI = blkdiag(speye(num_x_to_control),speye(n_x-num_x_to_control));
+% 
+% 
+%         % Now formulate the optimisation problem to solve for u
+%         %toControl = ~[1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
+%         toControl = [ ones(7,1) ; zeros(35,1) ];
+%         %num_x_to_cotnrol = length(toControl);
+%         %thisI = diag(toControl);
+% 
+%         %x_masked = toControl .* x;
+%         xref = toControl .* xref;
 
         % Define the yalmip variable
         u_opt = sdpvar( double(n_u) , 1 , 'full' );
@@ -79,11 +81,21 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
         % Define the yalmip variable for the optimizer
         x_opt = sdpvar( double(n_x) , 1 , 'full' );
         
+        % Define the yalmip variable for the optimizer
+        Exi_opt = sdpvar( double(n_xi) , 1 , 'full' );
+        
         % Compute the state update equation
-        xplus_opt = A*x_opt + Bu * u_opt + Bxi * Exi;
+        xplus_opt = A*x_opt + Bu * u_opt + Bxi * Exi_opt;
 
         % Compute the objective function
-        thisObj_opt = (xplus_opt.*toControl - xref)' * (xplus_opt.*toControl - xref);
+        %thisObj_opt = (xplus_opt.*toControl - xref)' * (xplus_opt.*toControl - xref);
+        thisObj_opt = xplus_opt' * Q * xplus_opt + q' * xplus_opt + c + r' * u_opt;
+        
+        
+        % THIS IS FUNDAMENTALLY WRONG!!! BECAUSE IT IS NOT USING THE NEW
+        % Exi information at each time step!!!!!!!!!!!!
+        
+        
         
         % Copmute the Constraints
         thisCons_opt = ( myConstraints.u_all_A * u_opt <= myConstraints.u_all_b );
@@ -94,7 +106,7 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
         thisOptions.verbose  = false;
         
         % Create the "optimised" Yalmip function
-        obj.optYalmip = optimizer(thisCons_opt,thisObj_opt,thisOptions,x_opt,u_opt);
+        obj.optYalmip = optimizer(thisCons_opt,thisObj_opt,thisOptions,[x_opt;Exi_opt],u_opt);
 
         
     end
@@ -105,7 +117,7 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     % Call the solver via Yalmip
     
     % Using the "optimised" Yalmip object to speed up the code
-    u = obj.optYalmip{x};
+    u = obj.optYalmip{[x;Exi]};
 
     % SYNTAX: diagnostics = solvesdp(Constraints,Objective,options)
     %diagnostics = solvesdp(thisCons,thisObj,thisOptions);

@@ -21,7 +21,7 @@ unitsForTimeAxis = plotOptions.unitsForTimeAxis;
 %% --------------------------------------------------------------------- %%
 %% PLOT THE STATES
 % Get the data
-data            = inputDataStruct.x.data(1:42,:);
+data            = inputDataStruct.x.data(1:7,:);
 dimPerTime      = inputDataStruct.x.dimPerTime;
 labelPerDim     = inputDataStruct.x.labelPerDim;
 
@@ -54,7 +54,7 @@ thisPlotOptions = { 'LineColourIndex'   ,  1:numLinesToPlot                  ;..
                     'LineWidth'         ,  Visualisation.lineWidthDefault    ;...
                     %'maRkerIndex'       ,  ones(numLinesToPlot,1)            ;...
                     'legendOnOff'       ,  'on'                              ;...    % OPTIONS: 'off', 'on'
-                    'legendStrings'     ,  labelPerDim{1}(:)                 ;...
+                    'legendStrings'     ,  labelPerDim{1}(1:7)                 ;...
                     'legendFontSize'    ,  12                                ;...
                     'legendFontWeight'  ,  'bold'                            ;...    % OPTIONS: 'normal', 'bold'
                     'legendLocation'    ,  'eastOutside'                     ;...    % OPTIONS: see below

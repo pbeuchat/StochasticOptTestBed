@@ -83,6 +83,11 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
     flag_getPredictions = ( sum(statsRequired_mask) > 0 );
     
     
+    % For the deterministic simulation we want to pull the mean
+    statsRequiredDeterministic = {'mean'};
+    statsRequiredDeterministic_mask = bbConstants.stats_createMaskFromCellArray( statsRequiredDeterministic );
+    
+    
     %% GET THE PREDICITON HORIZON
     % @TODO - this is a HORRIBLE hack because it should be specified by the
     % control method
@@ -136,10 +141,15 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
         result_time(2,iTime) = this_time.abs_hours;
         
         % Get the disturbance sample for this time
-        if obj.flag_precomputedDisturbancesAvailable
-            this_xi = obj.precomputedDisturbances(:,this_time.index);
+        if ~obj.flag_deterministic
+            if obj.flag_precomputedDisturbancesAvailable
+                this_xi = obj.precomputedDisturbances(:,this_time.index);
+            else
+                this_xi = getDisturbanceSampleForOneTimeStep( obj.distCoord , this_time.index );
+            end
         else
-            this_xi = getDisturbanceSampleForOneTimeStep( obj.distCoord , this_time.index );
+            this_prediction_forDeterminisitic = getPredictions( obj.distCoord , statsRequiredDeterministic_mask , this_time.index , 1 );
+            this_xi = this_prediction_forDeterminisitic.mean;
         end
         
         % Get the disturbance statisitcs for this time
@@ -148,6 +158,7 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
         else
             this_prediction = [];
         end
+        
         
         % Pass either "this" or the "prev" "xi" based on the flag
         if flag_current_xi_isAvailable

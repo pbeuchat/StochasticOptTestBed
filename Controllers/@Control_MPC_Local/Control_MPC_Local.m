@@ -1,4 +1,4 @@
-classdef Control_ADPCentral_Local < Control_LocalController
+classdef Control_MPC_Local < Control_LocalController
 % This class runs the local control algorithms
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
@@ -12,7 +12,7 @@ classdef Control_ADPCentral_Local < Control_LocalController
         % Number of properties required for object instantation
         n_properties@uint64 = uint64(2);
         % Name of this class for displaying relevant messages
-        thisClassName@string = 'Control_Null_Local';
+        thisClassName@string = 'Control_MPC_Local';
     end
    
     properties (Access = public)
@@ -54,23 +54,26 @@ classdef Control_ADPCentral_Local < Control_LocalController
         
         % --------------------------------------------------------------- %
         % VARIABLES SPECIFIC TO THIS CONTROLLER
-        P@cell;
-        p@cell;
-        s@cell;
-        
-        computeVEveryNumSteps@uint32 = uint32(1);
+        computeMPCEveryNumSteps@uint32 = uint32(1);
         
         iterationCounter@uint32;
         
-        useMethod_samplingWithLSFit@logical     = false;
-        useMethod_bellmanIneq@logical           = true;
+        u_MPC_fullHorizon@double;
+        
+        % Model matrices (this is to allow for a different discreteisation
+        % to be used compared to that from the one contained in the "model"
+        % property
+        A@double;
+        Bu@double;
+        Bxi@double;
+        
         
     end
 
     
     methods
         % This is the "CONSTRUCTOR" method
-        function obj = Control_ADPCentral_Local( input_idnum , inputStateDef , inputConstraintDef , inputGlobalControlObject)
+        function obj = Control_MPC_Local( input_idnum , inputStateDef , inputConstraintDef , inputGlobalControlObject)
             % Allow the Constructor method to pass through when called with
             % no nput arguments (required for the "empty" object array
             % creator)
@@ -152,7 +155,7 @@ classdef Control_ADPCentral_Local < Control_LocalController
         
         % --------------------------------------------------------------- %
         % FUNCTIONS SPECIFIC TO THIS CONTROLLER
-        [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper );
+        %[Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper );
         
     end
     % END OF: "methods (Static = false , Access = public)"
@@ -166,9 +169,13 @@ classdef Control_ADPCentral_Local < Control_LocalController
     %end
     % END OF: "methods (Static = true , Access = public)"
         
-    %methods (Static = true , Access = private)
+    methods (Static = true , Access = private)
+        % --------------------------------------------------------------- %
+        % FUNCTIONS SPECIFIC TO THIS CONTROLLER
+        [R_new, r_new, c_new, A_new, Bu_new, Bxi_new] = buildMPCMatrices( T, x0, A, Bu, Bxi, Q, R, S, q, r, c, thisExi, thisExixi );
         
-    %end
+        [return_A_ineq, return_b_ineq] = buildMPC_inputConstraints_fromConstraintDefObject( T, constraintDef );
+    end
     % END OF: "methods (Static = true , Access = private)"
     
 end

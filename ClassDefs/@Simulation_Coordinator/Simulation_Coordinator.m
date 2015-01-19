@@ -68,6 +68,10 @@ classdef Simulation_Coordinator < handle
         % save
         flag_SaveResults@logical = false;
         
+        % Flag to specify whether to perform a deterministic simulation or
+        % not
+        flag_deterministic@logical = false;
+        
         % A pre-computed stream of uncertainties to ensure a fair
         % comparison
         flag_precomputedDisturbancesAvailable@logical = false;
@@ -193,10 +197,11 @@ classdef Simulation_Coordinator < handle
         
         
         % FUNCTION: to specify the key simulation parameters
-        function [ ] = specifySimulationParameters(obj, inputTimeIndex_start , inputTimeIndex_end , inputFlagSaveResults)
+        function [ ] = specifySimulationParameters(obj, inputTimeIndex_start , inputTimeIndex_end , inputFlagSaveResults, inputFlagDeterministic)
             obj.simTimeIndex_start  = uint32( inputTimeIndex_start );
             obj.simTimeIndex_end    = uint32( inputTimeIndex_end );
-            obj.flag_SaveResults     = inputFlagSaveResults;
+            obj.flag_SaveResults    = inputFlagSaveResults;
+            obj.flag_deterministic  = inputFlagDeterministic;
         end
         
         

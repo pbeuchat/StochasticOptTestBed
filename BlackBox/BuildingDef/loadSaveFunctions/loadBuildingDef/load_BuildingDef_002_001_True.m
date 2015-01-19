@@ -245,7 +245,9 @@ disp('     -> "Reading" the specified initial condition');
 internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
 
 %x0 = 22.5*internalStates + 16 * ~internalStates;
-x0 = 21.5*internalStates + 16 * ~internalStates;
+x0 = 22.4*internalStates + 16 * ~internalStates;
+%x0 = 22.0*internalStates + 16 * ~internalStates;
+%x0 = 21.5*internalStates + 16 * ~internalStates;
 %x0 = 20.0*internalStates + 16 * ~internalStates;
 %x0 = 30*internalStates + 16 * ~internalStates;
 
@@ -301,13 +303,13 @@ constraintsByHand.x_rect_upper = 25 * ones( n_x , 1);
 % For the min and max on each input
 %   (assuming they are all radiators)
 u_radiator_min = 0;
-u_radiator_max = 20;
+u_radiator_max = 22;
 constraintsByHand.u_rect_lower = u_radiator_min * ones( n_u , 1);
 constraintsByHand.u_rect_upper = u_radiator_max * ones( n_u , 1);
 
 % For the coupling resourse constraint
 constraintsByHand.u_poly_A = sparse( ones(1,n_u) , 1:n_u , ones(n_u,1) , 1 , n_u , n_u );
-constraintsByHand.u_poly_b = n_u * u_radiator_max * 1.1;
+constraintsByHand.u_poly_b = n_u * u_radiator_max * 1.0;
 
 constraintsByHand.u_poly_label = { 'resource' };
 

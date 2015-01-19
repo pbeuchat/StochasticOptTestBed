@@ -10,6 +10,10 @@ function [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj 
 %  DESCRIPTION: > ...
 % ----------------------------------------------------------------------- %
 
+    %% MULTIPLY "p_tp1" BY 2 (and divide the result by 2 at the end)
+    p_tp1 = 2 * p_tp1;
+
+
     %% FLAGS FOR WHICH LEAST SQUARE FITTING METHOD TO USE
     flag_full_01 = false;
     flag_full_02 = false;
@@ -379,8 +383,8 @@ function [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj 
         
     end
     
-    
-    temp = 1;
+    %% DIVIDE "pnew" BY 2
+    pnew = 0.5 * pnew;
     
 end
 % END OF FUNCTION

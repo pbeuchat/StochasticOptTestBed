@@ -48,6 +48,9 @@ flag_performControlSimulations      = inputBlackBoxInstructions.flag_performCont
 % Get the flag for whether to return the various object or not
 flag_returnObjectsToWorkspace       = inputBlackBoxInstructions.flag_returnObjectsToWorkspace;
 
+% Get the flag for whether to perform a deterministic simulation or not
+flag_deterministicSimulation        = inputBlackBoxInstructions.flag_deterministicSimulation;
+
 % Get the plotting flags:
 flag_plotResults                        = inputBlackBoxInstructions.flag_plotResults;
 flag_plotResultsPerController           = inputBlackBoxInstructions.flag_plotResultsPerController;
@@ -238,7 +241,7 @@ for iController = 1:numControlTechniques
     mySimCoordArray(iController,1) = Simulation_Coordinator( distCoord , myControlCoordArray(iController,1) , myProgModelEng , stateDef , costDef , constraintDef );
     
     % Set the parameters for the simulation
-    specifySimulationParameters( mySimCoordArray(iController,1) , timeIndex_start , timeIndex_end , flag_saveResults);
+    specifySimulationParameters( mySimCoordArray(iController,1) , timeIndex_start , timeIndex_end , flag_saveResults , flag_deterministicSimulation);
     
     % Check that the components of the simulation are compatible
     flag_throwError = true;

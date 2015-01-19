@@ -22,38 +22,15 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
     
     %% SPECIFY A FEW DEFAULTS TO USE
     
-    % FOR THE ADP METHOD TO USE:
-    useMethod_samplingWithLSFit = false;
-    useMethod_bellmanIneq       = true;
-    
     % FOR THE PREDICITON HORIZON
     statsPredictionHorizon = uint32(12);
     
     % FOR THE REGULARILTY OF RECOMPUTING THE VALUE FUNCTIONS
-    computeVEveryNumSteps = uint32(6);
+    computeMPCEveryNumSteps = uint32(12);
     
     %% EXTRACT THE OPTIONS FROM THE "vararginLocal" INPUT VARIABLE
     if isstruct( vararginLocal )
         
-        % --------------------------------------------------------------- %
-        % GET THE SPECIFIED ADP METHOD TO USE
-        if isfield( vararginLocal , 'ADPMethod' )
-            if strcmp( vararginLocal.ADPMethod , 'samplingWithLeastSquaresFit' )
-                useMethod_samplingWithLSFit = true;
-                useMethod_bellmanIneq       = false;
-            elseif strcmp( vararginLocal.ADPMethod , 'bellmanInequality' )
-                useMethod_samplingWithLSFit = false;
-                useMethod_bellmanIneq       = true;
-            else
-                disp( ' ... ERROR: The specified ADP Method was not recognised');
-                disp( '            The method specified was:');
-                disp(vararginLocal.ADPMethod);
-                disp( ' ... NOTE: Using the Bellman Inequality Method as a default');
-            end
-        else
-            disp( ' ... ERROR: The "vararginLocal" did not contain a field "ADPMethod"');
-            disp( ' ... NOTE: Using the Bellman Inequality Method as a default');
-        end
         
         % --------------------------------------------------------------- %
         % GET THE SPECIFIED TIME HORIZON TO USE
@@ -67,18 +44,18 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
         % --------------------------------------------------------------- %
         % GET THE REGULARILTY WITH WHICH THE VALUE FUNCTIONS SHOULD BE
         % RE-COMPUTED
-        if isfield( vararginLocal , 'computeVEveryNumSteps' )
-            statsPredictionHorizon = uint32(vararginLocal.computeVEveryNumSteps);
+        if isfield( vararginLocal , 'computeMPCEveryNumSteps' )
+            computeMPCEveryNumSteps = uint32(vararginLocal.computeMPCEveryNumSteps);
         else
-            disp( ' ... ERROR: The "vararginLocal" did not contain a field "computeVEveryNumSteps"');
-            disp([' ... NOTE: Using the default of ',num2str(computeVEveryNumSteps),' time steps']);
+            disp( ' ... ERROR: The "vararginLocal" did not contain a field "computeMPCEveryNumSteps"');
+            disp([' ... NOTE: Using the default of ',num2str(computeMPCEveryNumSteps),' time steps']);
         end
         
         
     else
         disp( ' ... ERROR: the "vararginLocal" variable was not a struct and hence cannot be processed');
     end
-    
+
     
     %% NOW PERFORM THE INITIALISATION
     % Initialise the return flag
@@ -90,23 +67,49 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
     % Store the model
     obj.model = inputModel;
     
-    % Create a cell array for storing the Value function at each time step
-    obj.P = cell( obj.statsPredictionHorizon+1 , 1 );
-    obj.p = cell( obj.statsPredictionHorizon+1 , 1 );
-    obj.s = cell( obj.statsPredictionHorizon+1 , 1 );
-    
     % Store the prediction horizon to be used
     obj.statsPredictionHorizon = statsPredictionHorizon;
     
     % Store the recomputation regularilty
-    obj.computeVEveryNumSteps = computeVEveryNumSteps;
+    obj.computeMPCEveryNumSteps = computeMPCEveryNumSteps;
     
-    % Initialise the counter so that V is compute during the first step
-    obj.iterationCounter = obj.computeVEveryNumSteps;
+    % Initialise the counter so that MPC is computed during the first step
+    obj.iterationCounter = obj.computeMPCEveryNumSteps;
     
-    % Store which ADP Method to use
-    obj.useMethod_samplingWithLSFit     = useMethod_samplingWithLSFit;
-    obj.useMethod_bellmanIneq           = useMethod_bellmanIneq;
+    %% SET THE MODEL MATRICES BASED ON THE DISCRETISATION SPECIFIED
+    % Initialise a flag for whether to use the discrete model from the
+    % "inputModel" or not
+    flag_useInputModelDiscreteTimeModel = true;
+    
+    % Check is a discretisation method" property is defined for the
+    % "VARiable ARGuments INput"
+    if isfield(vararginLocal,'discretisationMethod')
+        % If the option was set to "euler" then update the model to be used
+        if strcmp(vararginLocal.discretisationMethod , 'euler')
+            % Get the discretisation time step from the "inputModel"
+            secondsPerHours = 60 * 60;
+            Ts_seconds = inputModel.building.building_model.Ts_hrs * secondsPerHours;
+            
+            temp_n_x = size( inputModel.building.building_model.continuous_time_model.A , 1 );
+            
+            obj.A    =  speye(temp_n_x) + sparse( inputModel.building.building_model.continuous_time_model.A   .* Ts_seconds );
+            obj.Bu   =                    sparse( inputModel.building.building_model.continuous_time_model.Bu  .* Ts_seconds );
+            obj.Bxi  =                    sparse( inputModel.building.building_model.continuous_time_model.Bv  .* Ts_seconds );
+            
+            % Set the flag to prevent this been over-written
+            flag_useInputModelDiscreteTimeModel = false;
+        end
+    end
+    
+    
+    % Use the discrete time model from the "inputModel" variable if
+    % required
+    if flag_useInputModelDiscreteTimeModel
+        obj.A    =  sparse(  inputModel.building.building_model.discrete_time_model.A   );
+        obj.Bu   =  sparse(  inputModel.building.building_model.discrete_time_model.Bu  );
+        obj.Bxi  =  sparse(  inputModel.building.building_model.discrete_time_model.Bv  );
+    end
+    
     
     
             

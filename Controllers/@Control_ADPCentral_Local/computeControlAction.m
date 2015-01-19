@@ -36,6 +36,12 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     
     r = 0*r;
     
+    % Display an error message if all Cost Components are not included
+    if not(flag_allCostComponentsIncluded)
+        disp( ' ... ERROR: not all of the cost components could be retireived');
+        disp( '            This likely because at least one of the components is NOT a quadratic or linear function');
+        disp( '            and this ADP implementation can only handle linear or quadratic cost terms');
+    end
     
     n_x  = obj.stateDef.n_x;
     n_u  = obj.stateDef.n_u;
@@ -83,8 +89,10 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
 
         % To be purely the comfort cost
         obj.P{obj.statsPredictionHorizon+1} = Q;
-        obj.p{obj.statsPredictionHorizon+1} = q;
+        obj.p{obj.statsPredictionHorizon+1} = 0.5*q;  % <<---- NOTE THE "0.5" HERE!!!!
         obj.s{obj.statsPredictionHorizon+1} = c;
+        
+        
         
         % Print out a few things for where we are at:
         %mainfprintf('T=');
@@ -106,7 +114,14 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
             thiss = obj.s{obj.statsPredictionHorizon+1};
 
             % Pass everything to a ADP Sampling method
-            [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper );
+            if obj.useMethod_samplingWithLSFit
+                [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit(  obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper );
+            elseif obj.useMethod_bellmanIneq
+                [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq(     obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper );
+            else
+                disp( ' ... ERROR: the selected ADP method was NOT recognised');
+                Pnew = 0 * thisP; pnew = 0 * pnew; snew = 0 * thiss;
+            end
             
             obj.P{iTime,1} = Pnew;
             obj.p{iTime,1} = pnew;
