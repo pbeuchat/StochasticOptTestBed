@@ -1,6 +1,6 @@
 function [ ] = visualise_singleController( inputControllerSpecs , inputDataStruct , inputPropertyNames , plotOptions )
-% Defined for the "ControllerInterface" class, this function builds a cell
-% array of initialised controllers
+% Defined for the "Visualisation" class, this function plots the results
+% for one controller
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
@@ -19,8 +19,9 @@ unitsForTimeAxis = plotOptions.unitsForTimeAxis;
 
 
 %% --------------------------------------------------------------------- %%
-%% PLOT THE STATES
+%% PLOT THE STATES (Those of importance and everything)
 % Get the data
+% @TODO - THERE IS A PARTIAL HACK HERE BECUSE "1:7" IS HARDCODED!!!
 data            = inputDataStruct.x.data(1:7,:);
 dimPerTime      = inputDataStruct.x.dimPerTime;
 labelPerDim     = inputDataStruct.x.labelPerDim;
@@ -50,11 +51,11 @@ else
 end
 
 % Specify the plotting options
-thisPlotOptions = { 'LineColourIndex'   ,  1:numLinesToPlot                  ;...
+thisPlotOptions = { 'legendStrings'     ,  labelPerDim{1}(1:7)                 ;...
+                    'LineColourIndex'   ,  1:numLinesToPlot                  ;...
                     'LineWidth'         ,  Visualisation.lineWidthDefault    ;...
                     %'maRkerIndex'       ,  ones(numLinesToPlot,1)            ;...
                     'legendOnOff'       ,  'on'                              ;...    % OPTIONS: 'off', 'on'
-                    'legendStrings'     ,  labelPerDim{1}(1:7)                 ;...
                     'legendFontSize'    ,  12                                ;...
                     'legendFontWeight'  ,  'bold'                            ;...    % OPTIONS: 'normal', 'bold'
                     'legendLocation'    ,  'eastOutside'                     ;...    % OPTIONS: see below
@@ -89,9 +90,28 @@ hFig = figure('position',[50 680 1200 600]);
 set(hFig,'Color', Visualisation.figure_backgroundColour );
 
 % Create the axes
-thisPosition = [0.15 0.15 0.8 0.75];
-hAxes = axes('Position', thisPosition);
+%thisPosition = [0.15 0.15 0.8 0.75];
+%hAxes = axes('Position', thisPosition);
 
+% Create the axes for the states of "importance"
+hAxes = subplot(2,1,1);
+
+% Now call the generic plotting function
+Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotOptions  );
+
+
+% NOW FOR ALL THE STATES
+% Update the data to be all states
+data = inputDataStruct.x.data(:,:);
+% Update the legend labels respectively
+thisPlotOptions{1,2} = labelPerDim{1}(:);
+% Update the "numLinesToPlot"
+numLinesToPlot = size(data,1);
+thisPlotOptions{2,2} = 1:numLinesToPlot;
+
+
+% Create the axes for ALL the states
+hAxes = subplot(2,1,2);
 % Now call the generic plotting function
 Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotOptions  );
 

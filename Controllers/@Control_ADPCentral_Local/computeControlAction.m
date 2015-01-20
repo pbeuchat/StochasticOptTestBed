@@ -52,8 +52,8 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     
     internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
 
-    x_lower = 20*internalStates + 14 * ~internalStates;
-    x_upper = 23*internalStates + 18 * ~internalStates;
+    x_lower = 10*internalStates + 14 * ~internalStates;
+    x_upper = 30*internalStates + 18 * ~internalStates;
 
     
     
@@ -89,7 +89,7 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
 
         % To be purely the comfort cost
         obj.P{obj.statsPredictionHorizon+1} = Q;
-        obj.p{obj.statsPredictionHorizon+1} = 0.5*q;  % <<---- NOTE THE "0.5" HERE!!!!
+        obj.p{obj.statsPredictionHorizon+1} = q;  % <<---- NOTE THE "0.5" HERE, OR THE LACK OF IT!!!!
         obj.s{obj.statsPredictionHorizon+1} = c;
         
         

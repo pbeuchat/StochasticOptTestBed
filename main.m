@@ -81,7 +81,7 @@ sysOptions.discretisationMethod         = 'default';  % 'default','euler','expm'
 %% SPECIFY THE TIME HORIZON FOR WHICH TO RUN THE SIMULATIONS
 
 timeStart       = 1;
-timeHorizon     = 24*4;% (24*4) * 4;
+timeHorizon     = 12*4;% (24*4) * 4;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
@@ -120,7 +120,7 @@ flag_returnObjectsToWorkspace = false;        % "true" or "false"
 
 flag_plotResults                        = true;
 flag_plotResultsPerController           = true;
-flag_plotResultsControllerComparison    = false;
+flag_plotResultsControllerComparison    = true;
 
 plotResults_unitsForTimeAxis            = 'steps';        % "steps"  or "days" or "hours" or "minutes" or "seconds"
 
@@ -288,25 +288,25 @@ numCntr = 0;
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'Using 1-step predicition only';
-cntrSpecs{numCntr}.legend           = 'Naive - One Step Prediciton';
-cntrSpecs{numCntr}.saveFolderName   = 'OneStepPred';
-cntrSpecs{numCntr}.modelFree        = false;
-cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_OneStepPred_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_OneStepPred_Global';
-cntrSpecs{numCntr}.globalInit       = true;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'A controller that simply minimises the cost at every step based on the prediciton for the next step';
-clear thisVararginLocal;
-thisVararginLocal.discretisationMethod = 'none';   % 'none' , 'euler'
-cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;      
-thisVararginGlobal                  = 'two';
-cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Using 1-step predicition only';
+% cntrSpecs{numCntr}.legend           = 'Naive - One Step Prediciton';
+% cntrSpecs{numCntr}.saveFolderName   = 'OneStepPred';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_OneStepPred_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_OneStepPred_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A controller that simply minimises the cost at every step based on the prediciton for the next step';
+% clear thisVararginLocal;
+% thisVararginLocal.discretisationMethod = 'none';   % 'none' , 'euler'
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;      
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 
@@ -395,7 +395,7 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 numCntr = numCntr + 1;
 % Mandatory Specifications
 cntrSpecs{numCntr}.label            = 'MPC';
-cntrSpecs{numCntr}.legend           = 'MPC';
+cntrSpecs{numCntr}.legend           = 'MPC - Full Horizon';
 cntrSpecs{numCntr}.saveFolderName   = 'MPC';
 cntrSpecs{numCntr}.modelFree        = false;
 cntrSpecs{numCntr}.trueModelBased   = true;
@@ -406,13 +406,39 @@ cntrSpecs{numCntr}.globalInit       = true;
 cntrSpecs{numCntr}.description      = 'A typical MPC controller';
 
 clear thisVararginLocal;
-thisVararginLocal.discretisationMethod = 'none';   % 'none' , 'euler'
-thisVararginLocal.predHorizon          = timeHorizon;
-thisVararginLocal.computeMPCEveryNumSteps = timeHorizon;
-cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler'
+thisVararginLocal.predHorizon               = timeHorizon;
+thisVararginLocal.computeMPCEveryNumSteps   = timeHorizon;
+cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
 
 thisVararginGlobal                  = 'two';
 cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+% -----------------------------------
+% Add a Controller Spec
+numCntr = numCntr + 1;
+% Mandatory Specifications
+cntrSpecs{numCntr}.label            = 'MPC';
+cntrSpecs{numCntr}.legend           = 'MPC - 1 Step Horizon';
+cntrSpecs{numCntr}.saveFolderName   = 'MPC';
+cntrSpecs{numCntr}.modelFree        = false;
+cntrSpecs{numCntr}.trueModelBased   = true;
+cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
+cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
+cntrSpecs{numCntr}.globalInit       = true;
+% Optional Specifications
+cntrSpecs{numCntr}.description      = 'A typical MPC controller';
+
+clear thisVararginLocal;
+thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler'
+thisVararginLocal.predHorizon               = 1;
+thisVararginLocal.computeMPCEveryNumSteps   = 1;
+cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
+
+thisVararginGlobal                  = 'two';
+cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
 
 
 % % -----------------------------------
@@ -420,7 +446,7 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 % numCntr = numCntr + 1;
 % % Mandatory Specifications
 % cntrSpecs{numCntr}.label            = 'ADP Centralised';
-% cntrSpecs{numCntr}.legend           = 'ADP_Cent_LinSys';
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - via Sampling';
 % cntrSpecs{numCntr}.modelFree        = false;
 % cntrSpecs{numCntr}.trueModelBased   = true;
 % cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
@@ -430,11 +456,38 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 % cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
 % 
 % clear thisVararginLocal;
-% thisVararginLocal.predHorizon               = 12;
-% thisVararginLocal.computeEveryNumSteps      = 6;
-% thisVararginLocal.ADPMethod                 = 'bellmanInequality';    % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'samplingWithLeastSquaresFit';    % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
 % thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
 % thisVararginLocal.bellmanIneqType           = 'step-by-step';                       % OPTIONS: 'step-by-step', 'iterated'
+% 
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - via Bellman Ineq';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
 % 
 % 
 % cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;

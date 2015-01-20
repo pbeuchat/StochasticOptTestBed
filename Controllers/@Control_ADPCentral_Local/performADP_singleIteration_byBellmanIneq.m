@@ -10,10 +10,13 @@ function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P
 %  DESCRIPTION: > ...
 % ----------------------------------------------------------------------- %
 
+    %% DIVIDE "p_tp1" BY 2 (and multiply the result by 2 at the end)
+    p_tp1 = 0.5 * p_tp1;
+
     %% FLAGS FOR WHICH LEAST SQUARE FITTING METHOD TO USE
-    flag_full_01 = false;
+    flag_full_01 = true;
     flag_full_02 = false;
-    flag_diag_01 = true;
+    flag_diag_01 = false;
 
     %% INFER FROM SIZES FROM THE INPUT VARIABLES
     n_x = size(A,1);
@@ -334,8 +337,8 @@ function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P
     % ---------------------------------------- %
     % METHOD "DIAG" 01
     elseif flag_diag_01
-        if sum( double(P) < 0 ) > 0
-            disp(' ... ERROR: The coefficient matrix P is not Positive Semi-Definite');
+        if sum( double(P+10^-10) < 0 ) > 0
+            disp(' ... ERROR: The diagonal entries of the matrix P are NOT all non-negative');
             %error(' Terminating :-( See previous messages and ammend');
         end
         
@@ -364,6 +367,9 @@ function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P
     end
     
     optimalObjVal = ( trace( Pnew * Exx ) + 2 * Ex' * pnew + snew );
+    
+    %% MULTIPLY "pnew" BY 2
+    pnew = 2.0 * pnew;
     
 end
 % END OF FUNCTION

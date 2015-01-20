@@ -11,7 +11,7 @@ function [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj 
 % ----------------------------------------------------------------------- %
 
     %% MULTIPLY "p_tp1" BY 2 (and divide the result by 2 at the end)
-    p_tp1 = 2 * p_tp1;
+    %p_tp1 = 2 * p_tp1;
 
 
     %% FLAGS FOR WHICH LEAST SQUARE FITTING METHOD TO USE
@@ -301,8 +301,8 @@ function [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj 
     
     % Define the options
     thisOptions          = sdpsettings;
-    thisOptions.debug    = true;
-    thisOptions.verbose  = true;
+    thisOptions.debug    = false;
+    thisOptions.verbose  = false;
     
     
     % Specify the solver
@@ -384,7 +384,7 @@ function [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj 
     end
     
     %% DIVIDE "pnew" BY 2
-    pnew = 0.5 * pnew;
+    %pnew = 0.5 * pnew;
     
 end
 % END OF FUNCTION

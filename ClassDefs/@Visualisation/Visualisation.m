@@ -98,7 +98,7 @@ classdef Visualisation < handle
         
         [ ] = visualise_singleController( inputControllerSpecs , inputDataStruct , inputPropertyNames , plotOptions );
         
-        [ ] = visualise_multipleControllers( inputControllerSpecs , inputDataStruct , inputPropertyNames );
+        [ ] = visualise_multipleControllers( inputControllerSpecs , inputDataCellArray , inputPropertyNames , plotOptions );
         
         [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
         

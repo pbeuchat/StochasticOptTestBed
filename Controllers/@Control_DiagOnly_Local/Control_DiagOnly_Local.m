@@ -18,7 +18,7 @@ classdef Control_DiagOnly_Local < Control_LocalController
     properties (Access = public)
         % A cell array of strings with the statistics required
         statsRequired@cell = {'mean','cov'};
-        statsPredictionHorizon@uint32 = uint32(12);
+        statsPredictionHorizon@uint32 = uint32(8);
         
         % The Identifiaction Number that specifies which sub-system 
         % this local controller is
@@ -58,7 +58,7 @@ classdef Control_DiagOnly_Local < Control_LocalController
         p@cell;
         s@cell;
         
-        computeVEveryNumSteps@uint32 = uint32(6);
+        computeVEveryNumSteps@uint32 = uint32(8);
         
         iterationCounter@uint32;
         

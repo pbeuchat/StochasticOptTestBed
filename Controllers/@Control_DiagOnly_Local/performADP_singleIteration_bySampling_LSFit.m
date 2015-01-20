@@ -297,8 +297,8 @@ function [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj 
     
     % Define the options
     thisOptions          = sdpsettings;
-    thisOptions.debug    = true;
-    thisOptions.verbose  = true;
+    thisOptions.debug    = false;
+    thisOptions.verbose  = false;
     
     
     % Specify the solver

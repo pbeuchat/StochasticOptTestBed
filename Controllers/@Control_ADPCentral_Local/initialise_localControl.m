@@ -68,7 +68,7 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
         % GET THE REGULARILTY WITH WHICH THE VALUE FUNCTIONS SHOULD BE
         % RE-COMPUTED
         if isfield( vararginLocal , 'computeVEveryNumSteps' )
-            statsPredictionHorizon = uint32(vararginLocal.computeVEveryNumSteps);
+            computeVEveryNumSteps = uint32(vararginLocal.computeVEveryNumSteps);
         else
             disp( ' ... ERROR: The "vararginLocal" did not contain a field "computeVEveryNumSteps"');
             disp([' ... NOTE: Using the default of ',num2str(computeVEveryNumSteps),' time steps']);

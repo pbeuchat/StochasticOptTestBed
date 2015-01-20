@@ -450,8 +450,14 @@ if flag_plotResults
         % Don't bother calling the plotting function if only 1 control
         % technique was simulated...
         if numControlTechniques > 1
+            % The cell array of "allDataFileNames" should be consolidated
+            % to only include file names that exists for multiple
+            % controllers
+            % For now we will cheat and assume they all have 'x', 'u' and
+            % 'cost'
+            
             % Visualise the comparative results for ALL controller
-            Visualisation.visualise_singleController( controllerSpecArray{iController,1} , allResults{iController,1} , allDataFileNames{iController,1} , plotOptions );
+            Visualisation.visualise_multipleControllers( controllerSpecArray(:,1) , allResults(:,1) , allDataFileNames(iController,1) , plotOptions );
         end
         
     end

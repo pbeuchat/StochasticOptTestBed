@@ -245,10 +245,11 @@ disp('     -> "Reading" the specified initial condition');
 internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
 
 %x0 = 22.5*internalStates + 16 * ~internalStates;
-x0 = 22.4*internalStates + 16 * ~internalStates;
+%x0 = 22.4*internalStates + 16 * ~internalStates;
 %x0 = 22.0*internalStates + 16 * ~internalStates;
 %x0 = 21.5*internalStates + 16 * ~internalStates;
-%x0 = 20.0*internalStates + 16 * ~internalStates;
+x0 = 20.0*internalStates + 16 * ~internalStates;
+%x0 = 19.0*internalStates + 16 * ~internalStates;
 %x0 = 30*internalStates + 16 * ~internalStates;
 
 
@@ -309,7 +310,7 @@ constraintsByHand.u_rect_upper = u_radiator_max * ones( n_u , 1);
 
 % For the coupling resourse constraint
 constraintsByHand.u_poly_A = sparse( ones(1,n_u) , 1:n_u , ones(n_u,1) , 1 , n_u , n_u );
-constraintsByHand.u_poly_b = n_u * u_radiator_max * 1.0;
+constraintsByHand.u_poly_b = n_u * u_radiator_max * 0.6;
 
 constraintsByHand.u_poly_label = { 'resource' };
 

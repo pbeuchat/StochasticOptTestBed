@@ -25,24 +25,63 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     set(0, 'defaultTextInterpreter', 'latex');
     
     %% Check the x and y data are compatible with eachother
-    if ~( (size(data_x,1) == 1) || (size(data_x,2) == 1) )
-        disp( ' ... ERROR: the input "x" data was not a vector');
-        disp(['            size(data_x) = ',num2str(size(data_x,1)),' -by- ',num2str(size(data_x,2)) ]);
-        disp( ' ... Returning from function now without plotting anything');
-        return;
-    end
-    
-    if ~( length(data_x) == size(data_y,2) )
-        disp( ' ... ERROR: the input "y" data should have the same width as the length of the "x" data');
-        disp(['            size(data_y)    = ',num2str(size(data_y,1)),' -by- ',num2str(size(data_y,2)) ]);
-        disp(['            length(data_x)  = ',num2str(length(data_y)),' -by- ',num2str(size(data_y,2)) ]);
-        disp( ' ... Returning from function now without plotting anything');
-        return;
+    %% Noting that we need to differentiate between cell-array input and direct data
+    % If either "data_x" or "data_y" is a cell array, then we expect both
+    % to be and to be the same length:
+    if ( iscell(data_x) || iscell(data_y) )
+        if iscell(data_x) && iscell(data_y)
+            % Check that they are both vectors of the same length
+            if ( isvector(data_x) && isvector(data_y) )
+                % Now check they are the same length
+                if ~( length(data_x) == length(data_x) )
+                    disp( ' ... ERROR: The input "x" and "y" data are not the same length');
+                    disp(['            length(data_x) = ',length(data_x,1) ]);
+                    disp(['            length(data_y) = ',length(data_y,1) ]);
+                    return;
+                end
+            % Else they are not both vector hence we don't know what to do
+            else
+                disp( ' ... ERROR: One or both of the input "x" and "y" data is NOT a vector cell array');
+                disp(['            size(data_x) = ',size(data_x,1),' -by- ',size(data_x,2) ]);
+                disp(['            size(data_y) = ',size(data_y,1),' -by- ',size(data_y,2) ]);
+                return;
+            end
+            
+        % Else if they are not both cell array then we don't know how to
+        % handle them
+        else
+            disp( ' ... ERROR: One of the input "x" and "y" data is a cell array but not both');
+            disp(['            class(data_x) = ',class(data_x)]);
+            disp(['            class(data_x) = ',class(data_y)]);
+            return;
+        end
+            
+    % Otherwise, we expect the data to be a vector and matrix of a
+    % compatible size:
+    else
+        if ~( (size(data_x,1) == 1) || (size(data_x,2) == 1) )
+            disp( ' ... ERROR: the input "x" data was not a vector');
+            disp(['            size(data_x) = ',num2str(size(data_x,1)),' -by- ',num2str(size(data_x,2)) ]);
+            disp( ' ... Returning from function now without plotting anything');
+            return;
+        end
+
+        if ~( length(data_x) == size(data_y,2) )
+            disp( ' ... ERROR: the input "y" data should have the same width as the length of the "x" data');
+            disp(['            size(data_y)    = ',num2str(size(data_y,1)),' -by- ',num2str(size(data_y,2)) ]);
+            disp(['            length(data_x)  = ',num2str(length(data_y)),' -by- ',num2str(size(data_y,2)) ]);
+            disp( ' ... Returning from function now without plotting anything');
+            return;
+        end
     end
     
     
     %% GET THE NUMBER OF LINE TO PLOT - directly from the "y" data
-    numLinesToPlot = size(data_y,1);
+    if ~iscell(data_y)
+        numLinesToPlot = size(data_y,1);
+    else
+        numLinesToPlot = length(data_y);
+    end
     
     
     %% ----------------------------------------------------------------- %%
@@ -67,12 +106,15 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     legendInterpreter       = [];
     
     % Title details
+    titleOnOff              = [];
     titleString             = [];
     titleFontSize           = [];
 	titleFontWeight         = [];
 	titleColour             = [];
 
     % Axis label details
+    xLabelOnOff             = [];
+    yLabelOnOff             = [];
     xLabelString            = [];
 	yLabelString            = [];
 	xLabelColour            = [];
@@ -105,12 +147,15 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     default_legendInterpreter       = 'none';
     
     % Title defaults
+    default_titleOnOff              = 'off';
     default_titleString             = [];
     default_titleFontSize           = 16;
 	default_titleFontWeight         = 'bold';
 	default_titleColour             = 'k';
 
     % Axis label defaults
+    default_xLabelOnOff             = 'off';
+    default_yLabelOnOff             = 'off';
     default_xLabelString            = [];
 	default_yLabelString            = [];
 	default_xLabelColour            = 'k';
@@ -252,12 +297,17 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                 % ------------------------------- %
                 case 'titlestring'
                     titleString = inputSettings{iTemp,2};
-                    % If is is not a memeber then ignore it
-                    if ~ischar( titleString )
-                        disp(' ... ERROR: the "titleString" option input was not valid, using default instead');
-                        titleString = [];
+                    % If it is empty then there is nothing to check, and it
+                    % will not be plotted
+                    if ~isempty(titleString)
+                        % If is is not a string then ignore it
+                        if ~ischar( titleString )
+                            disp(' ... ERROR: the "titleString" option input was not valid, using default instead');
+                            titleString = [];
+                        end
+                    else
+                        titleOnOff = [];
                     end
-                    
                     
                 % ------------------------------- %
                 case 'titlefontsize'
@@ -302,22 +352,33 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                 % ------------------------------- %
                 case 'xlabelstring'
                     xLabelString = inputSettings{iTemp,2};
-                    % If is is not a memeber then ignore it
-                    if ~ischar( xLabelString )
-                        disp(' ... ERROR: the "xLabel" option input was not valid, using default instead');
-                        xLabelString = [];
+                    % If it is empty then there is nothing to check, and it
+                    % will not be plotted
+                    if ~isempty(xLabelString)
+                        % If is is not a string then ignore it
+                        if ~ischar( xLabelString )
+                            disp(' ... ERROR: the "xLabel" option input was not valid, using default instead');
+                            xLabelString = [];
+                        end
+                    else
+                        xLabelOnOff = [];
                     end
                     
                     
                 % ------------------------------- %
                 case 'ylabelstring'
                     yLabelString = inputSettings{iTemp,2};
-                    % If is is not a memeber then ignore it
-                    if ~ischar( yLabelString )
-                        disp(' ... ERROR: the "yLabel" option input was not valid, using default instead');
-                        yLabelString = [];
+                    % If it is empty then there is nothing to check, and it
+                    % will not be plotted
+                    if ~isempty(xLabelString)
+                        % If is is not a string then ignore it
+                        if ~ischar( yLabelString )
+                            disp(' ... ERROR: the "yLabel" option input was not valid, using default instead');
+                            yLabelString = [];
+                        end
+                    else
+                        yLabelOnOff = [];
                     end
-                    
                     
                     
                 % ------------------------------- %
@@ -512,6 +573,9 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     if isempty(legendInterpreter)
         legendInterpreter = default_legendInterpreter;
     end
+    if isempty(titleOnOff)
+        titleOnOff = default_titleOnOff;
+    end
     if isempty(titleString)
         titleString = default_titleString;
     end
@@ -523,6 +587,12 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     end
     if isempty(titleColour)
         titleColour = default_titleColour;
+    end
+    if isempty(xLabelOnOff)
+        xLabelOnOff = default_xLabelOnOff;
+    end
+    if isempty(yLabelOnOff)
+        yLabelOnOff = default_yLabelOnOff;
     end
     if isempty(xLabelString)
         xLabelString = default_xLabelString;
@@ -584,29 +654,37 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
         thisMarker = Visualisation.getDefaultMarkerForIndex( markerIndex(iLine) );
         
         % Plot the line
-        hLine(iLine) = plot( hAxes, data_x, data_y(iLine,:) , 'color' , thisColour , 'LineWidth' , thisLineWidth , 'marker' , thisMarker);
+        if iscell(data_y)
+            hLine(iLine) = plot( hAxes, data_x{iLine}, data_y{iLine} , 'color' , thisColour , 'LineWidth' , thisLineWidth , 'marker' , thisMarker);
+        else
+            hLine(iLine) = plot( hAxes, data_x, data_y(iLine,:) , 'color' , thisColour , 'LineWidth' , thisLineWidth , 'marker' , thisMarker);
+        end
     end
     hold off;
     
     % Label a few things
     % Set some properties of the axes
     
-    hTitle = title(hAxes,titleString);
-    set(hTitle,'Color',titleColour);
-    set(hTitle,'FontSize',titleFontSize);
-    set(hTitle,'FontWeight',titleFontWeight);
+    if titleOnOff
+        hTitle = title(hAxes,titleString);
+        set(hTitle,'Color',titleColour);
+        set(hTitle,'FontSize',titleFontSize);
+        set(hTitle,'FontWeight',titleFontWeight);
+    end
     
-    hXLabel = xlabel(hAxes,xLabelString);
-    hYLabel = ylabel(hAxes,yLabelString);
+    if xLabelOnOff
+        hXLabel = xlabel(hAxes,xLabelString);
+        set(hXLabel,'Color',xLabelColour);
+        set(hXLabel,'FontSize',labelFontSize);
+        set(hXLabel,'FontWeight',labelFontWeight);
+    end
     
-    set(hXLabel,'Color',xLabelColour);
-    set(hYLabel,'Color',yLabelColour);
-    
-    set(hXLabel,'FontSize',labelFontSize);
-    set(hYLabel,'FontSize',labelFontSize);
-    
-    set(hXLabel,'FontWeight',labelFontWeight);
-    set(hYLabel,'FontWeight',labelFontWeight);
+    if yLabelOnOff
+        hYLabel = ylabel(hAxes,yLabelString);
+        set(hYLabel,'Color',yLabelColour);
+        set(hYLabel,'FontSize',labelFontSize);
+        set(hYLabel,'FontWeight',labelFontWeight);
+    end
     
     set(hAxes,'XGrid',xGridOnOff);
     set(hAxes,'YGrid',yGridOnOff);
