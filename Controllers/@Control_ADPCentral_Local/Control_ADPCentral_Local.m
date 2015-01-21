@@ -65,6 +65,13 @@ classdef Control_ADPCentral_Local < Control_LocalController
         useMethod_samplingWithLSFit@logical     = false;
         useMethod_bellmanIneq@logical           = true;
         
+        PMatrixStructure@string;
+        
+        VFitting_xInternal_lower@double;
+        VFitting_xInternal_upper@double;
+        VFitting_xExternal_lower@double;
+        VFitting_xExternal_upper@double;
+        
     end
 
     
@@ -152,7 +159,10 @@ classdef Control_ADPCentral_Local < Control_LocalController
         
         % --------------------------------------------------------------- %
         % FUNCTIONS SPECIFIC TO THIS CONTROLLER
-        [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper );
+        [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper , PMatrixStructure );
+        
+        [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P_tp1, p_tp1, s_tp1, Exi, Exixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper , PMatrixStructure );
+        
         
     end
     % END OF: "methods (Static = false , Access = public)"

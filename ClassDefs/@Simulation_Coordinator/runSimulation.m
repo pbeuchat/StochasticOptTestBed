@@ -135,7 +135,7 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
         
         % Get the time step for this itertion
         this_time.index      = timeStartIndex + (iTime - 1);
-        this_time.abs_hours  = double(this_time.index) * timeHoursPerInc;
+        this_time.abs_hours  = (double(this_time.index) - 1) * timeHoursPerInc;
         
         result_time(1,iTime) = this_time.index;
         result_time(2,iTime) = this_time.abs_hours;
@@ -215,8 +215,13 @@ function [returnCompletedSuccessfully , returnResults , savedDataNames] = runSim
     result_x( : , timeDuration+1 ) = this_x;
     
     % Store the terminal cost
-    result_cost( : , timeDuration+1 ) = 0;
-    result_cost_per_ss( : , : , timeDuration+1 ) =  0;
+    % @TODO: this is a partial HACK at the moment
+    this_u  =  zeros( obj.stateDef.n_u  , 1 );
+    this_xi =  zeros( obj.stateDef.n_xi , 1 );
+    [~ , this_stageCost , this_stageCost_per_ss , ~] = performStateUpdate( obj.progModelEng , this_x , this_u , this_xi , this_time);
+    
+    result_cost( : , timeDuration+1 ) = this_stageCost;
+    result_cost_per_ss( : , : , timeDuration+1 ) =  this_stageCost_per_ss;
     
     % Store the terminal time
     result_time(1,timeDuration+1) = timeStartIndex + timeDuration;

@@ -1,4 +1,4 @@
-function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P_tp1, p_tp1, s_tp1, Exi, Exixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper )
+function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P_tp1, p_tp1, s_tp1, Exi, Exixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper , PMatrixStructure )
  %timeStepIndex , timeStepAbsolute
 % Defined for the "ControllerInterface" class, this function builds a cell
 % array of initialised controllers
@@ -14,9 +14,21 @@ function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P
     p_tp1 = 0.5 * p_tp1;
 
     %% FLAGS FOR WHICH LEAST SQUARE FITTING METHOD TO USE
-    flag_full_01 = true;
+    flag_full_01 = false;
     flag_full_02 = false;
     flag_diag_01 = false;
+    
+    if strcmp( PMatrixStructure , 'dense' )
+        flag_full_01 = true;
+    elseif strcmp( PMatrixStructure , 'distributable' )
+        flag_full_02 = true;
+    elseif strcmp( PMatrixStructure , 'diag' )
+        flag_diag_01 = true;
+    else
+        disp( ' ... NOTE: The specified "P" matrix structure was not recognised');
+        disp( '           Setting it to be diagonal');
+        flag_diag_01 = true;
+    end
 
     %% INFER FROM SIZES FROM THE INPUT VARIABLES
     n_x = size(A,1);
@@ -244,6 +256,16 @@ function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P
     % Note: this work for both dense and diagonal only P matrices
     thisCons = [ P >= 0 , fullMatrix >= 0 , lmul >= 0];
     
+    if flag_full_02
+        % Add constraints to make P distributable
+        thisCons = [thisCons , P(1,2:7) == 0];
+        thisCons = [thisCons , P(2,3:7) == 0];
+        thisCons = [thisCons , P(3,4:7) == 0];
+        thisCons = [thisCons , P(4,5:7) == 0];
+        thisCons = [thisCons , P(5,6:7) == 0];
+        thisCons = [thisCons , P(6,7)   == 0];
+    end
+    
     
 %% --------------------------------------------------------------------- %%
 %% SPECIFY THE OBJECTIVE FUNCTION FOR THE SDP
@@ -284,8 +306,8 @@ function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P
     
     % Define the options
     thisOptions          = sdpsettings;
-    thisOptions.debug    = true;
-    thisOptions.verbose  = true;
+    thisOptions.debug    = false;
+    thisOptions.verbose  = false;
     
     
     % Specify the solver

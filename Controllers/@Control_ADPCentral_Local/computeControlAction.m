@@ -52,9 +52,11 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     
     internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
 
-    x_lower = 10*internalStates + 14 * ~internalStates;
-    x_upper = 30*internalStates + 18 * ~internalStates;
+    x_lower = obj.VFitting_xInternal_lower * internalStates  +  obj.VFitting_xExternal_lower * ~internalStates;
+    x_upper = obj.VFitting_xInternal_upper * internalStates  +  obj.VFitting_xExternal_upper * ~internalStates;
 
+    %x_lower = 10 * internalStates  +  10 * ~internalStates;
+    %x_upper = 30 * internalStates  +  20 * ~internalStates;
     
     
     % TODO: this is a hack
@@ -115,9 +117,9 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
 
             % Pass everything to a ADP Sampling method
             if obj.useMethod_samplingWithLSFit
-                [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit(  obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper );
+                [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit(  obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper , obj.PMatrixStructure );
             elseif obj.useMethod_bellmanIneq
-                [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq(     obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper );
+                [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq(     obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper , obj.PMatrixStructure);
             else
                 disp( ' ... ERROR: the selected ADP method was NOT recognised');
                 Pnew = 0 * thisP; pnew = 0 * pnew; snew = 0 * thiss;

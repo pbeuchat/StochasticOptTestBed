@@ -166,11 +166,11 @@ if strcmp( discretisationMethod , 'euler' )
     % Access of full continous model matrices, and then implement a
     % discretisation technique that is structure preserving
     contTime_A     = B.building_model.continuous_time_model.A;
-    contTime_Bu    = B.building_model.continuous_time_model.Bu;
-    contTime_Bv    = B.building_model.continuous_time_model.Bv;
-    contTime_Bvu   = B.building_model.continuous_time_model.Bvu;
-    contTime_Bxu   = B.building_model.continuous_time_model.Bxu;
-    % 
+    %contTime_Bu    = B.building_model.continuous_time_model.Bu;
+    %contTime_Bv    = B.building_model.continuous_time_model.Bv;
+    %contTime_Bvu   = B.building_model.continuous_time_model.Bvu;
+    %contTime_Bxu   = B.building_model.continuous_time_model.Bxu;
+
     % contTime_Sys = ss( contTime_A , contTime_B, 0 , 0 );
     % 
     % deltaT = Ts_hrs;
@@ -310,7 +310,7 @@ constraintsByHand.u_rect_upper = u_radiator_max * ones( n_u , 1);
 
 % For the coupling resourse constraint
 constraintsByHand.u_poly_A = sparse( ones(1,n_u) , 1:n_u , ones(n_u,1) , 1 , n_u , n_u );
-constraintsByHand.u_poly_b = n_u * u_radiator_max * 0.6;
+constraintsByHand.u_poly_b = n_u * u_radiator_max * 0.65;
 
 constraintsByHand.u_poly_label = { 'resource' };
 

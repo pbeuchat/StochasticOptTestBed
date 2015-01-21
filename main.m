@@ -81,7 +81,7 @@ sysOptions.discretisationMethod         = 'default';  % 'default','euler','expm'
 %% SPECIFY THE TIME HORIZON FOR WHICH TO RUN THE SIMULATIONS
 
 timeStart       = 1;
-timeHorizon     = 12*4;% (24*4) * 4;
+timeHorizon     = 24*4;% (24*4) * 4;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
@@ -462,18 +462,26 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 % thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
 % thisVararginLocal.bellmanIneqType           = 'step-by-step';                       % OPTIONS: 'step-by-step', 'iterated'
 % 
+% thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 22.5 - 3;
+% thisVararginLocal.VFitting_xInternal_upper  = 22.5 + 3;
+% thisVararginLocal.VFitting_xExternal_lower  = 16.0 - 3;
+% thisVararginLocal.VFitting_xExternal_upper  = 16.0 + 3;
 % 
 % cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
 % 
 % thisVararginGlobal                  = 'two';
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
+
+
 % % -----------------------------------
 % % Add a Controller Spec
 % numCntr = numCntr + 1;
 % % Mandatory Specifications
 % cntrSpecs{numCntr}.label            = 'ADP Centralised';
-% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - via Bellman Ineq';
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - +/-3';
 % cntrSpecs{numCntr}.modelFree        = false;
 % cntrSpecs{numCntr}.trueModelBased   = true;
 % cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
@@ -489,11 +497,198 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 % thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
 % thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
 % 
+% thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 22.5 - 3;
+% thisVararginLocal.VFitting_xInternal_upper  = 22.5 + 3;
+% thisVararginLocal.VFitting_xExternal_lower  = 16.0 - 2;
+% thisVararginLocal.VFitting_xExternal_upper  = 16.0 + 2;
 % 
 % cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
 % 
 % thisVararginGlobal                  = 'two';
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+ 
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - +0.5 -3';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 22.5 - 3;
+% thisVararginLocal.VFitting_xInternal_upper  = 22.5 + 0.5;
+% thisVararginLocal.VFitting_xExternal_lower  = 16.0 - 3;
+% thisVararginLocal.VFitting_xExternal_upper  = 16.0 + 0.5;
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+
+% -----------------------------------
+% Add a Controller Spec
+numCntr = numCntr + 1;
+% Mandatory Specifications
+cntrSpecs{numCntr}.label            = 'ADP Centralised';
+cntrSpecs{numCntr}.legend           = 'ADP - Diag P - 10-30';
+cntrSpecs{numCntr}.modelFree        = false;
+cntrSpecs{numCntr}.trueModelBased   = true;
+cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+cntrSpecs{numCntr}.globalInit       = true;
+% Optional Specifications
+cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+
+clear thisVararginLocal;
+thisVararginLocal.predHorizon               = timeHorizon;
+thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+
+thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+
+thisVararginLocal.VFitting_xInternal_lower  = 10;
+thisVararginLocal.VFitting_xInternal_upper  = 30;
+thisVararginLocal.VFitting_xExternal_lower  = 10;
+thisVararginLocal.VFitting_xExternal_upper  = 20;
+
+cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+
+thisVararginGlobal                  = 'two';
+cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+
+% -----------------------------------
+% Add a Controller Spec
+numCntr = numCntr + 1;
+% Mandatory Specifications
+cntrSpecs{numCntr}.label            = 'ADP Centralised';
+cntrSpecs{numCntr}.legend           = 'ADP - Distributable P - 10-30';
+cntrSpecs{numCntr}.modelFree        = false;
+cntrSpecs{numCntr}.trueModelBased   = true;
+cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+cntrSpecs{numCntr}.globalInit       = true;
+% Optional Specifications
+cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+
+clear thisVararginLocal;
+thisVararginLocal.predHorizon               = timeHorizon;
+thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+
+thisVararginLocal.PMatrixStructure          = 'distributable';                  % OPTIONS: 'diag', 'dense', 'distributable'
+
+thisVararginLocal.VFitting_xInternal_lower  = 10;
+thisVararginLocal.VFitting_xInternal_upper  = 30;
+thisVararginLocal.VFitting_xExternal_lower  = 10;
+thisVararginLocal.VFitting_xExternal_upper  = 20;
+
+cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+
+thisVararginGlobal                  = 'two';
+cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+% -----------------------------------
+% Add a Controller Spec
+numCntr = numCntr + 1;
+% Mandatory Specifications
+cntrSpecs{numCntr}.label            = 'ADP Centralised';
+cntrSpecs{numCntr}.legend           = 'ADP - Dense P - 10-30';
+cntrSpecs{numCntr}.modelFree        = false;
+cntrSpecs{numCntr}.trueModelBased   = true;
+cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+cntrSpecs{numCntr}.globalInit       = true;
+% Optional Specifications
+cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+
+clear thisVararginLocal;
+thisVararginLocal.predHorizon               = timeHorizon;
+thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+
+thisVararginLocal.PMatrixStructure          = 'dense';                          % OPTIONS: 'diag', 'dense', 'distributable'
+
+thisVararginLocal.VFitting_xInternal_lower  = 10;
+thisVararginLocal.VFitting_xInternal_upper  = 30;
+thisVararginLocal.VFitting_xExternal_lower  = 10;
+thisVararginLocal.VFitting_xExternal_upper  = 20;
+
+cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+
+thisVararginGlobal                  = 'two';
+cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+ 
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - 0-50';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 0;
+% thisVararginLocal.VFitting_xInternal_upper  = 50;
+% thisVararginLocal.VFitting_xExternal_lower  = 10;
+% thisVararginLocal.VFitting_xExternal_upper  = 20;
+% 
+% 
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+
+
+
+
 
 
 % % -----------------------------------

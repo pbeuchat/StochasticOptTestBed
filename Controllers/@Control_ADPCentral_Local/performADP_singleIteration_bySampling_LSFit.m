@@ -1,4 +1,4 @@
-function [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj , P_tp1, p_tp1, s_tp1, Exi, Exixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper )
+function [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj , P_tp1, p_tp1, s_tp1, Exi, Exixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper , PMatrixStructure )
  %timeStepIndex , timeStepAbsolute
 % Defined for the "ControllerInterface" class, this function builds a cell
 % array of initialised controllers
@@ -17,7 +17,19 @@ function [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj 
     %% FLAGS FOR WHICH LEAST SQUARE FITTING METHOD TO USE
     flag_full_01 = false;
     flag_full_02 = false;
-    flag_diag_01 = true;
+    flag_diag_01 = false;
+    
+    if strcmp( PMatrixStructure , 'dense' )
+        flag_full_01 = true;
+    elseif strcmp( PMatrixStructure , 'distributable' )
+        flag_full_02 = true;
+    elseif strcmp( PMatrixStructure , 'diag' )
+        flag_diag_01 = true;
+    else
+        disp( ' ... NOTE: The specified "P" matrix structure was not recognised');
+        disp( '           Setting it to be diagonal');
+        flag_diag_01 = true;
+    end
 
     %% INFER FROM SIZES FROM THE INPUTS
     n_x = length( x_lower );

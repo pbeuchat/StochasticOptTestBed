@@ -32,6 +32,15 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
     % FOR THE REGULARILTY OF RECOMPUTING THE VALUE FUNCTIONS
     computeVEveryNumSteps = uint32(6);
     
+    % FOR THE "P" MATRIX STRUCTURE TO ENFORCE
+    PMatrixStructure = 'diag';
+    
+    % THE STATE RANGE FOR WHERE TO FIT THE APPROXIMATE VALUE FUNCTION
+    VFitting_xInternal_lower = 0;
+    VFitting_xInternal_upper = 50;
+    VFitting_xExternal_lower = 0;
+    VFitting_xExternal_upper = 50;
+    
     %% EXTRACT THE OPTIONS FROM THE "vararginLocal" INPUT VARIABLE
     if isstruct( vararginLocal )
         
@@ -75,6 +84,36 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
         end
         
         
+        % --------------------------------------------------------------- %
+        % GET THE SPECIFIED "P" MATRIX STRUCTURE TO ENFORCE
+        if isfield( vararginLocal , 'PMatrixStructure' )
+            PMatrixStructure = vararginLocal.PMatrixStructure;
+        else
+            disp( ' ... ERROR: The "vararginLocal" did not contain a field "PMatrixStructure"');
+            disp([' ... NOTE: Using the default of "',PMatrixStructure,'" instead']);
+        end
+        
+        
+        % --------------------------------------------------------------- %
+        % GET THE SPECIFIED STATE FITTING RANGE FOR THE INTERNAL STATES
+        if ( isfield( vararginLocal , 'VFitting_xInternal_lower' ) && isfield( vararginLocal , 'VFitting_xInternal_upper' ) )
+            VFitting_xInternal_lower = vararginLocal.VFitting_xInternal_lower;
+            VFitting_xInternal_upper = vararginLocal.VFitting_xInternal_upper;
+        else
+            disp( ' ... ERROR: The "vararginLocal" did not contain the fields "VFitting_xInternal_lower" and "VFitting_xInternal_upper"');
+            disp([' ... NOTE: Using the default of ',num2str(VFitting_xInternal_lower),' and ',num2str(VFitting_xInternal_upper),' respectively']);
+        end
+        
+        % --------------------------------------------------------------- %
+        % GET THE SPECIFIED STATE FITTING RANGE FOR THE EXTERNAL STATES
+        if ( isfield( vararginLocal , 'VFitting_xExternal_lower' ) && isfield( vararginLocal , 'VFitting_xExternal_upper' ) )
+            VFitting_xExternal_lower = vararginLocal.VFitting_xExternal_lower;
+            VFitting_xExternal_upper = vararginLocal.VFitting_xExternal_upper;
+        else
+            disp( ' ... ERROR: The "vararginLocal" did not contain the fields "VFitting_xExternal_lower" and "VFitting_xExternal_upper"');
+            disp([' ... NOTE: Using the default of ',num2str(VFitting_xExternal_lower),' and ',num2str(VFitting_xExternal_upper),' respectively']);
+        end
+        
     else
         disp( ' ... ERROR: the "vararginLocal" variable was not a struct and hence cannot be processed');
     end
@@ -107,6 +146,16 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
     % Store which ADP Method to use
     obj.useMethod_samplingWithLSFit     = useMethod_samplingWithLSFit;
     obj.useMethod_bellmanIneq           = useMethod_bellmanIneq;
+    
+    % Stoe which "P" matrix structure to enforce
+    obj.PMatrixStructure                = PMatrixStructure;
+    
+    % Store the state fitting range
+    obj.VFitting_xInternal_lower        = VFitting_xInternal_lower;
+    obj.VFitting_xInternal_upper        = VFitting_xInternal_upper;
+    obj.VFitting_xExternal_lower        = VFitting_xExternal_lower;
+    obj.VFitting_xExternal_upper        = VFitting_xExternal_upper;
+    
     
     
             

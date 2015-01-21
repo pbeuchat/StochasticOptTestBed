@@ -111,7 +111,7 @@ for iState = 1:numStatesToCompare
         % regularity
         dimPerTime      = inputDataCellArray{iController,1}.x.dimPerTime;
         timeLength      = size( data{iController,1} , dimPerTime+1 );
-        timeForPlot{iController,1} = inputDataCellArray{iController,1}.time.data(1,1:timeLength);
+        timeForPlot{iController,1} = inputDataCellArray{iController,1}.time.data(2,1:timeLength);
     end
     
     % Put in the xLabel, yLabel and Title options as required
@@ -208,7 +208,7 @@ for iInput = 1:numInputsToCompare
         % regularity
         dimPerTime      = inputDataCellArray{iController,1}.u.dimPerTime;
         timeLength      = size( data{iController,1} , dimPerTime+1 );
-        timeForPlot{iController,1} = inputDataCellArray{iController,1}.time.data(1,1:timeLength);
+        timeForPlot{iController,1} = inputDataCellArray{iController,1}.time.data(2,1:timeLength);
     end
     
     % Put in the xLabel, yLabel and Title options as required
@@ -249,6 +249,8 @@ labelPerDim       = inputDataCellArray{1,1}.cost.labelPerDim;
 % vertical axis data in a cell array
 data = cell(numControllers,1);
 timeForPlot = cell(numControllers,1);
+
+dataCumulativeCost = zeros(numControllers,1);
 
 % THIS FIGURE WILL HAVE ONE SUB-PLOT PER STATE-TO-COMPARE
 
@@ -304,7 +306,10 @@ for iCost = 1:numCostsToCompare
         % regularity
         dimPerTime      = inputDataCellArray{iController,1}.cost.dimPerTime;
         timeLength      = size( data{iController,1} , dimPerTime+1 );
-        timeForPlot{iController,1} = inputDataCellArray{iController,1}.time.data(1,1:timeLength);
+        timeForPlot{iController,1} = inputDataCellArray{iController,1}.time.data(2,1:timeLength);
+        
+        % Compute the cumulative
+        dataCumulativeCost(iController,1) = sum( data{iController,1} );
     end
     
     % Put in the xLabel, yLabel and Title options as required
@@ -331,6 +336,12 @@ for iCost = 1:numCostsToCompare
     % Now call the generic plotting function
     Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotOptions  );
         
+    % Display the Cumulative cost
+    disp([' ... NOTE: FOR COST COMPONENT: ',inputDataCellArray{1,1}.cost.labelPerDim{1}{thisCostIndex} ]);
+    for iController = 1:numControllers
+        disp(['  ',num2str(dataCumulativeCost(iController,1),'%10.1f'),'   for "',labelPerController{iController},'"' ]);
+    end
+    
         
 end
 
