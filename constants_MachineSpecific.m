@@ -50,8 +50,8 @@ classdef constants_MachineSpecific
             %addpath('/Users/pbeuchat/Documents/MATLAB/tbxmanager/');
             %tbxmanager restorepath;
 
-            %addpath('/Library/gurobi600/mac64/matlab');
-            %setenv GRB_LICENSE_FILE '/Users/pbeuchat/opt/gurobi/gurobi.lic'
+            addpath('/Library/gurobi600/mac64/matlab');
+            setenv GRB_LICENSE_FILE '/Users/pbeuchat/opt/gurobi/gurobi.lic'
 
             addpath(genpath('/Users/pbeuchat/opt/mosek/7/'));
             setenv MOSEKLM_LICENSE_FILE '/Users/pbeuchat/opt/mosek/mosek.lic'

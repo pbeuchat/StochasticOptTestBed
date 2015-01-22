@@ -173,7 +173,7 @@ classdef Control_Coordinator < handle
     
     methods (Static = false , Access = public)
         
-        [ ] = initialiseControllers(obj , inputSettings , inputModel)
+        [ ] = initialiseControllers(obj , inputSettings , inputModel , inputDisturbance_ology)
         
         [u , computationTime_per_ss , diagnostics] = computeControlAction( obj , currTime , x , xi , stageCost , stageCost_per_ss , prediciton , statsRequired_mask , timeHorizon );
         

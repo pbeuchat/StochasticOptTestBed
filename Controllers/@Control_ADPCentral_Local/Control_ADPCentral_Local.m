@@ -72,6 +72,8 @@ classdef Control_ADPCentral_Local < Control_LocalController
         VFitting_xExternal_lower@double;
         VFitting_xExternal_upper@double;
         
+        computeAllVsAtInitialisation@logical;
+        
     end
 
     
@@ -155,7 +157,9 @@ classdef Control_ADPCentral_Local < Control_LocalController
         % This function should be used to perform off-line possible
         % computations so that the controller computation speed during
         % simulation run-time is faster
-        flag_successfullyInitialised = initialise_localControl( obj , inputModelType , inputModel , vararginLocal);
+        [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl( obj , inputModelType , inputModel , vararginLocal);
+        
+        [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl_withDisturbanceInfo( obj , inputModelType , inputModel , vararginLocal);
         
         % --------------------------------------------------------------- %
         % FUNCTIONS SPECIFIC TO THIS CONTROLLER

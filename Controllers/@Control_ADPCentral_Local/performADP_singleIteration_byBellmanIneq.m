@@ -254,6 +254,7 @@ function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P
     % (PSD), and for the "Vhatf - Vhat + Lhat - sum lmul*Ghat" matrix to be
     % PSD
     % Note: this work for both dense and diagonal only P matrices
+    
     thisCons = [ P >= 0 , fullMatrix >= 0 , lmul >= 0];
     
     if flag_full_02
@@ -326,10 +327,13 @@ function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P
     end
 
     
+    tempTime = clock;
+    
     % Call the solver via Yalmip
     % SYNTAX: diagnostics = solvesdp(Constraints,Objective,options)
     diagnostics = solvesdp(thisCons,thisObj,thisOptions);
 
+    time_forSDP = etime(clock,tempTime);
     
     % Interpret the results
     if diagnostics.problem == 0
@@ -366,6 +370,119 @@ function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P
         
     end
     
+    
+    %% DIAGONALLY DOMINANT
+    
+flag_runDiagonallyDominant = false;
+if flag_runDiagonallyDominant
+    
+    % Now try solve it again faster!!!
+    P_dd = sdpvar( n_x , n_x ,'symmetric');
+    p_dd = sdpvar( n_x ,  1  ,'full');
+    s_dd = sdpvar(  1  ,  1  ,'full');
+    
+    Vhat_dd = ...
+            [    P_dd                           ,   sparse([],[],[],n_x,n_u,0)          ,   p_dd                        ;...
+                 sparse([],[],[],n_u,n_x,0)     ,   sparse([],[],[],n_u,n_u,0)          ,   sparse([],[],[],n_u,1,0)    ;...
+                 p_dd'                          ,   sparse([],[],[],1  ,n_u,0)          ,   s_dd                         ...
+            ];
+    
+    % Declare the "lambda" multiplier variables
+    lmul_dd = sdpvar(numCons,1,'full');
+
+    % Step through the "numCons" building up the SDP constraint
+    % P_t+1 - P_t + L - \lambda_i * \sum_i G_i
+    fullMatrix_dd = disFactor * Vhatf - Vhat_dd + Lhat;
+    for iCons = 1:numCons
+        fullMatrix_dd = fullMatrix_dd - lmul_dd(iCons,1) * constraintCoefficient{iCons,1};
+    end
+        
+    % The objective shuoldn't have changed, so we just need to adjust the
+    % constraint to reformulate the SDP constraints as Scaled Diagonally
+    % Dominant constrints
+    % Take a uniform distribution over the x-space
+    Ex  = 0.5 * (x_lower + x_upper);
+    Exx = 1/3 * diag( (x_lower.^2 + x_lower.*x_upper + x_upper.^2) );
+    % Compute the objective based on this
+    thisObj_dd = - ( trace( P_dd * Exx ) + 2 * Ex' * p_dd + s_dd );
+    
+    
+    
+    %% SPECIFY THE CONSTRAINT FUNCTIONS FOR THE SDP
+
+    % The constraints were for the P matrix to be positive semi-definite
+    % (PSD), and for the "Vhatf - Vhat + Lhat - sum lmul*Ghat" matrix to be
+    % PSD
+    % ie. thisCons = [ P >= 0 , fullMatrix >= 0 , lmul >= 0];
+    
+    thisCons_dd = (lmul >= 0);
+    
+    % For P >= 0
+    for i_nx=1:n_x
+        thisTrue = true(n_x,1);
+        thisTrue(i_nx,1) = false;
+        thisCons_dd = [thisCons_dd , P_dd(i_nx,i_nx) >= sum( abs( P_dd(i_nx,thisTrue) ) ) ];
+    end
+    
+    % For fullMatrix >= 0
+    n_temp = size(fullMatrix_dd,1);
+    for i_ntemp=1:n_temp
+        thisTrue = true(n_temp,1);
+        thisTrue(i_ntemp,1) = false;
+        thisCons_dd = [thisCons_dd , fullMatrix_dd(i_ntemp,i_ntemp) >= sum( abs( fullMatrix_dd(i_ntemp,thisTrue) ) ) ];
+    end
+    
+    
+    
+    
+    %% Call Yalmip to solve for the next value function
+    
+    % Define the options
+    thisOptions          = sdpsettings;
+    thisOptions.debug    = true;
+    thisOptions.verbose  = true;
+    
+    
+    % Specify the solver
+    %thisSolverStr = 'SeDuMi';
+    thisSolverStr = 'Mosek';
+    %thisSolverStr = 'sdpt3';
+    if strcmp('SeDuMi',thisSolverStr)
+        thisOptions.solver = 'sedumi';
+    elseif strcmp('Mosek',thisSolverStr)
+        thisOptions.solver = 'mosek-sdp';
+    elseif strcmp('sdpt3',thisSolverStr)
+        thisOptions.solver = 'sdpt3';
+    else
+        disp([' ... the specified solver "',thisSolverStr,'" was not recognised']);
+        error(' Terminating :-( See previous messages and ammend');
+    end
+
+    
+    tempTime = clock;
+    
+    % Call the solver via Yalmip
+    % SYNTAX: diagnostics = solvesdp(Constraints,Objective,options)
+    diagnostics = solvesdp(thisCons_dd,thisObj_dd,thisOptions);
+
+    time_forDD = etime(clock,tempTime);
+    
+    % Interpret the results
+    if diagnostics.problem == 0
+        % Don't display anything if things work
+        %disp(' ... the optimisation formulation was Feasible and has been solved')
+    elseif diagnostics.problem == 1
+        disp(' ... the optimisation formulation was Infeasible');
+        error(' Terminating :-( See previous messages and ammend');
+    else
+        disp(' ... the optimisation formulation was strange, it was neither "Feasible" nor "Infeasible", something else happened...');
+        error(' Terminating :-( See previous messages and ammend');
+    end
+    
+    
+    % Check how similar the solution is...
+    
+end % END OF: "if flag_runDiagonallyDominant"
     
     
     %% STORE THE RESULTANT VALUE FUNCTION INTO THE RETURN VARIABLES

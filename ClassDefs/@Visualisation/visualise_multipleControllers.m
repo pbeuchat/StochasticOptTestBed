@@ -332,7 +332,7 @@ for iCost = 1:numCostsToCompare
     
     
     % Create the axes for ALL the states
-    hAxes = subplot(numCostsToCompare,1,iCost);
+    hAxes = subplot(numCostsToCompare,4, [4*(iCost-1)+1 , 4*iCost-1] );
     % Now call the generic plotting function
     Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotOptions  );
         
@@ -340,6 +340,11 @@ for iCost = 1:numCostsToCompare
     disp([' ... NOTE: FOR COST COMPONENT: ',inputDataCellArray{1,1}.cost.labelPerDim{1}{thisCostIndex} ]);
     for iController = 1:numControllers
         disp(['  ',num2str(dataCumulativeCost(iController,1),'%10.1f'),'   for "',labelPerController{iController},'"' ]);
+        
+        hAxes = subplot(numCostsToCompare,4,4*iCost);
+        % @TODO: THIS IS A HACK BECAUSE THE COLOUR CODING IS NOT CONSISTENT
+        % WITH THE OTHER GRAPHS
+        scatter(1:numControllers,dataCumulativeCost);
     end
     
         

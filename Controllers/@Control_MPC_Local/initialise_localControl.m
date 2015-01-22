@@ -1,4 +1,4 @@
-function flag_successfullyInitialised = initialise_localControl( obj , inputModelType , inputModel , vararginLocal)
+function [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl( obj , inputModelType , inputModel , vararginLocal)
 % Defined for the "Control_LocalControl" class, this function will be
 % called once before the simulation is started
 % This function should be used to perform off-line possible
@@ -15,6 +15,11 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
     % You can except the "inputModel" parameter to be empty when the
     % control is specified to be "Model-Free" and non-empty otherwise
     
+    % In general this "flag_requestDisturbanceData" flag should be left as
+    % "false" and only set to true if access to the disturbance data is
+    % required for computational speed up purposes
+    flag_requestDisturbanceData = false;
+    
     % When using the "Null" controller as a template, insert your code here
     % to pre-compute off-line parts of your controllers so the the "on-line
     % computation time is minimised when the "copmuteControlAction"
@@ -23,9 +28,11 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
     %% SPECIFY A FEW DEFAULTS TO USE
     
     % FOR THE PREDICITON HORIZON
+    % (This default is used unless a value is specified in "vararginLocal")
     statsPredictionHorizon = uint32(12);
     
     % FOR THE REGULARILTY OF RECOMPUTING THE VALUE FUNCTIONS
+    % (This default is used unless a value is specified in "vararginLocal")
     computeMPCEveryNumSteps = uint32(12);
     
     %% EXTRACT THE OPTIONS FROM THE "vararginLocal" INPUT VARIABLE
@@ -60,6 +67,9 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
     %% NOW PERFORM THE INITIALISATION
     % Initialise the return flag
     flag_successfullyInitialised = true;
+    
+    % Store the size of the input vector
+    obj.n_u  = obj.stateDef.n_u;
     
     % Store the model type in the appropriate property
     obj.modelType = inputModelType;
@@ -111,6 +121,44 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
     end
     
     
+    %% SET THE QUADRATIC COST MATRICES
+    
+    % Get the coefficients for a quadratic cost
+    currentTime = [];
+    [costCoeff , flag_allCostComponentsIncluded] = getCostCoefficients_uptoQuadratic( obj.model.costDef , currentTime );
+    
+    Q_k     = costCoeff.Q;
+    R_k     = costCoeff.R;
+    S_k     = costCoeff.S;
+    q_k     = costCoeff.q;
+    r_k     = costCoeff.r;
+    c_k     = costCoeff.c;
+    
+    r_k = 0*r_k;
+    
+    % Display an error message if all Cost Components are not included
+    if not(flag_allCostComponentsIncluded)
+        disp( ' ... ERROR: not all of the cost components could be retireived');
+        disp( '            This likely because at least one of the components is NOT a quadratic or linear function');
+        disp( '            and this ADP implementation can only handle linear or quadratic cost terms');
+    end
+    
+    
+    
+    
+    
+    %% BUILD THE PREDICTIVE MODEL MATRICES
+    
+    % Build the generic MPC matrices first
+    [obj.A_mpc , obj.Bu_mpc , obj.Bxi_mpc , obj.Q_mpc , obj.R_mpc , obj.S_mpc , obj.q_mpc , obj.r_mpc , obj.c_mpc ] = Control_MPC_Local.buildMPCMatrices_static( statsPredictionHorizon, obj.A, obj.Bu, obj.Bxi, Q_k, R_k, S_k, q_k, r_k, c_k);
+    
+    % Now build the matrices that are need at each time step
+    buildMPCMatrices_specific( obj );
+    
+    
+    %% BUILD THE CONSTRAINT MATRICES
+    % Get the constraints
+    [obj.A_ineq_input, obj.b_ineq_input] = Control_MPC_Local.buildMPC_inputConstraints_fromConstraintDefObject( statsPredictionHorizon, obj.constraintDef );
     
             
 end

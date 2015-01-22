@@ -47,26 +47,6 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     n_u  = obj.stateDef.n_u;
     n_xi = obj.stateDef.n_xi;
     
-    %x_lower = myConstraints.x_rect_lower;
-    %x_upper = myConstraints.x_rect_upper;
-    
-    internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
-
-    x_lower = obj.VFitting_xInternal_lower * internalStates  +  obj.VFitting_xExternal_lower * ~internalStates;
-    x_upper = obj.VFitting_xInternal_upper * internalStates  +  obj.VFitting_xExternal_upper * ~internalStates;
-
-    %x_lower = 10 * internalStates  +  10 * ~internalStates;
-    %x_upper = 30 * internalStates  +  20 * ~internalStates;
-    
-    
-    % TODO: this is a hack
-    %x_lower = 0 * ones(n_x,1);
-    %x_upper = 50 * ones(n_x,1);
-    
-    u_lower = myConstraints.u_rect_lower;
-    u_upper = myConstraints.u_rect_upper;
-    
-    
     
     %% COMPUTE THE VALUE FUNCTIONS
     % We now need to compute the Value Functions for the next 
@@ -77,66 +57,91 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     % Define a few flags for how to run the computations
     %mask_P = diag( true(n_x,1) );
     
+    
     if obj.iterationCounter > obj.computeVEveryNumSteps
-        
+
         % Reset the iteration counter to one
         obj.iterationCounter = uint32(1);
-    
-        % Initialise the TERMINAL VALUE FUNCITON needed for the first
-        % iteration
-        % To be a zero value function
-        %obj.P{obj.statsPredictionHorizon+1} = sparse( [],[],[], double(n_x) , 1 , 0 );
-        %obj.p{obj.statsPredictionHorizon+1} = sparse( [],[],[], double(n_x) , 1 , 0 );
-        %obj.s{obj.statsPredictionHorizon+1} = sparse( [],[],[], 1 , 1 , 0 );
 
-        % To be purely the comfort cost
-        obj.P{obj.statsPredictionHorizon+1} = Q;
-        obj.p{obj.statsPredictionHorizon+1} = q;  % <<---- NOTE THE "0.5" HERE, OR THE LACK OF IT!!!!
-        obj.s{obj.statsPredictionHorizon+1} = c;
-        
-        
-        
-        % Print out a few things for where we are at:
-        %mainfprintf('T=');
+        if ~obj.computeAllVsAtInitialisation
+            % SPECIFY THE FITTIG RANGE
+            %x_lower = myConstraints.x_rect_lower;
+            %x_upper = myConstraints.x_rect_upper;
 
-        % Now iterate backwards through the time steps
-        for iTime = obj.statsPredictionHorizon : -1 : 1
-            
-            % Print this time step
-            %fprintf('%8d',iTime);
-            
-            % Get the first and second moment from the input prediciton struct
-            thisRange = ((iTime-1)*n_xi+1) : (iTime*n_xi);
-            thisExi     = predictions.mean(thisRange,1);
-            thisExixi   = predictions.cov(thisRange,thisRange);
+            internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
 
-            % Get the value function for the future time step
-            thisP = obj.P{obj.statsPredictionHorizon+1};
-            thisp = obj.p{obj.statsPredictionHorizon+1};
-            thiss = obj.s{obj.statsPredictionHorizon+1};
+            x_lower = obj.VFitting_xInternal_lower * internalStates  +  obj.VFitting_xExternal_lower * ~internalStates;
+            x_upper = obj.VFitting_xInternal_upper * internalStates  +  obj.VFitting_xExternal_upper * ~internalStates;
 
-            % Pass everything to a ADP Sampling method
-            if obj.useMethod_samplingWithLSFit
-                [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit(  obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper , obj.PMatrixStructure );
-            elseif obj.useMethod_bellmanIneq
-                [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq(     obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper , obj.PMatrixStructure);
-            else
-                disp( ' ... ERROR: the selected ADP method was NOT recognised');
-                Pnew = 0 * thisP; pnew = 0 * pnew; snew = 0 * thiss;
+            %x_lower = 10 * internalStates  +  10 * ~internalStates;
+            %x_upper = 30 * internalStates  +  20 * ~internalStates;
+
+
+            % TODO: this is a hack
+            %x_lower = 0 * ones(n_x,1);
+            %x_upper = 50 * ones(n_x,1);
+
+            u_lower = myConstraints.u_rect_lower;
+            u_upper = myConstraints.u_rect_upper;
+
+
+            % Initialise the TERMINAL VALUE FUNCITON needed for the first
+            % iteration
+            % To be a zero value function
+            %obj.P{obj.statsPredictionHorizon+1} = sparse( [],[],[], double(n_x) , 1 , 0 );
+            %obj.p{obj.statsPredictionHorizon+1} = sparse( [],[],[], double(n_x) , 1 , 0 );
+            %obj.s{obj.statsPredictionHorizon+1} = sparse( [],[],[], 1 , 1 , 0 );
+
+            % To be purely the comfort cost
+            obj.P{obj.statsPredictionHorizon+1} = Q;
+            obj.p{obj.statsPredictionHorizon+1} = q;  % <<---- NOTE THE "0.5" HERE, OR THE LACK OF IT!!!!
+            obj.s{obj.statsPredictionHorizon+1} = c;
+
+
+
+            % Print out a few things for where we are at:
+            %mainfprintf('T=');
+
+            % Now iterate backwards through the time steps
+            for iTime = obj.statsPredictionHorizon : -1 : 1
+
+                % Print this time step
+                %fprintf('%8d',iTime);
+
+                % Get the first and second moment from the input prediciton struct
+                thisRange = ((iTime-1)*n_xi+1) : (iTime*n_xi);
+                thisExi     = predictions.mean(thisRange,1);
+                thisExixi   = predictions.cov(thisRange,thisRange);
+
+                % Get the value function for the future time step
+                thisP = obj.P{obj.statsPredictionHorizon+1};
+                thisp = obj.p{obj.statsPredictionHorizon+1};
+                thiss = obj.s{obj.statsPredictionHorizon+1};
+
+                % Pass everything to a ADP Sampling method
+                if obj.useMethod_samplingWithLSFit
+                    [Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit(  obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper , obj.PMatrixStructure );
+                elseif obj.useMethod_bellmanIneq
+                    [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq(     obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper , obj.PMatrixStructure);
+                else
+                    disp( ' ... ERROR: the selected ADP method was NOT recognised');
+                    Pnew = 0 * thisP; pnew = 0 * pnew; snew = 0 * thiss;
+                end
+
+                obj.P{iTime,1} = Pnew;
+                obj.p{iTime,1} = pnew;
+                obj.s{iTime,1} = snew;
+
+                % Delete this time step with backspaces
+                %fprintf(' \b\b\b\b\b\b\b\b');
+
             end
-            
-            obj.P{iTime,1} = Pnew;
-            obj.p{iTime,1} = pnew;
-            obj.s{iTime,1} = snew;
 
-            % Delete this time step with backspaces
-            %fprintf(' \b\b\b\b\b\b\b\b');
-            
+            % Delete "T=" with backspaces
+            %fprintf('\b\b');
         end
-        
-        % Delete "T=" with backspaces
-        %fprintf('\b\b');
     end
+    
     
     % Get the value function coefficiens to use for this time step
     thisP = obj.P{obj.iterationCounter,1};

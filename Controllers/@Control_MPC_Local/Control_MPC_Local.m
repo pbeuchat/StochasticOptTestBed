@@ -62,11 +62,45 @@ classdef Control_MPC_Local < Control_LocalController
         
         % Model matrices (this is to allow for a different discreteisation
         % to be used compared to that from the one contained in the "model"
-        % property
+        % property)
         A@double;
         Bu@double;
         Bxi@double;
         
+        % MPC Matrices - these are the matrices that predict the future
+        % Storing here helps with speed up of the code
+        A_mpc@double;
+        Bu_mpc@double;
+        Bxi_mpc@double;
+        
+        Q_mpc@double;
+        R_mpc@double;
+        S_mpc@double;
+        q_mpc@double;
+        r_mpc@double;
+        c_mpc@double;
+        
+        A_ineq_input@double;
+        b_ineq_input@double;
+        
+        % Combined matrices to speed things up further
+        % For "R"
+        Bu_Q_Bu@double;
+        Bu_S@double;
+
+        % For "r"
+        A_Q_Bu@double;
+        Bxi_Q_Bu@double;
+        A_S@double;
+        q_Bu@double;
+
+        % For "c"
+        A_Q_A@double;
+        Bxi_Q_Bxi@double;
+        A_Q_Bxi@double;
+        q_A@double;
+        q_Bxi@double;
+
         
     end
 
@@ -151,11 +185,14 @@ classdef Control_MPC_Local < Control_LocalController
         % This function should be used to perform off-line possible
         % computations so that the controller computation speed during
         % simulation run-time is faster
-        flag_successfullyInitialised = initialise_localControl( obj , inputModelType , inputModel , vararginLocal);
+        [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl( obj , inputModelType , inputModel , vararginLocal);
         
         % --------------------------------------------------------------- %
         % FUNCTIONS SPECIFIC TO THIS CONTROLLER
         %[Pnew , pnew, snew] = performADP_singleIteration_bySampling_LSFit( obj , thisP, thisp, thiss, thisExi, thisExixi, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper );
+        
+        % Build the MPC matrices that are specific to the controller
+        [ ] = buildMPCMatrices_specific( obj );
         
     end
     % END OF: "methods (Static = false , Access = public)"
@@ -172,8 +209,14 @@ classdef Control_MPC_Local < Control_LocalController
     methods (Static = true , Access = private)
         % --------------------------------------------------------------- %
         % FUNCTIONS SPECIFIC TO THIS CONTROLLER
-        [R_new, r_new, c_new, A_new, Bu_new, Bxi_new] = buildMPCMatrices( T, x0, A, Bu, Bxi, Q, R, S, q, r, c, thisExi, thisExixi );
+        % Build the MPC matrices that are independent of the controller
+        [A_new, Bu_new, Bxi_new, Q_new, R_new, S_new, q_new, r_new, c_new ] = buildMPCMatrices_static( T, A_k, Bu_k, Bxi_k, Q_k, R_k, S_k, q_k, r_k, c_k);
         
+        % Build the MPC matrices needed for each computation
+        %[R_new, r_new, c_new, A_new, Bu_new, Bxi_new] = buildMPCMatrices( T, x0, A, Bu, Bxi, Q, R, S, q, r, c, thisExi, thisExixi );
+        [R_new, r_new, c_new] = buildMPCMatrices_given_x0( T, x0, thisExi, thisExixi );
+        
+        % Build the constraints
         [return_A_ineq, return_b_ineq] = buildMPC_inputConstraints_fromConstraintDefObject( T, constraintDef );
     end
     % END OF: "methods (Static = true , Access = private)"

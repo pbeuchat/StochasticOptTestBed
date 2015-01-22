@@ -1,4 +1,4 @@
-function [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl( obj , inputModelType , inputModel , vararginLocal)
+function [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl_withDisturbanceInfo( obj , inputModelType , inputModel , vararginLocal)
 % Defined for the "Control_LocalControl" class, this function will be
 % called once before the simulation is started
 % This function should be used to perform off-line possible
