@@ -211,7 +211,7 @@ for iController = 1:numControlTechniques
     %     controller classes
     %   > Only pass on the "sysModel" to these initialisation functions
     %     base on if specified as "Model-Based" versus "Model-Free"
-    initialiseControllers( myControlCoordArray(iController,1) , thisSettings , sysModel , inputDisturbance_ology );
+    initialiseControllers( myControlCoordArray(iController,1) , thisSettings , sysModel , distCoord );
     
 end
 

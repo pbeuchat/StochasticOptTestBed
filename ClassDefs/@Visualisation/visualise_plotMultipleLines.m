@@ -304,6 +304,8 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                         if ~ischar( titleString )
                             disp(' ... ERROR: the "titleString" option input was not valid, using default instead');
                             titleString = [];
+                        else
+                            titleOnOff = 'on';
                         end
                     else
                         titleOnOff = [];
@@ -359,6 +361,8 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                         if ~ischar( xLabelString )
                             disp(' ... ERROR: the "xLabel" option input was not valid, using default instead');
                             xLabelString = [];
+                        else
+                            xLabelOnOff = 'on';
                         end
                     else
                         xLabelOnOff = [];
@@ -370,11 +374,13 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                     yLabelString = inputSettings{iTemp,2};
                     % If it is empty then there is nothing to check, and it
                     % will not be plotted
-                    if ~isempty(xLabelString)
+                    if ~isempty(yLabelString)
                         % If is is not a string then ignore it
                         if ~ischar( yLabelString )
                             disp(' ... ERROR: the "yLabel" option input was not valid, using default instead');
                             yLabelString = [];
+                        else
+                            yLabelOnOff = 'on';
                         end
                     else
                         yLabelOnOff = [];
@@ -665,21 +671,22 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     % Label a few things
     % Set some properties of the axes
     
-    if titleOnOff
+    if strcmp( titleOnOff , 'on' )
         hTitle = title(hAxes,titleString);
         set(hTitle,'Color',titleColour);
         set(hTitle,'FontSize',titleFontSize);
         set(hTitle,'FontWeight',titleFontWeight);
     end
     
-    if xLabelOnOff
+    if strcmp( xLabelOnOff , 'on' )
         hXLabel = xlabel(hAxes,xLabelString);
         set(hXLabel,'Color',xLabelColour);
         set(hXLabel,'FontSize',labelFontSize);
         set(hXLabel,'FontWeight',labelFontWeight);
     end
     
-    if yLabelOnOff
+    if strcmp( yLabelOnOff , 'on' )
+        yLabelString = strrep( yLabelString , '_' , '\_' );
         hYLabel = ylabel(hAxes,yLabelString);
         set(hYLabel,'Color',yLabelColour);
         set(hYLabel,'FontSize',labelFontSize);

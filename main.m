@@ -4,11 +4,12 @@
 %  ---------------------------------------------------------------------  %
 %  ---------------------------------------------------------------------  %
 
+% VERSION:          v1.01
+% DATE PUBLISHED:   23-Jan-2015
 
 %  ---------------------------------------------------------------------  %
 %  PACKAGE:     Black-Box Simulation-Based Stochastic Optimisation Test-Bed
 %  AUTHOR:      Paul N. Beuchat - Copyright (C) 2014
-%  DATE:        13-Oct-2014
 %  GOAL:        Black-Box Simulation-Based Stochastic Optimisation Test-Bed
 %
 %  DESCRIPTION: > This script should be all that is required to run a test
@@ -249,43 +250,43 @@ numCntr = 0;
 % cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
 % cntrSpecs{numCntr}.vararginGlobal   = [];
 
-% % -----------------------------------
-% % Add a Controller Spec
-% numCntr = numCntr + 1;
-% % Mandatory Specifications
-% cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
-% cntrSpecs{numCntr}.legend           = 'Constant Local';
-% cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
-% cntrSpecs{numCntr}.modelFree        = true;
-% cntrSpecs{numCntr}.trueModelBased   = [];
-% cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
-% cntrSpecs{numCntr}.classNameGlobal  = [];
-% cntrSpecs{numCntr}.globalInit       = false;
-% % Optional Specifications
-% cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
-% thisVararginLocal                   = 20;        % This is the constant control action that will be applied
-% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-% cntrSpecs{numCntr}.vararginGlobal   = [];
+% -----------------------------------
+% Add a Controller Spec
+numCntr = numCntr + 1;
+% Mandatory Specifications
+cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
+cntrSpecs{numCntr}.legend           = 'Constant Local';
+cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
+cntrSpecs{numCntr}.modelFree        = true;
+cntrSpecs{numCntr}.trueModelBased   = [];
+cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
+cntrSpecs{numCntr}.classNameGlobal  = [];
+cntrSpecs{numCntr}.globalInit       = false;
+% Optional Specifications
+cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
+thisVararginLocal                   = 20;        % This is the constant control action that will be applied
+cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+cntrSpecs{numCntr}.vararginGlobal   = [];
 
 
-% % -----------------------------------
-% % Add a Controller Spec
-% numCntr = numCntr + 1;
-% % Mandatory Specifications
-% cntrSpecs{numCntr}.label            = 'Random Controller with Central Coordinator';
-% cntrSpecs{numCntr}.legend           = 'Rand w Coord';
-% cntrSpecs{numCntr}.saveFolderName   = 'Rand_with_GlobalCoord';
-% cntrSpecs{numCntr}.modelFree        = false;
-% cntrSpecs{numCntr}.trueModelBased   = true;
-% cntrSpecs{numCntr}.classNameLocal   = 'Control_Rand_Local';
-% cntrSpecs{numCntr}.classNameGlobal  = 'Control_Rand_Global';
-% cntrSpecs{numCntr}.globalInit       = true;
-% % Optional Specifications
-% cntrSpecs{numCntr}.description      = 'A controller that randomly chooses and input between the lower and upper bound for each input';
-% thisVararginLocal                   = 'one';
-% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-% thisVararginGlobal                  = 'two';
-% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+% -----------------------------------
+% Add a Controller Spec
+numCntr = numCntr + 1;
+% Mandatory Specifications
+cntrSpecs{numCntr}.label            = 'Random Controller with Central Coordinator';
+cntrSpecs{numCntr}.legend           = 'Rand w Coord';
+cntrSpecs{numCntr}.saveFolderName   = 'Rand_with_GlobalCoord';
+cntrSpecs{numCntr}.modelFree        = false;
+cntrSpecs{numCntr}.trueModelBased   = true;
+cntrSpecs{numCntr}.classNameLocal   = 'Control_Rand_Local';
+cntrSpecs{numCntr}.classNameGlobal  = 'Control_Rand_Global';
+cntrSpecs{numCntr}.globalInit       = true;
+% Optional Specifications
+cntrSpecs{numCntr}.description      = 'A controller that randomly chooses and input between the lower and upper bound for each input';
+thisVararginLocal                   = 'one';
+cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+thisVararginGlobal                  = 'two';
+cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 % % -----------------------------------
@@ -384,29 +385,29 @@ numCntr = 0;
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'MPC';
-cntrSpecs{numCntr}.legend           = 'MPC - Full Horizon';
-cntrSpecs{numCntr}.saveFolderName   = 'MPC';
-cntrSpecs{numCntr}.modelFree        = false;
-cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
-cntrSpecs{numCntr}.globalInit       = true;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'A typical MPC controller';
-
-clear thisVararginLocal;
-thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler'
-thisVararginLocal.predHorizon               = timeHorizon;
-thisVararginLocal.computeMPCEveryNumSteps   = timeHorizon;
-cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
-
-thisVararginGlobal                  = 'two';
-cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'MPC';
+% cntrSpecs{numCntr}.legend           = 'MPC - Full Horizon';
+% cntrSpecs{numCntr}.saveFolderName   = 'MPC';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A typical MPC controller';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler'
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeMPCEveryNumSteps   = timeHorizon;
+% cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 
@@ -446,40 +447,40 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'ADP Centralised';
-cntrSpecs{numCntr}.legend           = 'ADP - Diag P - +/-3';
-cntrSpecs{numCntr}.modelFree        = false;
-cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
-cntrSpecs{numCntr}.globalInit       = true;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
-
-clear thisVararginLocal;
-thisVararginLocal.predHorizon               = timeHorizon;
-thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
-thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
-thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
-thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
-
-thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
-
-thisVararginLocal.computeAllVsAtInitialisation = true;                           % OPTIONS: 'true', 'false'
-
-thisVararginLocal.VFitting_xInternal_lower  = 22.5 - 3;
-thisVararginLocal.VFitting_xInternal_upper  = 22.5 + 3;
-thisVararginLocal.VFitting_xExternal_lower  = 16.0 - 2;
-thisVararginLocal.VFitting_xExternal_upper  = 16.0 + 2;
-
-cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-
-thisVararginGlobal                  = 'two';
-cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - +/-3';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.computeAllVsAtInitialisation = true;                           % OPTIONS: 'true', 'false'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 22.5 - 3;
+% thisVararginLocal.VFitting_xInternal_upper  = 22.5 + 3;
+% thisVararginLocal.VFitting_xExternal_lower  = 16.0 - 2;
+% thisVararginLocal.VFitting_xExternal_upper  = 16.0 + 2;
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
  
 
 % % -----------------------------------
