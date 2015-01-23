@@ -59,6 +59,7 @@ mask_xi_ss  = false( n_xi , n_ss );
 % The label for each state shuold be something like the following:
 %       'x_Z0001'
 % or    'x_B0001_L1_s1_AMBZ0001'
+% or    'x_B0001_L1_s1_ADAZ0001'
 % or    'x_B0011_L1_s1_Z0001Z0004'
 %
 % So the simple way to associate the state with a sub-system is to check if
@@ -89,8 +90,62 @@ mask_xi_ss = sparse( mask_xi_ss );
 
 
 %% SPECIFY THE INITIAL CONDITION
-% 
+ 
 x0 = obj.x0;
+
+
+%% --------------------------------------------------------------------- %%
+%% NOW CATAGORISE EVERYTHING FOR PLOTTING PURPOSES
+% This is introduced to allow grouping of similar variables for plotting
+% purposes
+
+% For the states, we split it into the following catagories:
+%   'zone'                     This is the zone temperature
+%   'element_interal'          This is a wall connecting 2 zones
+%   'element_external_amb'     This is a wall connecting a zone to the ambient
+%   'element_external_adb'     This is a wall connectiog a zone to the adiabatic
+% These are called elements because they do not distinguish betweem floors,
+% walls, or ceiling elements
+
+category_x = cell(n_x,1);
+
+indicies_toAmb  =  ~cellfun( 'isempty' , strfind( label_x , 'AMB' ) ) ;
+indicies_toAdb  =  ~cellfun( 'isempty' , strfind( label_x , 'ADB' ) ) ;
+
+category_x(indicies_toAmb,1) = {'element_external_amb'};
+category_x(indicies_toAdb,1) = {'element_external_adb'};
+
+% Check there is no cross-over between "Ambient" and "Adiabatic"
+if any( and( indicies_toAmb , indicies_toAdb ) )
+    disp( ' ... ERROR: there is a state that was identified to be connected to both');
+    disp( '            the "adiabatic" and the "ambient". This seems strange"');
+    disp( '            The label of the state(s) identified to be such are:');
+    indicies_temp = find( and( indicies_toAmb , indicies_toAdb ) );
+    for iTemp = 1:length(indicies_temp)
+        disp(label_x{indicies_temp(iTemp),1});
+    end
+end
+
+% Now step through all the other indices and figure out whether they are a
+% "zone" or an "element_interal"
+indicies_other = find( and( ~indicies_toAmb , ~indicies_toAdb ) );
+for iIndex = 1:length(indicies_other)
+    thisIndex = indicies_other(iIndex);
+    thisLabel = label_x{thisIndex,1};
+    thisZoneLabels = regexp( thisLabel , '.[Z]\d{1,6}' , 'start');
+    if length(thisZoneLabels) == 1
+        category_x{thisIndex,1} = 'zone';
+    elseif length(thisZoneLabels) == 2
+        category_x{thisIndex,1} = 'element_interal';
+    else
+        disp( ' ... ERROR: The following state could not be categorised:');
+        disp(label_x{thisIndex,1});
+        category_x{thisIndex,1} = bbConstants.uncategorised_label;
+    end
+end
+
+% Check that everything was filled in by checking that "category_x" is a
+% cell array of strings
 
 
 %% --------------------------------------------------------------------- %%

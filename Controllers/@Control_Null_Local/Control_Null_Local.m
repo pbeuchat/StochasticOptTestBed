@@ -127,7 +127,7 @@ classdef Control_Null_Local < Control_LocalController
         % This function should be used to perform off-line possible
         % computations so that the controller computation speed during
         % simulation run-time is faster
-        flag_successfullyInitialised = initialise_localControl( obj , inputModelType , inputModel , vararginLocal);
+        [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl( obj , inputModelType , inputModel , vararginLocal);
         
     end
     % END OF: "methods (Static = false , Access = public)"

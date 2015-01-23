@@ -31,6 +31,13 @@ classdef ProgressModelEngine < handle
     end
    
     properties (Access = public)
+        % The absolute time increment per step, taken from the "model"
+        % Needed as public so that the simulator can track time
+        % (instead we really should pass back the absolute time increment
+        % with every "performStateUpdate" step. That would allow for varied
+        % absolute time steps to be taken
+        t_perInc_hrs@double = 0;
+        
         % Very few properties should have public access, otherwise the
         % concept and benefits of Object-Orientated-Programming will be
         % degraded...
@@ -51,6 +58,7 @@ classdef ProgressModelEngine < handle
         % Current time in steps and time
         k@uint64 = uint64(0);
         t@double = 0;
+        
         % State, Stage Cost and Constraint Satisfaction returned
         xnew@double;
         l@double;
@@ -99,6 +107,8 @@ classdef ProgressModelEngine < handle
             % Make deep copy of the Building object in order to prevent changes of data in object from outside of SimulationExperiment
             obj.model = copy(inputModel);
             obj.modelType = inputModelType;
+            
+            obj.t_perInc_hrs = inputModel.t_perInc_hrs;
 
         end
         % END OF: "function [..] = ProgressModelEngine(...)"
@@ -133,7 +143,7 @@ classdef ProgressModelEngine < handle
             
             % Increment the time counter and time
             obj.k = obj.k + 1;
-            obj.t = obj.t + currentTime.abs_increment;
+            obj.t = obj.t + currentTime.abs_increment_hrs;
         end
         % END OF: "function [...] = performStateUpdate(...)"
         

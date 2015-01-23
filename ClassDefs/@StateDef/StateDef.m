@@ -41,8 +41,17 @@ classdef StateDef < matlab.mixin.Copyable
         label_u@cell    = cell(0,0);
         label_xi@cell   = cell(0,0);
         
+        % Categories for the above, this was introduced to allow grouping
+        % of similar variables for plotting purposes
+        category_x@cell     = cell(0,0);
+        category_u@cell     = cell(0,0);
+        category_xi@cell    = cell(0,0);
+        
         % The number of sub-systems
         n_ss@uint32 = uint32(0);
+        % A copy of the original "n_ss" to handle the cases in which the
+        % controller changes the definitions of the state def
+        n_ss_original@uint32 = uint32(0);
         
         % The masks for which sub-system has access to which state and
         % disturbance information, and controls which inputs
@@ -156,17 +165,18 @@ classdef StateDef < matlab.mixin.Copyable
             % ... or don't :-(
             
             % Now put all the input into this "StateDef" object
-            obj.n_x         = n_x;
-            obj.n_u         = n_u;
-            obj.n_xi        = n_xi;
-            obj.label_x     = label_x;
-            obj.label_u     = label_u;
-            obj.label_xi    = label_xi;
-            obj.n_ss        = n_ss;
-            obj.mask_x_ss   = mask_x_ss;
-            obj.mask_u_ss   = mask_u_ss;
-            obj.mask_xi_ss  = mask_xi_ss;
-            obj.x0          = x0;
+            obj.n_x             = n_x;
+            obj.n_u             = n_u;
+            obj.n_xi            = n_xi;
+            obj.label_x         = label_x;
+            obj.label_u         = label_u;
+            obj.label_xi        = label_xi;
+            obj.n_ss            = n_ss;
+            obj.n_ss_original   = n_ss;
+            obj.mask_x_ss       = mask_x_ss;
+            obj.mask_u_ss       = mask_u_ss;
+            obj.mask_xi_ss      = mask_xi_ss;
+            obj.x0              = x0;
 
         end
         % END OF: "function [..] = ProgressModelEngine(...)"

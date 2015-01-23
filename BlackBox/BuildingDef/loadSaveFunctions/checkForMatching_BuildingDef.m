@@ -3,7 +3,7 @@
 %  ---------     checkForMatching_BuildingDef.m
 %  ---------------------------------------------------------------------  %
 %  ---------------------------------------------------------------------  %
-function [returnIsMatch, returnModelMatch] = checkForMatching_BuildingDef( inputBuildingIdentifierString )
+function [returnIsMatch, returnModelMatch] = checkForMatching_BuildingDef( inputBuildingIdentifierString , bbFullPath , flag_deleteMatch )
 
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
@@ -25,15 +25,22 @@ loadFileName = [ bbConstants.saveDefPrefix , inputBuildingIdentifierString , bbC
 % (Note: the folder where it is located should already be on the path)
 existResult = exist( loadFileName , 'file' );
 
-% If it exists then load it
+% If it exists then load it (or delete it)
 if (existResult == 2)
-    % Load the file, this should store the saved Building Model into a
-    % struct propterty called:
-    %     "savedData"
-    tempLoad = load( loadFileName );
-    returnModelMatch = tempLoad.savedData;
-    returnIsMatch = 1;
-    clear tempLoad;
+    if ~flag_deleteMatch
+        % Load the file, this should store the saved Building Model into a
+        % struct propterty called:
+        %     "savedData"
+        tempLoad = load( loadFileName );
+        returnModelMatch = tempLoad.savedData;
+        returnIsMatch = 1;
+        clear tempLoad;
+    else
+        deleteFilePath = [bbFullPath , '/' , 'BlackBox/BuildingDef/SavedDef' , '/' , loadFileName ];
+        delete( deleteFilePath );
+        returnIsMatch = 0;
+        returnModelMatch = [];
+    end
         
 else
     % Else return that there is no match

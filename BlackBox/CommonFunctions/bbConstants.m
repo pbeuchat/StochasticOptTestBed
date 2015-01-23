@@ -64,7 +64,7 @@ classdef bbConstants
       
         % PLOT LABELS
         time@string = 'Time [hrs]';
-        temperature@string = 'Temp [°C]';
+        temperature@string = 'Temp [?C]';
         heatflux@string = 'Heat Flux [W]';
         input_u@string = 'Control input u';
         input_v@string = 'Disturbance v';
@@ -91,6 +91,9 @@ classdef bbConstants
         loadDefFunctionPrefix_forBuilding@string    = 'load_BuildingDef_';
         
         
+        
+        % STRINGS RELATED TO CATEGORISATION OF THE LABEL OF DATA
+        uncategorised_label@string           = 'uncategorised';
         
         % Fundamental Data-Type memory size
         double_sizeIn_bits                 = 64;
@@ -318,6 +321,16 @@ classdef bbConstants
                     returnMask(iStat,1) = true;
                 end
             end
+        end
+        
+        
+        % -----------------------------------
+        % FUNCTION:
+        % Just use the built-in Matlab "etime" function
+        function clockDiff = clockDifference( clockEnd , clockStart )
+            hhmmss_diff = clockEnd(4:6) - clockStart(4:6);
+            
+            clockDiff = hhmmss_diff(1)*60*60 + hhmmss_diff(2)*60 * hhmmss_diff(1);
         end
         
         
