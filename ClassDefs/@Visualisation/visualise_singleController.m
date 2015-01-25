@@ -22,16 +22,16 @@ unitsForTimeAxis = plotOptions.unitsForTimeAxis;
 %% PLOT THE STATES (Those of importance and everything)
 % Get the data
 % @TODO - THERE IS A PARTIAL HACK HERE BECUSE "1:7" IS HARDCODED!!!
-data            = inputDataStruct.x.data(1:7,:);
-dimPerTime      = inputDataStruct.x.dimPerTime;
-labelPerDim     = inputDataStruct.x.labelPerDim;
+data            = inputDataStruct.x_worker_0001.data(1:7,:);
+dimPerTime      = inputDataStruct.x_worker_0001.dimPerTime;
+labelPerDim     = inputDataStruct.x_worker_0001.labelPerDim;
 
 timeLength      = size( data , dimPerTime+1 );
 if strcmp( unitsForTimeAxis , 'steps' )
-    timeForPlot     = inputDataStruct.time.data(1,1:timeLength);
+    timeForPlot     = inputDataStruct.time_worker_0001.data(1,1:timeLength);
     thisTimeLabel   = 'Time [index]';
 elseif ismember( unitsForTimeAxis , {'days', 'hours', 'minutes', 'seconds'} )
-    timeForPlot     = inputDataStruct.time.data(2,1:timeLength);
+    timeForPlot     = inputDataStruct.time_worker_0001.data(2,1:timeLength);
     thisTimeLabel   = 'Time [hours]';
     % Need to put a few extra statements in here to detect the exact units
     % of "inputDataStruct.time.data(2,:);" and scale it appropriately
@@ -102,7 +102,7 @@ Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotO
 
 % NOW FOR ALL THE STATES
 % Update the data to be all states
-data = inputDataStruct.x.data(:,:);
+data = inputDataStruct.x_worker_0001.data(:,:);
 % Update the legend labels respectively
 thisPlotOptions{1,2} = labelPerDim{1}(:);
 % Update the "numLinesToPlot"
@@ -120,16 +120,16 @@ Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotO
 %% --------------------------------------------------------------------- %%
 %% PLOT THE INPUTS
 % Get the data
-data            = inputDataStruct.u.data;
-dimPerTime      = inputDataStruct.u.dimPerTime;
-labelPerDim     = inputDataStruct.u.labelPerDim;
+data            = inputDataStruct.u_worker_0001.data;
+dimPerTime      = inputDataStruct.u_worker_0001.dimPerTime;
+labelPerDim     = inputDataStruct.u_worker_0001.labelPerDim;
 
 timeLength      = size( data , dimPerTime+1 );
 if strcmp( unitsForTimeAxis , 'steps' )
-    timeForPlot     = inputDataStruct.time.data(1,1:timeLength);
+    timeForPlot     = inputDataStruct.time_worker_0001.data(1,1:timeLength);
     thisTimeLabel   = 'Time [index]';
 elseif ismember( unitsForTimeAxis , {'days', 'hours', 'minutes', 'seconds'} )
-    timeForPlot     = inputDataStruct.time.data(2,1:timeLength);
+    timeForPlot     = inputDataStruct.time_worker_0001.data(2,1:timeLength);
     thisTimeLabel   = 'Time [hours]';
     % Need to put a few extra statements in here to detect the exact units
     % of "inputDataStruct.time.data(2,:);" and scale it appropriately
@@ -200,17 +200,17 @@ Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotO
 %% --------------------------------------------------------------------- %%
 %% PLOT THE DISTURBANCES
 % Get the data
-data            = inputDataStruct.xi.data;
-dimPerTime      = inputDataStruct.xi.dimPerTime;
-labelPerDim     = inputDataStruct.xi.labelPerDim;
+data            = inputDataStruct.xi_worker_0001.data;
+dimPerTime      = inputDataStruct.xi_worker_0001.dimPerTime;
+labelPerDim     = inputDataStruct.xi_worker_0001.labelPerDim;
 
 
 timeLength      = size( data , dimPerTime+1 );
 if strcmp( unitsForTimeAxis , 'steps' )
-    timeForPlot     = inputDataStruct.time.data(1,1:timeLength);
+    timeForPlot     = inputDataStruct.time_worker_0001.data(1,1:timeLength);
     thisTimeLabel   = 'Time [index]';
 elseif ismember( unitsForTimeAxis , {'days', 'hours', 'minutes', 'seconds'} )
-    timeForPlot     = inputDataStruct.time.data(2,1:timeLength);
+    timeForPlot     = inputDataStruct.time_worker_0001.data(2,1:timeLength);
     thisTimeLabel   = 'Time [hours]';
     % Need to put a few extra statements in here to detect the exact units
     % of "inputDataStruct.time.data(2,:);" and scale it appropriately
@@ -280,17 +280,17 @@ Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotO
 %% --------------------------------------------------------------------- %%
 %% PLOT THE COST
 % Get the data
-data            = inputDataStruct.cost.data;
-dimPerTime      = inputDataStruct.cost.dimPerTime;
-labelPerDim     = inputDataStruct.cost.labelPerDim;
+data            = inputDataStruct.cost_worker_0001.data;
+dimPerTime      = inputDataStruct.cost_worker_0001.dimPerTime;
+labelPerDim     = inputDataStruct.cost_worker_0001.labelPerDim;
 
 
 timeLength      = size( data , dimPerTime+1 );
 if strcmp( unitsForTimeAxis , 'steps' )
-    timeForPlot     = inputDataStruct.time.data(1,1:timeLength);
+    timeForPlot     = inputDataStruct.time_worker_0001.data(1,1:timeLength);
     thisTimeLabel   = 'Time [index]';
 elseif ismember( unitsForTimeAxis , {'days', 'hours', 'minutes', 'seconds'} )
-    timeForPlot     = inputDataStruct.time.data(2,1:timeLength);
+    timeForPlot     = inputDataStruct.time_worker_0001.data(2,1:timeLength);
     thisTimeLabel   = 'Time [hours]';
     % Need to put a few extra statements in here to detect the exact units
     % of "inputDataStruct.time.data(2,:);" and scale it appropriately

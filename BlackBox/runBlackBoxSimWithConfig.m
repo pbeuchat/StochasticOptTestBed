@@ -51,6 +51,15 @@ flag_returnObjectsToWorkspace       = inputBlackBoxInstructions.flag_returnObjec
 % Get the flag for whether to perform a deterministic simulation or not
 flag_deterministicSimulation        = inputBlackBoxInstructions.flag_deterministicSimulation;
 
+% Get the seed for controlling repeatability of runs
+seed_forSimulation                  = inputBlackBoxInstructions.seed_forSimulation;
+% Get the random number "Generator Type" for how to draw random samples
+seed_RandNumGeneratorType           = inputBlackBoxInstructions.seed_RandNumGeneratorType;
+
+% Get the details stuct about "Evaulating Multiple Realisations"
+details_evalMultiReal               = inputBlackBoxInstructions.details_evalMultiReal;
+
+
 % Get the plotting flags:
 flag_plotResults                        = inputBlackBoxInstructions.flag_plotResults;
 flag_plotResultsPerController           = inputBlackBoxInstructions.flag_plotResultsPerController;
@@ -132,7 +141,7 @@ disp('            and wrapping it together as a "Distrubance Coordinator" class'
 
 % Instantiate a "Disturbance Coordinator" object
 % This requires the identifier for the disturbance model to be used
-thisDistIdentifier  = '002_002';
+thisDistIdentifier  = '002_003';
 thisRecomputeStats  = false;
 distCoord           = Disturbance_Coordinator(thisDistIdentifier);
 
@@ -241,7 +250,7 @@ for iController = 1:numControlTechniques
     mySimCoordArray(iController,1) = Simulation_Coordinator( distCoord , myControlCoordArray(iController,1) , myProgModelEng , stateDef , costDef , constraintDef );
     
     % Set the parameters for the simulation
-    specifySimulationParameters( mySimCoordArray(iController,1) , timeIndex_start , timeIndex_end , flag_saveResults , flag_deterministicSimulation);
+    specifySimulationParameters( mySimCoordArray(iController,1) , timeIndex_start , timeIndex_end , seed_forSimulation , seed_RandNumGeneratorType , flag_saveResults , flag_deterministicSimulation, details_evalMultiReal);
     
     % Check that the components of the simulation are compatible
     flag_throwError = true;
@@ -343,7 +352,7 @@ for iController = 1:numControlTechniques
     end
     
     
-    % Run the simulation
+    % RUN THE SIMULATION:
     [thisCompletedSuccessfully , allResults{iController,1} , savedDataFileNames] = runSimulation( mySimCoordArray(iController,1) , savePath_Results_thisTime_thisTechnique );
     allDataFileNames{iController,1} = savedDataFileNames;
     
@@ -368,40 +377,51 @@ for iController = 1:numControlTechniques
     % Store the time taken for this section
     thisTime = etime(clock,thisStartTime);
     % Give the user a little bit of info
-    disp([' ... INFO: ',num2str(thisTime),' seconds elapsed using the "',thisControllerSpec.label ,'" control technique run for ',num2str((timeIndex_end-timeIndex_start+1)),' time steps']);
+    disp([' ... INFO: ',num2str(thisTime),' seconds elapsed using the following:' ]);
+    disp(['            Controller:                    "',thisControllerSpec.label ,'"' ]);
+    disp(['            # Time Steps per realisation:   ',num2str((timeIndex_end-timeIndex_start+1)) ]);
+    if details_evalMultiReal.flag_evaluateOnMultipleRealisations
+        disp(['            # of realisations:              ',num2str(details_evalMultiReal.numSamplesUserSpec) ]);
+    else
+        disp( '            # of realisations:              1' );
+    end
+    disp(' ');
+
 
     
-    % TO ENSURE THAT EVERY CONTROLLER SEES THE SAME DISTURBANCE
-    % This is also for some computational efficiency because it "should" be
-    % quicker than starting with the same seed and generating the same
-    % random number that are from the same sequence
-    if ~passedSameDisturbanceToAllSimulators && (numControlTechniques > 1)
-        % If the field exists
-        if isfield( allResults{iController,1} , 'xi' )
-            % Then get the disturbance sequence that was used
-            tempXi = allResults{iController,1}.xi.data;
-            % A flag for whether to throw errors or not
-            temp_flag_throwError = false;
-            % Now step through all the remaining Simulations and add this
-            % same disturbance sequence to their property
-            for iTemp = (iController+1) : numControlTechniques
-                % Add the data
-                specifyPrecomputedDisturbances( mySimCoordArray(iTemp,1) , tempXi );
-                % Check the compatibility
-                returnIsCompatible = checkSimulationCompatability( mySimCoordArray(iTemp,1) , temp_flag_throwError );
-                % If the compatibility check failed
-                if ~returnIsCompatible
-                    % then remove the disturbance data
-                    specifyPrecomputedDisturbances( mySimCoordArray(iTemp,1) , flase );
-                    % and check the compatability again
-                    checkSimulationCompatability( mySimCoordArray(iTemp,1) , temp_flag_throwError );
+    if ~details_evalMultiReal.flag_evaluateOnMultipleRealisations
+        % TO ENSURE THAT EVERY CONTROLLER SEES THE SAME DISTURBANCE
+        % This is also for some computational efficiency because it "should" be
+        % quicker than starting with the same seed and generating the same
+        % random number that are from the same sequence
+        if ~passedSameDisturbanceToAllSimulators && (numControlTechniques > 1)
+            % If the field exists
+            if isfield( allResults{iController,1} , 'xi' )
+                % Then get the disturbance sequence that was used
+                tempXi = allResults{iController,1}.xi.data;
+                % A flag for whether to throw errors or not
+                temp_flag_throwError = false;
+                % Now step through all the remaining Simulations and add this
+                % same disturbance sequence to their property
+                for iTemp = (iController+1) : numControlTechniques
+                    % Add the data
+                    specifyPrecomputedDisturbances( mySimCoordArray(iTemp,1) , tempXi );
+                    % Check the compatibility
+                    returnIsCompatible = checkSimulationCompatability( mySimCoordArray(iTemp,1) , temp_flag_throwError );
+                    % If the compatibility check failed
+                    if ~returnIsCompatible
+                        % then remove the disturbance data
+                        specifyPrecomputedDisturbances( mySimCoordArray(iTemp,1) , false );
+                        % and check the compatability again
+                        checkSimulationCompatability( mySimCoordArray(iTemp,1) , temp_flag_throwError );
+                    end
                 end
             end
+            % Set the flag so that we don't do this again
+            passedSameDisturbanceToAllSimulators = true;
         end
-        % Set the flag so that we don't do this again
-        passedSameDisturbanceToAllSimulators = true;
+        % END OF: "if passedSameDisturbanceToAllSimulators && (numControlTechniques > 1)"
     end
-    % END OF: "if passedSameDisturbanceToAllSimulators && (numControlTechniques > 1)"
     
 end
 
@@ -419,6 +439,7 @@ timedResults.runAllSimulations = etime(clock,timerStart);
 % Give the user a little bit more info for the cumulative time
 disp(' ');
 disp([' ... INFO: ',num2str(numControlTechniques),' controllers were run for ',num2str((timeIndex_end-timeIndex_start+1)),' time steps each, this was completed in ',num2str(timedResults.runAllSimulations),' seconds']);
+disp(' ');
 %% --------------------------------------------------------------------- %%
 %% NOW PLOT THE RESULTS
 timerStart = clock;

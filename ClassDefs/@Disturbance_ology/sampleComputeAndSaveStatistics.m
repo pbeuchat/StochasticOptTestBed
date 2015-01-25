@@ -220,7 +220,8 @@ for iCycleTime = 1:distCycleTimeSteps
         % Iterate through collecting the number of sample required
         for iSamp = 1:numSamplesToCollect
             % Get a sample
-            thisSamp = requestSampleFromTimeForDuration( obj.myDisturbanceModel , iCycleTime , timeHorizon );
+            tempXi = [];
+            thisSamp = requestSampleFromTimeForDuration( obj.myDisturbanceModel , iCycleTime , timeHorizon , tempXi );
             % Update the running statistics
             if computeMean
                 running_mean = running_mean + thisSamp;

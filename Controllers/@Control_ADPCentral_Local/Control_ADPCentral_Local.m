@@ -74,6 +74,8 @@ classdef Control_ADPCentral_Local < Control_LocalController
         
         computeAllVsAtInitialisation@logical;
         
+        numVsInitialised@uint32;
+        
     end
 
     

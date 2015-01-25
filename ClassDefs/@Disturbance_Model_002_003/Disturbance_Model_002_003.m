@@ -1,4 +1,4 @@
-classdef Disturbance_Model_002_002 < Disturbance_Model
+classdef Disturbance_Model_002_003 < Disturbance_Model
 % This is a specific implementation of the "isturbance_Model" superclass
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
@@ -44,19 +44,31 @@ classdef Disturbance_Model_002_002 < Disturbance_Model
         %stats_directlyAvailable = {'mean'};
         stats_directlyAvailable = {''};
         
+        % Specifications of the distrubance model
+        n_Tamb@uint32;
+        sineWave_mean_Tamb@double;
+        sineWave_amp_Tamb@double;
+        bounds_lower_Tamb@double;
+        bounds_upper_Tamb@double;
+        covMatrix_Tamb@double;
+        
+        
         % Details for being able to compute a Multi-Variate Normal random
         % vector from an input of a input sample of idenpendent univariate
         % standard normal distributions
-        sigmaMatrix@double;
+        covMatrix@double;
         lengthRandInputVector@uint32 = uint32(1);
-        simgaDecomp@double;
+        covMatrixDecomp@double;
+        
+        bounds_lower@double;
+        bounds_upper@double;
         
         
     end
     
     methods
         % This is the "CONSTRUCTOR" method
-        function obj = Disturbance_Model_002_002(inputAnything)
+        function obj = Disturbance_Model_002_003(inputAnything)
             % Allow the Constructor method to pass through when called with
             % no nput arguments (required for the "empty" object array
             % creator)
@@ -74,7 +86,7 @@ classdef Disturbance_Model_002_002 < Disturbance_Model
                 
                 % Call the function to compute the Cholesky or spectral
                 % Decomposition of the covariance matrix
-                
+                initiliaseDisturbanceModelParameters( obj );
                 
                 
                 % Set the handles to the appropriate properties
@@ -105,7 +117,7 @@ classdef Disturbance_Model_002_002 < Disturbance_Model
         
         % FUNCTION: to get a trace for given duration using the random
         % input
-        returnSample = requestSampleFromTimeForDuration_withRandInput( obj , startTime , duration , startXi , inputRandNumbers );
+        returnSample = requestSampleFromTimeForDuration_withRandInput( obj , startTime , duration , startXi , inputRandNumbers )
         
         % FUNCTION: to check if a statistics is available directly
         returnCheck = isStatAvailableDirectly( obj , statDesired );

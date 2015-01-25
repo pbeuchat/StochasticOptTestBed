@@ -104,7 +104,6 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
             error(bbConstants.errorMsg);
         end
         
-        
     end
     
     % Select the u for this step within the MPC solution

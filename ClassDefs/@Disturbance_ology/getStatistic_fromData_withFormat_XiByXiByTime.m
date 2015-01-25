@@ -57,7 +57,27 @@ if isempty(i_fullInput)
        i_full( ((iStep-1)*n_xi2+1) : (iStep*n_xi2) , 1 ) = repmat( ( ((iStep-1)*n_xi+1) : (iStep*n_xi) )' , n_xi , 1 );
     end
 else
-    i_full = i_fullInput(1:num_nonZeroFull);
+    % "i_fullInput" should give the indexing for a full "N_max" cylce time
+    % of the disturbance model, if "duration" is longer than "N_max",
+    % then we need to extend the indexing...
+    % (NOTE: that "Tmax" is "N_max" in this function)
+    if duration <= Tmax
+        i_full = i_fullInput(1:num_nonZeroFull);
+    else
+        % Get the number of wraps required
+        numWrapsIndexing = floor( double(duration-1)/Tmax );
+        % Initialise the indexing variable
+        i_full = zeros( num_nonZeroFull , 1 );
+        % Fill in the first part
+        i_full( 1:(n_xi2*Tmax) , 1 ) = i_fullInput;
+        % Fill in the "complete" wraps
+        for iWrap=1:numWrapsIndexing-1
+            i_full( (iWrap*n_xi2*Tmax+1) : ((iWrap+1)*n_xi2*Tmax) , 1 ) = i_fullInput + (iWrap * n_xi2 * Tmax);
+        end
+        % Fill in the final partial wrap
+        numFinalWrap = num_nonZeroFull - numWrapsIndexing*n_xi2*Tmax;
+        i_full( (numWrapsIndexing*n_xi2*Tmax+1) : (numWrapsIndexing*n_xi2*Tmax+numFinalWrap) , 1 ) = i_fullInput(1:numFinalWrap,1)  + (numWrapsIndexing * n_xi2 * Tmax);
+    end
 end
     
 if isempty(j_fullInput)
@@ -66,7 +86,28 @@ if isempty(j_fullInput)
        j_full( ((iStep-1)*n_xi+1) : (iStep*n_xi) , 1 ) = iStep;
     end
 else
-    j_full = j_fullInput(1:num_nonZeroFull);
+    % SAME AS ABOVE FOR "i_full"
+    % "j_fullInput" should give the indexing for a full "N_max" cylce time
+    % of the disturbance model, if "duration" is longer than "N_max",
+    % then we need to extend the indexing...
+    % (NOTE: that "Tmax" is "N_max" in this function)
+    if duration <= Tmax
+        j_full = j_fullInput(1:num_nonZeroFull);
+    else
+        % Get the number of wraps required
+        numWrapsIndexing = floor( double(duration-1)/Tmax );
+        % Initialise the indexing variable
+        j_full = zeros( num_nonZeroFull , 1 );
+        % Fill in the first part
+        j_full( 1:(n_xi2*Tmax) , 1 ) = j_fullInput;
+        % Fill in the "complete" wraps
+        for iWrap=1:numWrapsIndexing-1
+            j_full( (iWrap*n_xi2*Tmax+1) : ((iWrap+1)*n_xi2*Tmax) , 1 ) = j_fullInput + (iWrap * n_xi2 * Tmax);
+        end
+        % Fill in the final partial wrap
+        numFinalWrap = num_nonZeroFull - numWrapsIndexing*n_xi2*Tmax;
+        j_full( (numWrapsIndexing*n_xi2*Tmax+1) : (numWrapsIndexing*n_xi2*Tmax+numFinalWrap) , 1 ) = j_fullInput(1:numFinalWrap,1)  + (numWrapsIndexing * n_xi2 * Tmax);
+    end
 end
 
 

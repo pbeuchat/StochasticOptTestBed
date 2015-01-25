@@ -363,7 +363,7 @@ function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P
     % ---------------------------------------- %
     % METHOD "DIAG" 01
     elseif flag_diag_01
-        if sum( double(P+10^-10) < 0 ) > 0
+        if sum( double(P+10^-8) < 0 ) > 0
             disp(' ... ERROR: The diagonal entries of the matrix P are NOT all non-negative');
             %error(' Terminating :-( See previous messages and ammend');
         end

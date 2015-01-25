@@ -83,7 +83,7 @@ classdef Disturbance_Model_002_001 < Disturbance_Model
         % FUNCTION: to get a trace for the full length of the cycle
         returnSample = requestSampleForFullCylce( obj );
         
-        % FUNCTION: to call for a state update externally
+        % FUNCTION: to call for a trae for a given duration
         returnSample = requestSampleFromTimeForDuration( obj , startTime , duration , startXi );
         
         % FUNCTION: to check if a statistics is available directly

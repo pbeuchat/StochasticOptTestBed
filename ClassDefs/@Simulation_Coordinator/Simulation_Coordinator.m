@@ -72,6 +72,19 @@ classdef Simulation_Coordinator < handle
         % not
         flag_deterministic@logical = false;
         
+        % The "Original" Seed that fully determines the simulation
+        seed_original@double;
+        
+        % The "Generator Type" to use for the "RandStream" objects
+        randNumGenType@string;
+        
+        % A cell array that will be filled with "RandStream" objects
+        randStream_perWorkerCellArray@cell;
+        
+        % Struct with the details about evaluating controllers by
+        % simulating over multiple realisation of the uncertainty
+        evalMultiReal_details@struct;
+        
         % A pre-computed stream of uncertainties to ensure a fair
         % comparison
         flag_precomputedDisturbancesAvailable@logical = false;
@@ -197,11 +210,21 @@ classdef Simulation_Coordinator < handle
         
         
         % FUNCTION: to specify the key simulation parameters
-        function [ ] = specifySimulationParameters(obj, inputTimeIndex_start , inputTimeIndex_end , inputFlagSaveResults, inputFlagDeterministic)
-            obj.simTimeIndex_start  = uint32( inputTimeIndex_start );
-            obj.simTimeIndex_end    = uint32( inputTimeIndex_end );
-            obj.flag_SaveResults    = inputFlagSaveResults;
-            obj.flag_deterministic  = inputFlagDeterministic;
+        function [ ] = specifySimulationParameters(obj, inputTimeIndex_start , inputTimeIndex_end , inputSeed , inputRandNumGeneratorType , inputFlagSaveResults, inputFlagDeterministic, inputEvalMultiRealDetails)
+            obj.simTimeIndex_start      = uint32( inputTimeIndex_start );
+            obj.simTimeIndex_end        = uint32( inputTimeIndex_end );
+            obj.seed_original           = inputSeed;
+            obj.randNumGenType          = inputRandNumGeneratorType;
+            obj.flag_SaveResults        = inputFlagSaveResults;
+            obj.flag_deterministic      = inputFlagDeterministic;
+            obj.evalMultiReal_details   = inputEvalMultiRealDetails;
+            
+            % Adjust the flags such that "deterministic" is 'false' if
+            % "evaulate multiple realisation" is spefied as 'true'
+            if inputEvalMultiRealDetails.flag_evaluateOnMultipleRealisations
+                obj.flag_deterministic = false;
+            end
+            
         end
         
         

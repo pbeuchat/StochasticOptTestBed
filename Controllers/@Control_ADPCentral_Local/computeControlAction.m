@@ -58,12 +58,13 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     %mask_P = diag( true(n_x,1) );
     
     
-    if obj.iterationCounter > obj.computeVEveryNumSteps
+    if ~obj.computeAllVsAtInitialisation
+        
+        if obj.iterationCounter > obj.computeVEveryNumSteps
+        
+            % Reset the iteration counter to one
+            obj.iterationCounter = uint32(1);
 
-        % Reset the iteration counter to one
-        obj.iterationCounter = uint32(1);
-
-        if ~obj.computeAllVsAtInitialisation
             % SPECIFY THE FITTIG RANGE
             %x_lower = myConstraints.x_rect_lower;
             %x_upper = myConstraints.x_rect_upper;
@@ -114,9 +115,9 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
                 thisExixi   = predictions.cov(thisRange,thisRange);
 
                 % Get the value function for the future time step
-                thisP = obj.P{obj.statsPredictionHorizon+1};
-                thisp = obj.p{obj.statsPredictionHorizon+1};
-                thiss = obj.s{obj.statsPredictionHorizon+1};
+                thisP = obj.P{iTime+1};
+                thisp = obj.p{iTime+1};
+                thiss = obj.s{iTime+1};
 
                 % Pass everything to a ADP Sampling method
                 if obj.useMethod_samplingWithLSFit
@@ -137,10 +138,18 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
 
             end
 
-            % Delete "T=" with backspaces
-            %fprintf('\b\b');
+
+        end   % END OF: "if obj.iterationCounter > obj.computeVEveryNumSteps"
+        
+    else
+        % If we go beyond the "number of Value Functions initialised", then
+        % (Note: "numVsInitialised" is set to be the Full Cycle Time of the
+        % disturbance model)
+        if obj.iterationCounter > obj.numVsInitialised
+            % Reset the iteration counter to one
+            obj.iterationCounter = uint32(1);
         end
-    end
+    end   % END OF: "if ~obj.computeAllVsAtInitialisation"
     
     
     % Get the value function coefficiens to use for this time step
@@ -154,48 +163,71 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     Exixi   = predictions.cov(thisRange,thisRange);
     
     
-    % Now formulate the optimisation problem to solve for u
-    u = sdpvar( double(n_u) , 1 , 'full' );
+    R_new = sparse( Bu'*thisP*Bu );
+    r_new = (2*x'*A'*thisP + 2*Exi'*Bxi'*thisP + thisp') * Bu;
+    r_new = r_new';
+    c_new = 0;
     
-    thisObj =   r' * u ...
-              + x' * Q * x + q' * x + c ...
-              + u' * Bu'*thisP*Bu * u ...
-              + (2*x'*A'*thisP + 2*Exi'*Bxi'*thisP + thisp') * Bu * u ...
-              + x'*A'*thisP*A*x ...
-              + trace( Bxi'*thisP*Bxi*Exixi ) ...
-              + 2*x'*A'*thisP*Bxi*Exi ...
-              + thisp'*A*x ...
-              + thisp'*Bxi*Exi ...
-              + thiss;
-    
-	thisCons = ( myConstraints.u_all_A * u <= myConstraints.u_all_b );
-          
-    
-        % Inform the user that we are about to call the solver
-    %disp([' ... calling solver now (calling "',thisSolverStr,'" via Yalmip)'])
-    
-    % Define the options
-    thisOptions          = sdpsettings;
-    thisOptions.debug    = false;
-    thisOptions.verbose  = false;
-    
-    % Call the solver via Yalmip
-    % SYNTAX: diagnostics = solvesdp(Constraints,Objective,options)
-    diagnostics = solvesdp(thisCons,thisObj,thisOptions);
+    % Some things that need to be passed to the solver
+    A_eq_input = sparse([],[],[],0,double(n_u),0);
+    b_eq_input = sparse([],[],[],0,1,0);
+    tempModelSense = 'min';
+    tempVerboseOptDisplay = false;
 
-    % Interpret the results
-    if diagnostics.problem == 0
-        %disp(' ... the optimisation formulation was Feasible and has been solved')
-    elseif diagnostics.problem == 1
-        disp(' ... the optimisation formulation was Infeasible');
-        error(' Terminating :-( See previous messages and ammend');
-    else
-        disp(' ... the optimisation formulation was strange, it was neither "Feasible" nor "Infeasible", something else happened...');
-        error(' Terminating :-( See previous messages and ammend');
+    % Pass the problem to a solver
+    % RETURN SYNTAX: [x , objVal, lambda, flag_solvedSuccessfully] = = solveQP_viaGurobi( H, f, c, A_ineq, b_ineq, A_eq, b_eq, inputModelSense, verboseOptDisplay )
+    [u , ~, ~, flag_solvedSuccessfully ] = opt.solveQP_viaGurobi( R_new, r_new, c_new, myConstraints.u_all_A, myConstraints.u_all_b, A_eq_input, b_eq_input, tempModelSense, tempVerboseOptDisplay );
+    
+    
+    % Handle the case that the problem was not successfully solved
+    if ~flag_solvedSuccessfully
+        disp([' ... ERROR: The optimisation for "u" via  ADP failed at time step: ',num2str(currentTime.index) ]);
+        error(bbConstants.errorMsg);
     end
-
-    u = double( u );
-    temp = 1;
+    
+    
+%     % Now formulate the optimisation problem to solve for u
+%     u = sdpvar( double(n_u) , 1 , 'full' );
+%     
+%     thisObj =   r' * u ...
+%               + x' * Q * x + q' * x + c ...
+%               + u' * Bu'*thisP*Bu * u ...
+%               + (2*x'*A'*thisP + 2*Exi'*Bxi'*thisP + thisp') * Bu * u ...
+%               + x'*A'*thisP*A*x ...
+%               + trace( Bxi'*thisP*Bxi*Exixi ) ...
+%               + 2*x'*A'*thisP*Bxi*Exi ...
+%               + thisp'*A*x ...
+%               + thisp'*Bxi*Exi ...
+%               + thiss;
+%     
+% 	thisCons = ( myConstraints.u_all_A * u <= myConstraints.u_all_b );
+%           
+%     
+%         % Inform the user that we are about to call the solver
+%     %disp([' ... calling solver now (calling "',thisSolverStr,'" via Yalmip)'])
+%     
+%     % Define the options
+%     thisOptions          = sdpsettings;
+%     thisOptions.debug    = false;
+%     thisOptions.verbose  = false;
+%     
+%     % Call the solver via Yalmip
+%     % SYNTAX: diagnostics = solvesdp(Constraints,Objective,options)
+%     diagnostics = solvesdp(thisCons,thisObj,thisOptions);
+% 
+%     % Interpret the results
+%     if diagnostics.problem == 0
+%         %disp(' ... the optimisation formulation was Feasible and has been solved')
+%     elseif diagnostics.problem == 1
+%         disp(' ... the optimisation formulation was Infeasible');
+%         error(' Terminating :-( See previous messages and ammend');
+%     else
+%         disp(' ... the optimisation formulation was strange, it was neither "Feasible" nor "Infeasible", something else happened...');
+%         error(' Terminating :-( See previous messages and ammend');
+%     end
+% 
+%     u = double( u );
+%     temp = 1;
     
 end
 % END OF FUNCTION
