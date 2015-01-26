@@ -127,7 +127,7 @@ flag_evaluateOnMultipleRealisations = true;
 % About how many realisations to run:
 evalMultiReal_numSampleMethod       = 'userSpecified';      % OPTIONS: 'userSpecified', 'n_xi^2'
 evalMultiReal_numSamplesMax         =  inf;                 % OPTIONS: set to "inf" for unbounded
-evalMultiReal_numSamplesUserSpec    =  3;
+evalMultiReal_numSamplesUserSpec    =  90;
 
 % About how to parallelise the computations
 evalMultiReal_parallelise_onOff     = true;                 % OPTIONS: 'true', 'false'
@@ -161,7 +161,7 @@ flag_returnObjectsToWorkspace = false;        % "true" or "false"
 
 flag_plotResults                        = true;
 flag_plotResultsPerController           = true;
-flag_plotResultsControllerComparison    = true;
+flag_plotResultsControllerComparison    = false;
 
 plotResults_unitsForTimeAxis            = 'steps';        % "steps"  or "days" or "hours" or "minutes" or "seconds"
 

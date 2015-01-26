@@ -480,14 +480,20 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         % following attributes so that things can be easily plotted
         % Specifically
         % .data         - this is the actual data
+        % .dataRepresents - this catagorised what the data is, eg. 'state'
+        %                   OPTIONS: 'time', 'state', 'input', 'disturbance',
+        %                   'cost', 'cost_per_ss'
         % .dimPerTime   - this is the number of dimension of data stored per time step
         % .labelPerDim  - this is a label of the variable for each non-time dimension
+        % .timePropertyName - this is the name of the property under which the time data is saved
+        %                     This makes the plotting more generic
         
         % We then put all these together into a struct, where the property
         % names for the struct are saved in a cell array of strings
     
         % Initialise the data counter and container
         iDataName = 0;
+        clear savedDataNames_thisWorker;
         savedDataNames_thisWorker = cell(7,1);
         
         % Clear the results struct just in case
@@ -502,10 +508,12 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
             savedDataNames_thisWorker{iDataName,1}  = ['time_worker_',num2str(iWorker,'%04d')];
         end
         tempResult.data             = result_time;
+        tempResult.dataRepresents   = 'time';
         tempResult.dimPerTime       = 1;
         tempLabels                  = cell(tempResult.dimPerTime,1);
         tempLabels{1,1}             = result_time_label;
         tempResult.labelPerDim      = tempLabels;
+        tempResult.timePropertyName = savedDataNames_thisWorker{1,1};
 
         results_thisWorker.(savedDataNames_thisWorker{iDataName}) = tempResult;
         clear tempLabels;
@@ -521,11 +529,13 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
                 savedDataNames_thisWorker{iDataName,1}  = ['x_worker_',num2str(iWorker,'%04d')];
             end
             tempResult.data             = result_x;
+            tempResult.dataRepresents   = 'state';
             tempResult.dimPerTime       = 1;
             tempLabels                  = cell(tempResult.dimPerTime,1);
             tempLabels{1,1}             = obj.stateDef.label_x;
             tempResult.labelPerDim      = tempLabels;
-
+            tempResult.timePropertyName = savedDataNames_thisWorker{1,1};
+            
             results_thisWorker.(savedDataNames_thisWorker{iDataName}) = tempResult;
             clear tempLabels;
             clear tempResult;
@@ -541,10 +551,12 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
                 savedDataNames_thisWorker{iDataName,1}  = ['u_worker_',num2str(iWorker,'%04d')];
             end
             tempResult.data             = result_u;
+            tempResult.dataRepresents   = 'input';
             tempResult.dimPerTime       = 1;
             tempLabels                  = cell(tempResult.dimPerTime,1);
             tempLabels{1,1}             = obj.stateDef.label_u;
             tempResult.labelPerDim      = tempLabels;
+            tempResult.timePropertyName = savedDataNames_thisWorker{1,1};
 
             results_thisWorker.(savedDataNames_thisWorker{iDataName}) = tempResult;
             clear tempLabels;
@@ -562,10 +574,12 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
                 savedDataNames_thisWorker{iDataName,1}  = ['xi_worker_',num2str(iWorker,'%04d')];
             end
             tempResult.data             = result_xi;
+            tempResult.dataRepresents   = 'disturbance';
             tempResult.dimPerTime       = 1;
             tempLabels                  = cell(tempResult.dimPerTime,1);
             tempLabels{1,1}             = obj.stateDef.label_xi;
             tempResult.labelPerDim      = tempLabels;
+            tempResult.timePropertyName = savedDataNames_thisWorker{1,1};
 
             results_thisWorker.(savedDataNames_thisWorker{iDataName}) = tempResult;
             clear tempLabels;
@@ -583,10 +597,12 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
                 savedDataNames_thisWorker{iDataName,1}  = ['cost_worker_',num2str(iWorker,'%04d')];
             end
             tempResult.data             = result_cost;
+            tempResult.dataRepresents   = 'cost';
             tempResult.dimPerTime       = 1;
             tempLabels                  = cell(tempResult.dimPerTime,1);
             tempLabels{1,1}             = costLabels;
             tempResult.labelPerDim      = tempLabels;
+            tempResult.timePropertyName = savedDataNames_thisWorker{1,1};
 
             results_thisWorker.(savedDataNames_thisWorker{iDataName}) = tempResult;
             clear tempLabels;
@@ -603,18 +619,20 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
                 savedDataNames_thisWorker{iDataName,1}  = ['cost_per_ss_worker_',num2str(iWorker,'%04d')];
             end
             tempResult.data             = result_cost_per_ss;
+            tempResult.dataRepresents   = 'cost_per_ss';
             tempResult.dimPerTime       = 2;
+            % Labes for dimension 1
             tempLabels                  = cell(tempResult.dimPerTime,1);
             tempLabels{1,1}             = costLabels;
-
+            % Labes for dimension 2
             tempCell = cell(obj.stateDef.n_ss,1);
             for itemp=1:obj.stateDef.n_ss
                 tempCell{itemp,1} = num2str(itemp);
             end
-
             tempLabels{2,1}             = tempCell;
             tempResult.labelPerDim      = tempLabels;
-
+            tempResult.timePropertyName = savedDataNames_thisWorker{1,1};
+            
             results_thisWorker.(savedDataNames_thisWorker{iDataName}) = tempResult;
             clear tempLabels;
             clear tempResult;
@@ -656,7 +674,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         % Didn't matter at the time because the plotting function didn't
         % use the info
         if iWorker == 1
-            returnSavedDataNames = savedDataNames_thisWorker;
+            returnSavedDataNames = savedDataNames_thisWorker(1:numDataNames,1);
         end
         
         % CLEAR THE SAVE VARIABLES TO ENUSRE THERE IS NO MISTAKE IN THE
@@ -695,6 +713,9 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     % following attributes so that things can be easily plotted
     % Specifically
     % .data                - this is the actual data
+    % .dataRepresents      - this catagorised what the data is, eg. 'state'
+    %                       OPTIONS: 'realisationNumber', '', 'costCumulative',
+    %                                'costCumulative_per_ss'
     % .dimPerRealisation   - this is the number of dimension of data stored per realisation
     % .labelPerDim         - this is a label of the variable for each non-time dimension
     
@@ -715,6 +736,8 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     iDataName                   = iDataName + 1;
     savedDataNames_all{iDataName,1} = 'realisationNumber';
     tempResult.data                 = result_realisationNumber_all;
+    tempResult.dataRepresents       = 'realisationNumber';
+    tempResult.dataRepresents       = '';
     tempResult.dimPerRealisation    = 1;
     tempLabels                      = cell(tempResult.dimPerRealisation,1);
     tempLabels{1,1}                 = result_realisationNumber_label;
@@ -729,6 +752,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     % For 'costCumulative'
     iDataName                       = iDataName + 1;
     savedDataNames_all{iDataName,1} = 'costCumulative';
+    tempResult.dataRepresents       = 'costCumulative';
     tempResult.data                 = result_costCumulative_all;
     tempResult.dimPerRealisation    = 1;
     tempLabels                      = cell(tempResult.dimPerRealisation,1);
@@ -743,18 +767,20 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     % For 'costCumulative_per_ss'
     iDataName                       = iDataName + 1;
     savedDataNames_all{iDataName,1} = 'costCumulative_per_ss';
+    tempResult.dataRepresents       = '';
     tempResult.data                 = result_costCumulative_per_ss_all;
     tempResult.dimPerRealisation    = 2;
+    % Labes for dimension 1
     tempLabels                      = cell(tempResult.dimPerRealisation,1);
     tempLabels{1,1}                 = costLabels;
-
+    % Labes for dimension 2
     tempCell = cell(obj.stateDef.n_ss,1);
     for itemp=1:obj.stateDef.n_ss
         tempCell{itemp,1} = num2str(itemp);
     end
-
     tempLabels{2,1}                 = tempCell;
     tempResult.labelPerDim          = tempLabels;
+    tempResult.dataRepresents       = 'costCumulative_per_ss';
 
     results_all.(savedDataNames_all{iDataName}) = tempResult;
     clear tempLabels;
@@ -765,6 +791,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     % To save the details of the Random Stream object used for each worker
     % so that any result can be exactly reproduced
     % .data                - this is the actual data
+    % .dataRepresents      - this catagorised what the data is, eg. 'randStreamPerWorker'
     % .propertiesPerCell   - this is the number of dimension of data stored per realisation
     
     % --------------------------- %
@@ -772,6 +799,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     iDataName                       = iDataName + 1;
     savedDataNames_all{iDataName,1} = 'randStreamPerWorker';
     tempResult.data                 = result_randStreamPerWorker;
+    tempResult.dataRepresents       = 'randStreamPerWorker';
     tempResult.propertiesPerCell    = propertiesFor_randStreamPerWorker;
 
     results_all.(savedDataNames_all{iDataName}) = tempResult;
@@ -781,7 +809,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     % Get the number of data files to be stored
     numDataNames = iDataName;
 
-    % Step through the data and save it (if the save path is not emtpty
+    % Step through the data and save it (if the save path is not emtpty)
     if ~isempty(savePath)
         for iDataName = 1:numDataNames
             save( [savePath , savedDataNames_thisWorker{iDataName} , '.mat'] , '-struct' ,  'results_all' , savedDataNames_all{iDataName} , '-v7.3' )
@@ -793,7 +821,10 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         returnResults.(savedDataNames_all{iDataName}) = results_all.(savedDataNames_all{iDataName});
     end
     % ... and "datanames" also
-    returnSavedDataNames = [ returnSavedDataNames(:,1) ; savedDataNames_all(1:numDataNames,1) ];
+    for iDataName = 1:numDataNames
+        returnSavedDataNames = [ returnSavedDataNames(:,1) ; savedDataNames_all(iDataName,1) ];
+    end
+    
     
     % CLEAR THE SAVE VARIABLES 
     clear savedDataNames_all;

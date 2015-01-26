@@ -118,6 +118,67 @@ classdef Visualisation < handle
             end
         end
         
+        
+        function figurePosition = getFigurePositionInFullScreenGrid( inputNumRows, inputNumCols, inputThisFigureIndex, inputIndexType )
+            
+            % First get the size of the screen
+            screenSize = get(0,'ScreenSize');
+            screenWidth = screenSize(1,4);
+            screenHeight = screenSize(1,4);
+            
+            % Specify the buffers
+            topBuffer = 20;
+            botBuffer = 0;
+            leftBuffer = 0;
+            rightBuffer = 0;
+            
+            % Get the position of the figure
+            if strcmpi( inputIndexType , 'rowwise')
+                % Check the index is valid
+                if inputThisFigureIndex <= (inputNumRows * inputNumCols)
+                    thisRow = floor( (double(inputThisFigureIndex)+1) / double(inputNumCols) );
+                    thisCol = double(inputThisFigureIndex) - (thisRow-1) * double(inputNumCols);
+                else
+                    disp( ' ... ERROR: the input index is greater than #rows x #cols' );
+                    disp( '            placing figure in the last tile' );
+                    thisRow = inputNumRows;
+                    thisCol = inputNumCols;
+                end
+                    
+            elseif strcmpi( inputIndexType , 'coulmnwise')
+                % Check the index is valid
+                if inputThisFigureIndex <= (inputNumRows * inputNumCols)
+                    thisCol = floor( (double(inputThisFigureIndex)+1) / double(inputNumRows) );
+                    thisRow = double(inputThisFigureIndex) - (thisCol-1) * double(inputNumRows);
+                else
+                    disp( ' ... ERROR: the input index is greater than #rows x #cols' );
+                    disp( '            placing figure in the last tile' );
+                    thisRow = inputNumRows;
+                    thisCol = inputNumCols;
+                end
+                
+            elseif strcmpi( inputIndexType , 'rowandcolumn')
+                thisRow = inputThisFigureIndex(1);
+                thisCol = inputThisFigureIndex(2);
+                
+            else
+                disp( ' ... ERROR: the specified "Index Type" was not recognised' );
+                disp( '            returning a default position' );
+                figurePosition = [0, 0, 100, 50];
+                return;
+            end
+            
+            % Now COMPUTE THE HEIGHT AND WIDTH OF EACH GRAPH
+            
+            
+            % NOW COMPUTE THE POSITION OF THE FIGURE
+            figurePosition = inputNumRows ;
+            
+            
+            
+        end
+        
+        
     end
     % END OF: "methods (Static = true , Access = public)"
         
