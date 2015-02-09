@@ -371,6 +371,7 @@ function [Pnew , pnew, snew] = performADP_singleIteration_byBellmanIneq( obj , P
     end
     
     
+    %% ----------------------------------------------------------------- %%
     %% DIAGONALLY DOMINANT
     
 flag_runDiagonallyDominant = false;
@@ -435,7 +436,7 @@ if flag_runDiagonallyDominant
     
     
     
-    %% Call Yalmip to solve for the next value function
+    %% Call Yalmip to solve for the next value function - SHOULD BE AN LP
     
     % Define the options
     thisOptions          = sdpsettings;
@@ -450,7 +451,7 @@ if flag_runDiagonallyDominant
     if strcmp('SeDuMi',thisSolverStr)
         thisOptions.solver = 'sedumi';
     elseif strcmp('Mosek',thisSolverStr)
-        thisOptions.solver = 'mosek-sdp';
+        thisOptions.solver = 'mosek';
     elseif strcmp('sdpt3',thisSolverStr)
         thisOptions.solver = 'sdpt3';
     else
@@ -484,7 +485,184 @@ if flag_runDiagonallyDominant
     
 end % END OF: "if flag_runDiagonallyDominant"
     
+
+
+
+    %% ----------------------------------------------------------------- %%
+    %% SCALED DIAGONALLY DOMINANT
+
+flag_runScaledDiagonallyDominant = false;
+if flag_runScaledDiagonallyDominant
     
+    % Now try solve it again faster!!!
+    P_sdd = sdpvar( n_x , n_x ,'symmetric');
+    p_sdd = sdpvar( n_x ,  1  ,'full');
+    s_sdd = sdpvar(  1  ,  1  ,'full');
+    
+    Vhat_sdd = ...
+            [    P_sdd                           ,   sparse([],[],[],n_x,n_u,0)          ,   p_sdd                        ;...
+                 sparse([],[],[],n_u,n_x,0)     ,   sparse([],[],[],n_u,n_u,0)          ,   sparse([],[],[],n_u,1,0)    ;...
+                 p_sdd'                          ,   sparse([],[],[],1  ,n_u,0)          ,   s_sdd                         ...
+            ];
+    
+    % Declare the "lambda" multiplier variables
+    lmul_sdd = sdpvar(numCons,1,'full');
+
+    % Step through the "numCons" building up the SDP constraint
+    % P_t+1 - P_t + L - \lambda_i * \sum_i G_i
+    fullMatrix_sdd = disFactor * Vhatf - Vhat_sdd + Lhat;
+    for iCons = 1:numCons
+        fullMatrix_sdd = fullMatrix_sdd - lmul_sdd(iCons,1) * constraintCoefficient{iCons,1};
+    end
+        
+    % The objective shuoldn't have changed, so we just need to adjust the
+    % constraint to reformulate the SDP constraints as Scaled Diagonally
+    % Dominant constrints
+    % Take a uniform distribution over the x-space
+    Ex  = 0.5 * (x_lower + x_upper);
+    Exx = 1/3 * diag( (x_lower.^2 + x_lower.*x_upper + x_upper.^2) );
+    % Compute the objective based on this
+    thisObj_sdd = - ( trace( P_sdd * Exx ) + 2 * Ex' * p_sdd + s_sdd );
+    
+    
+    
+    %% SPECIFY THE CONSTRAINT FUNCTIONS FOR THE SDP
+
+    % The constraints were for the P matrix to be positive semi-definite
+    % (PSD), and for the "Vhatf - Vhat + Lhat - sum lmul*Ghat" matrix to be
+    % PSD
+    % ie. thisCons = [ P >= 0 , fullMatrix >= 0 , lmul >= 0];
+    
+    thisCons_sdd = (lmul >= 0);
+    
+    
+    % For P >= 0
+    
+    % Create the "sub-matrix" variables
+    numSubMat = double((n_x-1)*(n_x-2))/2;
+    %M_for_P_sdd = cell(numSubMat,1);
+    %for i=1:numSubMat
+    %    M_for_P_sdd = sdpvar(  3  ,  1  ,'full');
+    %end
+    M_for_P_sdd = sdpvar(  numSubMat  , 3  ,'full');
+    
+    % Enforce the positivity constraints
+    thisCons_sdd = [ thisCons_sdd , M_for_P_sdd(:,1) >= 0, M_for_P_sdd(:,2) >= 0, M_for_P_sdd(:,1) .* M_for_P_sdd(:,2) - M_for_P_sdd(:,3).^2 >= 0 ];
+    
+    % Now build the full "M" matrix
+    M_sum_for_P_sdd = zeros(n_x,n_x);
+    iM = 1;
+    jM = 1;
+    for kSubMat = 1:numSubMat
+        jM = jM + 1;
+        if jM > n_x
+            iM = iM + 1;
+            jM = iM + 1;
+            if iM > n_x
+                error(' ... THIS SHOULD NOT HAVE OCCURRED :-(');
+            end
+            M_sum_for_P_sdd(iM,iM) = M_sum_for_P_sdd(iM,iM) + M_for_P_sdd(kSubMat,1);
+            M_sum_for_P_sdd(jM,jM) = M_sum_for_P_sdd(jM,jM) + M_for_P_sdd(kSubMat,2);
+            M_sum_for_P_sdd(iM,jM) = M_sum_for_P_sdd(iM,jM) + M_for_P_sdd(kSubMat,3);
+            M_sum_for_P_sdd(jM,iM) = M_sum_for_P_sdd(jM,iM) + M_for_P_sdd(kSubMat,3);
+        end
+    end
+    
+    % Lastly put the constraint that P == M
+    thisCons_sdd = [ thisCons_sdd , P_sdd == M_sum_for_P_sdd ];
+    
+    
+    
+    % For fullMatrix >= 0
+    
+    % Create the "sub-matrix" variables
+    n_temp = size(fullMatrix_sdd,1);
+    numSubMat = double((n_temp-1)*(n_temp-2))/2;
+    M_for_fullMatrix_sdd = sdpvar(  numSubMat  , 3  ,'full');
+    
+    % Enforce the positivity constraints
+    thisCons_sdd = [ thisCons_sdd , M_for_fullMatrix_sdd(:,1) >= 0, M_for_fullMatrix_sdd(:,2) >= 0, M_for_fullMatrix_sdd(:,1) .* M_for_fullMatrix_sdd(:,2) - M_for_fullMatrix_sdd(:,3).^2 >= 0 ];
+    
+    
+    % Now build the full "M" matrix
+    M_sum_for_fullMatrix_sdd = zeros(n_temp,n_temp);
+    iM = 1;
+    jM = 1;
+    for kSubMat = 1:numSubMat
+        jM = jM + 1;
+        if jM > n_temp
+            iM = iM + 1;
+            jM = iM + 1;
+            if iM > n_temp
+                error(' ... THIS SHOULD NOT HAVE OCCURRED :-(');
+            end
+            M_sum_for_fullMatrix_sdd(iM,iM) = M_sum_for_fullMatrix_sdd(iM,iM) + M_for_fullMatrix_sdd(kSubMat,1);
+            M_sum_for_fullMatrix_sdd(jM,jM) = M_sum_for_fullMatrix_sdd(jM,jM) + M_for_fullMatrix_sdd(kSubMat,2);
+            M_sum_for_fullMatrix_sdd(iM,jM) = M_sum_for_fullMatrix_sdd(iM,jM) + M_for_fullMatrix_sdd(kSubMat,3);
+            M_sum_for_fullMatrix_sdd(jM,iM) = M_sum_for_fullMatrix_sdd(jM,iM) + M_for_fullMatrix_sdd(kSubMat,3);
+        end
+    end
+    
+    
+    % Lastly put the constraint that P == M
+    thisCons_sdd = [ thisCons_sdd , fullMatrix_sdd == M_sum_for_fullMatrix_sdd ];
+    
+    
+    
+    
+    %% Call Yalmip to solve for the next value function - SHOULD BE AN SOCP
+    
+    % Define the options
+    thisOptions          = sdpsettings;
+    thisOptions.debug    = true;
+    thisOptions.verbose  = true;
+    
+    
+    % Specify the solver
+    %thisSolverStr = 'SeDuMi';
+    thisSolverStr = 'Mosek';
+    %thisSolverStr = 'sdpt3';
+    if strcmp('SeDuMi',thisSolverStr)
+        thisOptions.solver = 'sedumi';
+    elseif strcmp('Mosek',thisSolverStr)
+        thisOptions.solver = 'mosek';
+    elseif strcmp('sdpt3',thisSolverStr)
+        thisOptions.solver = 'sdpt3';
+    else
+        disp([' ... the specified solver "',thisSolverStr,'" was not recognised']);
+        error(' Terminating :-( See previous messages and ammend');
+    end
+
+    
+    tempTime = clock;
+    
+    % Call the solver via Yalmip
+    % SYNTAX: diagnostics = solvesdp(Constraints,Objective,options)
+    diagnostics = solvesdp(thisCons_sdd,thisObj_sdd,thisOptions);
+
+    time_forDD = etime(clock,tempTime);
+    
+    % Interpret the results
+    if diagnostics.problem == 0
+        % Don't display anything if things work
+        %disp(' ... the optimisation formulation was Feasible and has been solved')
+    elseif diagnostics.problem == 1
+        disp(' ... the optimisation formulation was Infeasible');
+        error(' Terminating :-( See previous messages and ammend');
+    else
+        disp(' ... the optimisation formulation was strange, it was neither "Feasible" nor "Infeasible", something else happened...');
+        error(' Terminating :-( See previous messages and ammend');
+    end
+    
+    
+    % Check how similar the solution is...
+    
+end % END OF: "if flag_runScaledDiagonallyDominant"
+
+
+
+
+    %% ----------------------------------------------------------------- %%
     %% STORE THE RESULTANT VALUE FUNCTION INTO THE RETURN VARIABLES
     
     

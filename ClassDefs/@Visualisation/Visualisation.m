@@ -100,7 +100,13 @@ classdef Visualisation < handle
         
         [ ] = visualise_multipleControllers( inputControllerSpecs , inputDataCellArray , inputPropertyNames , plotOptions );
         
-        [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
+        [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin );
+        
+        [ ] = visualise_plotMultipleHistogramAsScatter( hAxes , data_y , varargin );
+        
+        [ ] = visualise_plotMultipleHistogram( hAxes , data_y , varargin );
+        
+        [] = visualise_plotParetoFrontAsScatter( hAxes , data_x , data_y , thisPlotOptions  );
         
         function returnColour = getDefaultColourForIndex( inputIndex )
             thisIndex = mod(inputIndex-1, Visualisation.colourArrayLength ) + 1;
@@ -123,14 +129,14 @@ classdef Visualisation < handle
             
             % First get the size of the screen
             screenSize = get(0,'ScreenSize');
-            screenWidth = screenSize(1,4);
-            screenHeight = screenSize(1,4);
+            screenWidth = screenSize(1,3);
+            screenHeight = screenSize(1,4) - 20;
             
             % Specify the buffers
-            topBuffer = 20;
-            botBuffer = 0;
-            leftBuffer = 0;
-            rightBuffer = 0;
+            topBuffer = 50;
+            botBuffer = 50;
+            leftBuffer = 20;
+            rightBuffer = 20;
             
             % Get the position of the figure
             if strcmpi( inputIndexType , 'rowwise')
@@ -145,7 +151,7 @@ classdef Visualisation < handle
                     thisCol = inputNumCols;
                 end
                     
-            elseif strcmpi( inputIndexType , 'coulmnwise')
+            elseif strcmpi( inputIndexType , 'columnwise')
                 % Check the index is valid
                 if inputThisFigureIndex <= (inputNumRows * inputNumCols)
                     thisCol = floor( (double(inputThisFigureIndex)+1) / double(inputNumRows) );
@@ -169,12 +175,15 @@ classdef Visualisation < handle
             end
             
             % Now COMPUTE THE HEIGHT AND WIDTH OF EACH GRAPH
-            
+            rowHeight = double(screenHeight - topBuffer  - botBuffer)   /  double(inputNumRows);
+            colWidth  = double(screenWidth  - leftBuffer - rightBuffer)  /  double(inputNumCols);
             
             % NOW COMPUTE THE POSITION OF THE FIGURE
-            figurePosition = inputNumRows ;
-            
-            
+            figpos_x = leftBuffer + colWidth   *  double( (thisCol-1) );
+            figpos_y = botBuffer  + rowHeight  *  double( (inputNumRows - thisRow) );
+
+            % FINALLY PUT TOGHETHER THE RETURN VARIABLE
+            figurePosition= [ figpos_x , figpos_y , colWidth , rowHeight ];
             
         end
         

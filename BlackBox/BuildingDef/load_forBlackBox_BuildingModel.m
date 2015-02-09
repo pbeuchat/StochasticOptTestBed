@@ -3,7 +3,7 @@
 %  ---------     load_forBlackBox_BuildingModel.m
 %  ---------------------------------------------------------------------  %
 %  ---------------------------------------------------------------------  %
-function [returnB , returnX0 , returnConstraintParams , returnCostDef ] = load_forBlackBox_BuildingModel( inputBuildingIdentifierString , bbFullPath , sysOptions )
+function [returnB , returnX0 , returnStateDef, returnConstraintParams , returnCostDef ] = load_forBlackBox_BuildingModel( inputBuildingIdentifierString , bbFullPath , sysOptions )
 
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
@@ -27,7 +27,7 @@ thisBuildingDefFunctionString = [bbConstants.loadDefFunctionPrefix_forBuilding ,
 
 thisBuildingDefFunctionHandle = str2func( thisBuildingDefFunctionString );
 
-[returnB , returnX0 , returnConstraintParams, returnCostDef, returnV, returnTmax , returnDims] = thisBuildingDefFunctionHandle( inputBuildingIdentifierString , bbFullPath , sysOptions );
+[returnB , returnX0 , returnStateDef, returnConstraintParams, returnCostDef, returnV, returnTmax , returnDims] = thisBuildingDefFunctionHandle( inputBuildingIdentifierString , bbFullPath , sysOptions );
 
 
 

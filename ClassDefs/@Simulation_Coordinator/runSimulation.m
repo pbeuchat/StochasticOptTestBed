@@ -487,6 +487,8 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         % .labelPerDim  - this is a label of the variable for each non-time dimension
         % .timePropertyName - this is the name of the property under which the time data is saved
         %                     This makes the plotting more generic
+        % .toPlotMask  - this is a logical mask that specifies which states
+        %               are important for visualisation
         
         % We then put all these together into a struct, where the property
         % names for the struct are saved in a cell array of strings
@@ -514,6 +516,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         tempLabels{1,1}             = result_time_label;
         tempResult.labelPerDim      = tempLabels;
         tempResult.timePropertyName = savedDataNames_thisWorker{1,1};
+        tempResult.toPlotMask       = true( size(result_time,1) , 1 );
 
         results_thisWorker.(savedDataNames_thisWorker{iDataName}) = tempResult;
         clear tempLabels;
@@ -535,6 +538,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
             tempLabels{1,1}             = obj.stateDef.label_x;
             tempResult.labelPerDim      = tempLabels;
             tempResult.timePropertyName = savedDataNames_thisWorker{1,1};
+            tempResult.toPlotMask       = obj.stateDef.mask_toPlot_x;
             
             results_thisWorker.(savedDataNames_thisWorker{iDataName}) = tempResult;
             clear tempLabels;
@@ -557,6 +561,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
             tempLabels{1,1}             = obj.stateDef.label_u;
             tempResult.labelPerDim      = tempLabels;
             tempResult.timePropertyName = savedDataNames_thisWorker{1,1};
+            tempResult.toPlotMask       = obj.stateDef.mask_toPlot_u;
 
             results_thisWorker.(savedDataNames_thisWorker{iDataName}) = tempResult;
             clear tempLabels;
@@ -580,6 +585,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
             tempLabels{1,1}             = obj.stateDef.label_xi;
             tempResult.labelPerDim      = tempLabels;
             tempResult.timePropertyName = savedDataNames_thisWorker{1,1};
+            tempResult.toPlotMask       = obj.stateDef.mask_toPlot_xi;
 
             results_thisWorker.(savedDataNames_thisWorker{iDataName}) = tempResult;
             clear tempLabels;
@@ -603,6 +609,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
             tempLabels{1,1}             = costLabels;
             tempResult.labelPerDim      = tempLabels;
             tempResult.timePropertyName = savedDataNames_thisWorker{1,1};
+            tempResult.toPlotMask       = true( size(result_cost,1) , 1 );
 
             results_thisWorker.(savedDataNames_thisWorker{iDataName}) = tempResult;
             clear tempLabels;
@@ -632,6 +639,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
             tempLabels{2,1}             = tempCell;
             tempResult.labelPerDim      = tempLabels;
             tempResult.timePropertyName = savedDataNames_thisWorker{1,1};
+            tempResult.toPlotMask       = false( size(result_cost_per_ss,1) , size(result_cost_per_ss,2) , 1 );
             
             results_thisWorker.(savedDataNames_thisWorker{iDataName}) = tempResult;
             clear tempLabels;
@@ -718,6 +726,8 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     %                                'costCumulative_per_ss'
     % .dimPerRealisation   - this is the number of dimension of data stored per realisation
     % .labelPerDim         - this is a label of the variable for each non-time dimension
+    % .toPlotMask   - this is a logical mask that specifies which states
+    %                 are important for visualisation
     
     % We then put all these together into a struct, where the property
     % names for the struct are saved in a cell array of strings
@@ -742,6 +752,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     tempLabels                      = cell(tempResult.dimPerRealisation,1);
     tempLabels{1,1}                 = result_realisationNumber_label;
     tempResult.labelPerDim          = tempLabels;
+    tempResult.toPlotMask           = false( size(result_realisationNumber_all,1) , 1 );
 
     results_all.(savedDataNames_all{iDataName}) = tempResult;
     clear tempLabels;
@@ -758,6 +769,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     tempLabels                      = cell(tempResult.dimPerRealisation,1);
     tempLabels{1,1}                 = costLabels;
     tempResult.labelPerDim          = tempLabels;
+    tempResult.toPlotMask           = true( size(result_costCumulative_all,1) , 1 );
 
     results_all.(savedDataNames_all{iDataName}) = tempResult;
     clear tempLabels;
@@ -781,6 +793,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     tempLabels{2,1}                 = tempCell;
     tempResult.labelPerDim          = tempLabels;
     tempResult.dataRepresents       = 'costCumulative_per_ss';
+    tempResult.toPlotMask           = false( size(result_costCumulative_per_ss_all,1) , size(result_costCumulative_per_ss_all,2) , 1 );
 
     results_all.(savedDataNames_all{iDataName}) = tempResult;
     clear tempLabels;
@@ -812,7 +825,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     % Step through the data and save it (if the save path is not emtpty)
     if ~isempty(savePath)
         for iDataName = 1:numDataNames
-            save( [savePath , savedDataNames_thisWorker{iDataName} , '.mat'] , '-struct' ,  'results_all' , savedDataNames_all{iDataName} , '-v7.3' )
+            save( [savePath , savedDataNames_all{iDataName} , '.mat'] , '-struct' ,  'results_all' , savedDataNames_all{iDataName} , '-v7.3' )
         end
     end
     

@@ -31,7 +31,10 @@ if (existResult == 2)
         % Load the file, this should store the saved Building Model into a
         % struct propterty called:
         %     "savedData"
+        disp( ' DEBUGGING: my bet is that the next line is where it often crashes' );
         tempLoad = load( loadFileName );
+        disp( ' DEBUGGING: If this is displayed then I was wrong :-(' );
+
         returnModelMatch = tempLoad.savedData;
         returnIsMatch = 1;
         clear tempLoad;

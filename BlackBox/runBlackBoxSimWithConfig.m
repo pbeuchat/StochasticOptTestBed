@@ -3,7 +3,7 @@
 %  ---------     runBlackBoxSimWithConfig.m
 %  ---------------------------------------------------------------------  %
 %  ---------------------------------------------------------------------  %
-function [returnAllResults, object_system, object_disturbance] = runBlackBoxSimWithConfig(inputBlackBoxInstructions)
+function [returnAllResults, returnSavePath, object_system, object_disturbance] = runBlackBoxSimWithConfig(inputBlackBoxInstructions)
 
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
@@ -95,10 +95,11 @@ disp('******************************************************************');
 disp([' Black-Box: Loading the "',sysType,'"-type model requested']);
 disp('            and wrapping it together as a "Progress Model Engine" class');
 % Load the building
-[bbBuilding , bbX0 , bbConstraints , bbCostDef ] = load_forBlackBox_BuildingModel( sysID , bbFullPath , sysOptions );
+[bbBuilding , bbX0 , bbStateDef, bbConstraints , bbCostDef ] = load_forBlackBox_BuildingModel( sysID , bbFullPath , sysOptions );
 
 clear buildingModelStruct;
 buildingModelStruct.building        = bbBuilding;
+buildingModelStruct.stateDef        = bbStateDef;
 buildingModelStruct.costDef         = bbCostDef;
 buildingModelStruct.constraints     = bbConstraints;
 buildingModelStruct.x0              = bbX0;
@@ -113,7 +114,8 @@ clear sysModel;
 sysModel = ModelCostConstraints_Building(buildingModelStruct, sysType);
 
 % Extract the "StateDef" definition of the State, Input and Disturbance
-stateDef = requestStateDefObject( sysModel );
+%stateDef = requestStateDefObject( sysModel );
+stateDef = bbStateDef;
 
 
 % Extract the "ConstraintDef" definition object
@@ -141,7 +143,7 @@ disp('            and wrapping it together as a "Distrubance Coordinator" class'
 
 % Instantiate a "Disturbance Coordinator" object
 % This requires the identifier for the disturbance model to be used
-thisDistIdentifier  = '002_003';
+thisDistIdentifier  = '002_004';
 thisRecomputeStats  = false;
 distCoord           = Disturbance_Coordinator(thisDistIdentifier);
 
@@ -314,6 +316,18 @@ if flag_saveResults
     if ~(exist(savePath_Results_thisTime,'dir') == 7)
         mkdir(savePath_Results_thisTime);
     end
+    
+    
+    % Should run a look here to check that all the ".saveFolderName"
+    % properties are unique
+    %for iController = 1:numControlTechniques
+    %    
+    %end
+    
+else
+    % Set the "savePath_Results_thisTime" variable as blank for the retrn
+    savePath_Results_thisTime = [];
+    
 end
 
 
@@ -354,14 +368,19 @@ for iController = 1:numControlTechniques
     
     % RUN THE SIMULATION:
     [thisCompletedSuccessfully , allResults{iController,1} , savedDataFileNames] = runSimulation( mySimCoordArray(iController,1) , savePath_Results_thisTime_thisTechnique );
+    
+    % Keep the results into one big struct
     allDataFileNames{iController,1} = savedDataFileNames;
     
     
     % If completed successfully then store the names of the files saved
-    % And put the reesults into one big struct
+    % (saved into the same folder as the results)
+    % NOTE: the "controllerSpecArray" will be saved directly in the root
+    % "savePath_Results_thisTime" folder so that it can be used to
+    % unambiguously get the folder names in which the results are saved.
     if thisCompletedSuccessfully
         if flag_saveResults
-            save( [savePath_Results_thisTime,'savedDataFileNames.mat'] , 'savedDataFileNames' , '-v7.3' );
+            save( [savePath_Results_thisTime_thisTechnique,'savedDataFileNames.mat'] , 'savedDataFileNames' , '-v7.3' );
         end
         
     % If not completed successfully, inform the user
@@ -425,6 +444,14 @@ for iController = 1:numControlTechniques
     
 end
 
+% NOW SAVE THE "controllerSpecArray" directly in the root
+    % "savePath_Results_thisTime" folder so that it can be used to
+    % unambiguously get the folder names in which the results are saved.
+if flag_saveResults
+    save( [savePath_Results_thisTime,'controllerSpecArray.mat'] , 'controllerSpecArray' , '-v7.3' );
+end
+
+
 % This loop naturally suits parallelisation, see this links for some
 % details about parallelising in Maltab:
 % <http://www.mathworks.ch/help/distcomp/parallel-for-loops-parfor.html>
@@ -455,6 +482,14 @@ if flag_plotResults
     % BUILD A STRUCT WITH THE SELECTED OPTIONS FOR THE PLOTTING
     clear plotOptions;
     plotOptions.unitsForTimeAxis = plotResults_unitsForTimeAxis;
+    plotOptions.flag_plotResultsPerController = flag_plotResultsPerController;
+    plotOptions.flag_plotResultsControllerComparison = flag_plotResultsControllerComparison;
+    
+    
+    % CALL THE GENERAL PLOTTING FUNCTION
+    % (the idea is that this function can be equally called separately to
+    % plot saved date)
+    
     
     % PLOT THE PER-CONTROLLER RESULTS
     if flag_plotResultsPerController
@@ -478,7 +513,7 @@ if flag_plotResults
             % 'cost'
             
             % Visualise the comparative results for ALL controller
-            Visualisation.visualise_multipleControllers( controllerSpecArray(:,1) , allResults(:,1) , allDataFileNames(iController,1) , plotOptions );
+            Visualisation.visualise_multipleControllers( controllerSpecArray(:,1) , allResults(:,1) , allDataFileNames{iController,1} , plotOptions );
         end
         
     end
@@ -491,7 +526,8 @@ timedResults.plotResults = etime(clock,timerStart);
 %% --------------------------------------------------------------------- %%
 %% ELSE: if NOT "flag_performControlSimulations", then do some BOOK KEEPING to make things work smoothly
 else
-    returnAllResults = [];
+    %returnAllResults = [];
+    savePath_Results_thisTime = [];
     
     
 end
@@ -504,7 +540,9 @@ end
 % Either as empty or with the actual data depending on the flag
 if flag_returnObjectsToWorkspace
 
-    returnAllResults = [];
+    returnAllResults = allResults;
+    
+    returnSavePath = savePath_Results_thisTime;
     
     object_system = sysModel;
     
@@ -513,6 +551,9 @@ if flag_returnObjectsToWorkspace
 else
     clear returnAllResults;
     returnAllResults = [];
+    
+    % Still return the path
+    returnSavePath = savePath_Results_thisTime;
     
     clear object_system;
     object_system = [];

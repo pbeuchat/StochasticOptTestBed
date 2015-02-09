@@ -57,8 +57,63 @@ for iProperty = 1 : numInputProperties
     %% PLOTABLE PER TIME
     if ismember( thisDataRepresents , plotableDataPerTime )
         
+        
+        %% Deduce the title and y-axis label to use
+        switch lower(thisDataRepresents)
+            % ------------------------------- %
+            case 'state'
+                thisTitleString  = 'States';
+                thisYLabelString = 'State, $x$ (Temperature [T])';
+                thisFigIndex = 1;
+                
+            % ------------------------------- %
+            case 'input'
+                thisTitleString  = 'Inputs';
+                thisYLabelString = 'Input, $u$';
+                thisFigIndex = 2;
+                
+            % ------------------------------- %
+            case 'disturbance'
+                thisTitleString  = 'Disturbances';
+                thisYLabelString = 'Disturbance, $\xi$';
+                thisFigIndex = 3;
+            
+            % ------------------------------- %
+            case 'cost'
+                thisTitleString  = 'Cost Components and Total';
+                thisYLabelString = '';
+                thisFigIndex = 4;
+                
+            % ------------------------------- %
+            otherwise
+                thisTitleString  = 'Placeholder';
+                thisYLabelString = 'Placeholder';
+        end
+                
+            
+        %% CHECK THE "to plot" MASK
+        mask_toPlot     = inputDataStruct.(thisProperty).toPlotMask;
+        
+        numSubPlots = 1;
+        if ~all(mask_toPlot)
+            numSubPlots = 2;
+        end
+        
+        if strcmp( thisDataRepresents , 'cost')
+            numSubPlots = 3;
+        end
+        
+        
+        
         %% Extract the data to be plotted for "thisProperty
-        data            = inputDataStruct.(thisProperty).data(:,:,1);
+        if numSubPlots == 1
+            data            = inputDataStruct.(thisProperty).data(:,:,1);
+        elseif numSubPlots == 2
+            data            = inputDataStruct.(thisProperty).data(mask_toPlot,:,1);
+        else
+            % numSubPlots == 3
+            data            = inputDataStruct.(thisProperty).data(:,:,1);
+        end
         dimPerTime      = inputDataStruct.(thisProperty).dimPerTime;
         labelPerDim     = inputDataStruct.(thisProperty).labelPerDim;
         
@@ -79,10 +134,18 @@ for iProperty = 1 : numInputProperties
             disp(unitsForTimeAxis);
         end
 
+        
         %% Get the number of lines to be plotted, and the legend text for each
         if (dimPerTime == 1)
             numLinesToPlot = size(data,1);
-            legendStrings = labelPerDim{1}(:);
+            if numSubPlots == 1
+                legendStrings = labelPerDim{1}(:);
+            elseif numSubPlots == 2
+                legendStrings = labelPerDim{1}(mask_toPlot);
+            else
+                % numSubPlots == 3
+                legendStrings = [];
+            end
         elseif (dimPerTime == 2)
             numLinesToPlot = size(data,1) * size(data,2);
             legendStrings = labelPerDim{1}(:);
@@ -95,21 +158,21 @@ for iProperty = 1 : numInputProperties
         end
 
         % Specify the plotting options
-        thisPlotOptions = { 'LineColourIndex'   ,  1:numLinesToPlot                  ;...
-                            'LineWidth'         ,  Visualisation.lineWidthDefault    ;...
-                            %'maRkerIndex'       ,  ones(numLinesToPlot,1)            ;...
-                            'legendOnOff'       ,  'on'                              ;...    % OPTIONS: 'off', 'on'
-                            'legendStrings'     ,  legendStrings                     ;...
-                            'legendFontSize'    ,  legendFontSize_default            ;...
-                            'legendFontWeight'  ,  'bold'                            ;...    % OPTIONS: 'normal', 'bold'
-                            'legendLocation'    ,  'eastOutside'                     ;...    % OPTIONS: see below
-                            'legendInterpreter' ,  'none'                            ;...    % OPTIONS: 'latex', 'tex', 'none'
-                            'titleString'       ,  'Inputs'                          ;...
-                            'titleFontSize'     ,  24                                ;...
-                            'titleFontWeight'   ,  'bold'                            ;...    % OPTIONS: 'normal', 'bold'
+        thisPlotOptions = { 'LineColourIndex'   ,  1:numLinesToPlot                  ;...    % 01
+                            'LineWidth'         ,  Visualisation.lineWidthDefault    ;...    % 02
+                            'maRkerIndex'       ,  0                                 ;...    % 03 % OPTIONS: '0' gives no marker, other options are: {'o','+','*','.','x','square','diamond','^','v','<','>','pentagram','hexagram'}
+                            'legendOnOff'       ,  'on'                              ;...    % 04 % OPTIONS: 'off', 'on'
+                            'legendStrings'     ,  legendStrings                     ;...    % 05
+                            'legendFontSize'    ,  legendFontSize_default            ;...    % 06
+                            'legendFontWeight'  ,  'bold'                            ;...    % 07 % OPTIONS: 'normal', 'bold'
+                            'legendLocation'    ,  'eastOutside'                     ;...    % 08 % OPTIONS: see below
+                            'legendInterpreter' ,  'none'                            ;...    % 09 % OPTIONS: 'latex', 'tex', 'none'
+                            'titleString'       ,  thisTitleString                   ;...    % 10
+                            'titleFontSize'     ,  24                                ;...    % 11
+                            'titleFontWeight'   ,  'bold'                            ;...    % 12 % OPTIONS: 'normal', 'bold'
                             'titleColour'       ,  'black'                           ;...
                             'XLabelString'      ,  thisTimeLabel                     ;...
-                            'YLabelString'      ,  'Input, $u$'                      ;...
+                            'YLabelString'      ,  thisYLabelString                  ;...
                             'XLabelInterpreter' ,  xLabelInterpreter_default         ;...    % OPTIONS: 'latex', 'tex', 'none'
                             'YLabelInterpreter' ,  yLabelInterpreter_default         ;...    % OPTIONS: 'latex', 'tex', 'none'
                             'XLabelColour'      ,  'black'                           ;...
@@ -129,15 +192,56 @@ for iProperty = 1 : numInputProperties
                           };
 
         % Create the figure
-        hFig = figure('position',[50 40 1200 600]);
+        thisFigurePosition = Visualisation.getFigurePositionInFullScreenGrid( 2,2, thisFigIndex , 'columnwise' );
+        hFig = figure('OuterPosition',thisFigurePosition);
         set(hFig,'Color', Visualisation.figure_backgroundColour );
 
-        % Create the axes
-        thisPosition = [0.15 0.15 0.8 0.75];
-        hAxes = axes('Position', thisPosition);
+        if numSubPlots == 1
+            % Create the axes
+            thisPosition = [0.15 0.15 0.8 0.75];
+            hAxes = axes('Position', thisPosition);
 
-        % Now call the generic plotting function
-        Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotOptions  );
+            % Now call the generic plotting function
+            Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotOptions  );
+        elseif numSubPlots == 2
+            % ------------------------------ %
+            % Create the first subplot
+            hAxes = subplot(2,1,1);
+            % Now call the generic plotting function
+            Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotOptions  );
+            
+            % ------------------------------ %
+            % Now get the second set of data
+            data            = inputDataStruct.(thisProperty).data(~mask_toPlot,:,1);
+            % Update the legend strings and "numLinesToPlot" plotting option
+            legendStrings = labelPerDim{1}(~mask_toPlot);
+            numLinesToPlot = size(data,1);
+            % Put these into the "thisPlotOptions" cell array in the
+            % appropriate location
+            thisPlotOptions{1,2} = 1:numLinesToPlot;
+            thisPlotOptions{5,2} = legendStrings;
+            
+            % Create the swcond subplot
+            hAxes = subplot(2,1,2);
+            % Now call the generic plotting function
+            Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotOptions  );
+        else
+            % numSubPlots == 3
+            % Step through each of the line
+            for iLine = 1:numLinesToPlot
+                hAxes = subplot(numLinesToPlot,1,iLine);
+
+                % Updates the title string
+                thisPlotOptions{1,2} = 1;   % This is for: 'LineColourIndex'
+                thisPlotOptions{5,2} = [];  % This is for: 'legendStrings'
+                thisPlotOptions{10,2} = ['Cost Component: ', labelPerDim{1}{iLine}];     % This is for: 'titleString'
+                
+        
+                % Now call the generic plotting function
+                Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data(iLine,:) , thisPlotOptions  );
+            end
+        end % END OF: "numSubPlots == 1"
+        
 
     % Check that the data represented by this property is:
     %% PLOTABLE PER REALISATION
@@ -187,34 +291,34 @@ for iProperty = 1 : numInputProperties
         end
 
         % Specify the plotting options
-        thisPlotOptions = { 'LineColourIndex'   ,  1:numLinesToPlot                  ;...
-                            'LineWidth'         ,  Visualisation.lineWidthDefault    ;...
-                            %'maRkerIndex'       ,  ones(numLinesToPlot,1)            ;...
-                            'legendOnOff'       ,  'on'                              ;...    % OPTIONS: 'off', 'on'
-                            'legendStrings'     ,  legendStrings                     ;...
-                            'legendFontSize'    ,  legendFontSize_default            ;...
-                            'legendFontWeight'  ,  'bold'                            ;...    % OPTIONS: 'normal', 'bold'
-                            'legendLocation'    ,  'eastOutside'                     ;...    % OPTIONS: see below
-                            'legendInterpreter' ,  'none'                            ;...    % OPTIONS: 'latex', 'tex', 'none'
-                            'titleString'       ,  'Inputs'                          ;...
-                            'titleFontSize'     ,  24                                ;...
-                            'titleFontWeight'   ,  'bold'                            ;...    % OPTIONS: 'normal', 'bold'
-                            'titleColour'       ,  'black'                           ;...
-                            'XLabelString'      ,  thisTimeLabel                     ;...
-                            'YLabelString'      ,  'Input, $u$'                      ;...
-                            'XLabelInterpreter' ,  xLabelInterpreter_default         ;...    % OPTIONS: 'latex', 'tex', 'none'
-                            'YLabelInterpreter' ,  yLabelInterpreter_default         ;...    % OPTIONS: 'latex', 'tex', 'none'
-                            'XLabelColour'      ,  'black'                           ;...
-                            'YLabelColour'      ,  'black'                           ;...
-                            'LabelFontSize'     ,  labelFontSize_default             ;...
-                            'LabelFontWeight'   ,  'bold'                            ;...
-                            'XGridOnOff'        ,  'on'                              ;...    % OPTIONS: 'off', 'on'
-                            'YGridOnOff'        ,  'on'                              ;...    % OPTIONS: 'off', 'on'
-                            'gridStyle'         ,  '--'                              ;...    % OPTIONS: '-', '--', ':', '-.', 'none'
-                            'gridColour'        ,  [0.5 0.5 0.5]                     ;...
-                            'XGridMinorOnOff'   ,  'off'                             ;...    % OPTIONS: 'off', 'on'
-                            'YGridMinorOnOff'   ,  'off'                             ;...    % OPTIONS: 'off', 'on'
-                            'gridMinorStyle'    ,  ':'                               ;...    % OPTIONS: '-', '--', ':', '-.', 'none'
+        thisPlotOptions = { 'LineColourIndex'   ,  1                                 ;...    % 01
+                            'LineWidth'         ,  Visualisation.lineWidthDefault    ;...    % 02
+                            'maRkerIndex'       ,  1                                 ;...    % 03 % OPTIONS: '0' gives no marker, other options are: {'o','+','*','.','x','square','diamond','^','v','<','>','pentagram','hexagram'}
+                            'legendOnOff'       ,  'off'                             ;...    % 04 % OPTIONS: 'off', 'on'
+                            'legendStrings'     ,  []                                ;...    % 05
+                            'legendFontSize'    ,  legendFontSize_default            ;...    % 06
+                            'legendFontWeight'  ,  'bold'                            ;...    % 07 % OPTIONS: 'normal', 'bold'
+                            'legendLocation'    ,  'eastOutside'                     ;...    % 08 % OPTIONS: see below
+                            'legendInterpreter' ,  'none'                            ;...    % 09 % OPTIONS: 'latex', 'tex', 'none'
+                            'titleString'       ,  []                                ;...    % 10
+                            'titleFontSize'     ,  24                                ;...    % 11
+                            'titleFontWeight'   ,  'bold'                            ;...    % 12 % OPTIONS: 'normal', 'bold'
+                            'titleColour'       ,  'black'                           ;...    % 13
+                            'XLabelString'      ,  thisTimeLabel                     ;...    % 14
+                            'YLabelString'      ,  []                                ;...    % 15
+                            'XLabelInterpreter' ,  xLabelInterpreter_default         ;...    % 16 % OPTIONS: 'latex', 'tex', 'none'
+                            'YLabelInterpreter' ,  yLabelInterpreter_default         ;...    % 17 % OPTIONS: 'latex', 'tex', 'none'
+                            'XLabelColour'      ,  'black'                           ;...    % 18
+                            'YLabelColour'      ,  'black'                           ;...    % 19
+                            'LabelFontSize'     ,  labelFontSize_default             ;...    % 20
+                            'LabelFontWeight'   ,  'bold'                            ;...    % 21
+                            'XGridOnOff'        ,  'off'                             ;...    % 22 % OPTIONS: 'off', 'on'
+                            'YGridOnOff'        ,  'on'                              ;...    % 23 % OPTIONS: 'off', 'on'
+                            'gridStyle'         ,  '--'                              ;...    % 24 % OPTIONS: '-', '--', ':', '-.', 'none'
+                            'gridColour'        ,  [0.5 0.5 0.5]                     ;...    % 25 % 
+                            'XGridMinorOnOff'   ,  'off'                             ;...    % 26 % OPTIONS: 'off', 'on'
+                            'YGridMinorOnOff'   ,  'off'                             ;...    % 27 % OPTIONS: 'off', 'on'
+                            'gridMinorStyle'    ,  ':'                               ;...    % 28 % OPTIONS: '-', '--', ':', '-.', 'none'
                             'gridMinorColour'   ,  [0.5 0.5 0.5]                     ;...
                             %'XTickNumbersOnOff'
                             %'YTickNumbersOnOff'
@@ -226,9 +330,17 @@ for iProperty = 1 : numInputProperties
 
         for iData = 1 : numLinesToPlot
             hAxes = subplot(1,numLinesToPlot,iData);
-            scatter( hAxes , ones(numRealisations,1) , data(iData,:) );
+            %scatter( hAxes , ones(numRealisations,1) , data(iData,:) );
+            
+            thisPlotOptions{15,2} = ['Cost Component: ', labelPerDim{1}{iData}];     % This is for: 'YLabelString'
+            
+            % Now call the generic plotting function
+            Visualisation.visualise_plotMultipleHistogramAsScatter( hAxes , data(iData,:) , thisPlotOptions  );
             
         end
+        
+        hSupTitle = suptitle('Cumulative Cost Distibution over Realisations');
+        set(hSupTitle,'FontSize',16,'FontWeight','normal');
         
         
         % Create the axes

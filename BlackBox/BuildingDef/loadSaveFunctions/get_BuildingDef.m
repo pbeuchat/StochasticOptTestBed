@@ -24,7 +24,6 @@ function [returnB] = get_BuildingDef( inputBuildingIdentifierString , flags_EHFM
 [isMatch, modelMatch] = checkForMatching_BuildingDef( inputBuildingIdentifierString , bbFullPath , flags_EHFModelsToInclude.reconstructModel );
 
 
-
 %% --------------------------------------------------------------------- %%
 %% IF NOT A MATCH, THEN GENERATE AND SAVE THE REQUESTED BUILDING MODEL
 

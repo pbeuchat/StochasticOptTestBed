@@ -3,7 +3,7 @@
 %  ---------     load_BuildingDef_002_001_True.m
 %  ---------------------------------------------------------------------  %
 %  ---------------------------------------------------------------------  %
-function [B , returnX0 , returnConstraintParams, returnCostDefObject, returnV, returnTmax , returnDims] = load_BuildingDef_002_001_True( inputBuildingIdentifierString, bbFullPath , inputSysOptions )
+function [B , returnX0 , returnStateDefObject, returnConstraintParams, returnCostDefObject, returnV, returnTmax , returnDims] = load_BuildingDef_002_001_True( inputBuildingIdentifierString, bbFullPath , inputSysOptions )
 
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
@@ -246,11 +246,12 @@ internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 
 
 %x0 = 22.5*internalStates + 16 * ~internalStates;
 %x0 = 22.4*internalStates + 16 * ~internalStates;
-%x0 = 22.0*internalStates + 16 * ~internalStates;
+x0 = 22.0*internalStates + 16 * ~internalStates;
 %x0 = 21.5*internalStates + 16 * ~internalStates;
-x0 = 20.0*internalStates + 16 * ~internalStates;
+%x0 = 20.0*internalStates + 16 * ~internalStates;
 %x0 = 19.0*internalStates + 16 * ~internalStates;
 %x0 = 30*internalStates + 16 * ~internalStates;
+%x0 = 24*internalStates + 16 * ~internalStates;
 
 
 %% --------------------------------------------------------------------- %%
@@ -261,6 +262,13 @@ disp('     -> Build a "State Definition" object');
 stateDefObject = ModelCostConstraints_Building.buildStateDefObjectFromBuildingObject( B , x0 );
 
 
+% Add the plotting falg to the State Definition Object
+plotMask_x  = [true(7,1) ; false(35,1)];
+plotMask_u  = true( stateDefObject.n_u  , 1);
+plotMask_xi = true( stateDefObject.n_xi , 1);
+
+
+updatePlottingMasks( stateDefObject , plotMask_x, plotMask_u, plotMask_xi );
 
 
 %% --------------------------------------------------------------------- %%
@@ -310,7 +318,7 @@ constraintsByHand.u_rect_upper = u_radiator_max * ones( n_u , 1);
 
 % For the coupling resourse constraint
 constraintsByHand.u_poly_A = sparse( ones(1,n_u) , 1:n_u , ones(n_u,1) , 1 , n_u , n_u );
-constraintsByHand.u_poly_b = n_u * u_radiator_max * 1.70;
+constraintsByHand.u_poly_b = n_u * u_radiator_max * 0.75;
 
 constraintsByHand.u_poly_label = { 'resource' };
 
@@ -456,6 +464,7 @@ costDefObject = CostDef( stateDefObject , costComponents_num , costComponents_la
 
 %% PUT TOGETHER THE RETURN VARIABLES
 returnX0                    = x0;
+returnStateDefObject        = stateDefObject;
 returnConstraintParams      = constraintsByHand;
 returnCostDefObject         = costDefObject;
 

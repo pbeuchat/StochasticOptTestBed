@@ -122,7 +122,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
                 % Now check "inputBuilding" has the required properties
                 % An "inputModel" of type "building" should have:
                 %  ".building"  , ".costs"  ,  ".constraints"
-                inputBuildingFields = {'building','costDef','constraints','x0'};
+                inputBuildingFields = {'building','stateDef','costDef','constraints','x0'};
                 checkBuilding = checkForFields(inputBuilding,inputBuildingFields);
                 if ~checkBuilding
                     disp( ' ... ERROR: The "inputBuilding" variable was a struct but did not have the correct fields');
@@ -138,6 +138,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
 
                 % Store the inputs into the properties of this "obj"
                 obj.building            = copy(inputBuilding.building);
+                obj.stateDef             = inputBuilding.stateDef;
                 obj.costDef             = inputBuilding.costDef;
                 obj.constraintParams    = inputBuilding.constraints;
                 obj.x0                  = inputBuilding.x0;

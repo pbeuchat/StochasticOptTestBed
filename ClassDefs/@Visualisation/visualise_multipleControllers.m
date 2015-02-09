@@ -104,30 +104,32 @@ for iState = 1:numStatesToCompare
 
     % Construct the data to be plotted
     for iController = 1:numControllers
+        thisProperty = inputPropertyNames{2};
+        thisTimeProperty = inputPropertyNames{1};
         % Get the data for this controller and this state
-        data{iController,1} = inputDataCellArray{iController,1}.x.data(thisStateIndex,:);
+        data{iController,1} = inputDataCellArray{iController,1}.(thisProperty).data(thisStateIndex,:,1);
         % When comparing controllers is "only" makes sense to compare
         % in absolute time in case that the data was stored at a different
         % regularity
-        dimPerTime      = inputDataCellArray{iController,1}.x.dimPerTime;
+        dimPerTime      = inputDataCellArray{iController,1}.(thisProperty).dimPerTime;
         timeLength      = size( data{iController,1} , dimPerTime+1 );
-        timeForPlot{iController,1} = inputDataCellArray{iController,1}.time.data(2,1:timeLength);
+        timeForPlot{iController,1} = inputDataCellArray{iController,1}.(thisTimeProperty).data(2,1:timeLength);
     end
     
     % Put in the xLabel, yLabel and Title options as required
     if (iState == 1)
         thisPlotOptions{1,2} = [];
-        thisPlotOptions{2,2} = inputDataCellArray{iController,1}.x.labelPerDim{1}{thisStateIndex};
+        thisPlotOptions{2,2} = inputDataCellArray{iController,1}.(thisProperty).labelPerDim{1}{thisStateIndex};
         thisPlotOptions{3,2} = 'State, $x$ (Temperature [T]) vs. Time';
         thisPlotOptions{4,2} = 'on';
     elseif (iState == numStatesToCompare)
         thisPlotOptions{1,2} = thisTimeLabel;
-        thisPlotOptions{2,2} = inputDataCellArray{iController,1}.x.labelPerDim{1}{thisStateIndex};
+        thisPlotOptions{2,2} = inputDataCellArray{iController,1}.(thisProperty).labelPerDim{1}{thisStateIndex};
         thisPlotOptions{3,2} = [];
         thisPlotOptions{4,2} = 'off';
     else
         thisPlotOptions{1,2} = [];
-        thisPlotOptions{2,2} = inputDataCellArray{iController,1}.x.labelPerDim{1}{thisStateIndex};
+        thisPlotOptions{2,2} = inputDataCellArray{iController,1}.(thisProperty).labelPerDim{1}{thisStateIndex};
         thisPlotOptions{3,2} = [];
         thisPlotOptions{4,2} = 'off';
     end
@@ -146,7 +148,8 @@ end
 %% PLOT THE INPUTS (Those of importance and everything)
 % Get the data
 % @TODO - THERE IS A PARTIAL HACK HERE BECUSE "1:7" IS HARDCODED!!!
-numInputsToCompare = size(inputDataCellArray{1,1}.u.data,1);
+thisProperty = inputPropertyNames{3};
+numInputsToCompare = size(inputDataCellArray{1,1}.(thisProperty).data,1);
 
 
 % To allow for different lengths of the data, store both the horizontal and
@@ -201,30 +204,32 @@ for iInput = 1:numInputsToCompare
 
     % Construct the data to be plotted
     for iController = 1:numControllers
+        thisProperty = inputPropertyNames{3};
+        thisTimeProperty = inputPropertyNames{1};
         % Get the data for this controller and this state
-        data{iController,1} = inputDataCellArray{iController,1}.u.data(thisInputIndex,:);
+        data{iController,1} = inputDataCellArray{iController,1}.(thisProperty).data(thisInputIndex,:,1);
         % When comparing controllers is "only" makes sense to compare
         % in absolute time in case that the data was stored at a different
         % regularity
-        dimPerTime      = inputDataCellArray{iController,1}.u.dimPerTime;
+        dimPerTime      = inputDataCellArray{iController,1}.(thisProperty).dimPerTime;
         timeLength      = size( data{iController,1} , dimPerTime+1 );
-        timeForPlot{iController,1} = inputDataCellArray{iController,1}.time.data(2,1:timeLength);
+        timeForPlot{iController,1} = inputDataCellArray{iController,1}.(thisTimeProperty).data(2,1:timeLength);
     end
     
     % Put in the xLabel, yLabel and Title options as required
     if (iInput == 1)
         thisPlotOptions{1,2} = [];
-        thisPlotOptions{2,2} = inputDataCellArray{iController,1}.u.labelPerDim{1}{thisInputIndex};
+        thisPlotOptions{2,2} = inputDataCellArray{iController,1}.(thisProperty).labelPerDim{1}{thisInputIndex};
         thisPlotOptions{3,2} = 'Input, $u$ vs. Time';
         thisPlotOptions{4,2} = 'on';
     elseif (iInput == numInputsToCompare)
         thisPlotOptions{1,2} = thisTimeLabel;
-        thisPlotOptions{2,2} = inputDataCellArray{iController,1}.u.labelPerDim{1}{thisInputIndex};
+        thisPlotOptions{2,2} = inputDataCellArray{iController,1}.(thisProperty).labelPerDim{1}{thisInputIndex};
         thisPlotOptions{3,2} = [];
         thisPlotOptions{4,2} = 'off';
     else
         thisPlotOptions{1,2} = [];
-        thisPlotOptions{2,2} = inputDataCellArray{iController,1}.u.labelPerDim{1}{thisInputIndex};
+        thisPlotOptions{2,2} = inputDataCellArray{iController,1}.(thisProperty).labelPerDim{1}{thisInputIndex};
         thisPlotOptions{3,2} = [];
         thisPlotOptions{4,2} = 'off';
     end
@@ -242,8 +247,9 @@ end
 %% PLOT THE COSTS (Those of importance and everything)
 % Get the data
 % @TODO - THERE IS A PARTIAL HACK HERE BECUSE "1:7" IS HARDCODED!!!
-numCostsToCompare = size(inputDataCellArray{1,1}.cost.data,1);
-labelPerDim       = inputDataCellArray{1,1}.cost.labelPerDim;
+thisProperty = inputPropertyNames{5};
+numCostsToCompare = size(inputDataCellArray{1,1}.(thisProperty).data,1);
+labelPerDim       = inputDataCellArray{1,1}.(thisProperty).labelPerDim;
 
 % To allow for different lengths of the data, store both the horizontal and
 % vertical axis data in a cell array
@@ -299,14 +305,16 @@ for iCost = 1:numCostsToCompare
 
     % Construct the data to be plotted
     for iController = 1:numControllers
+        thisProperty = inputPropertyNames{5};
+        thisTimeProperty = inputPropertyNames{1};
         % Get the data for this controller and this state
-        data{iController,1} = inputDataCellArray{iController,1}.cost.data(thisCostIndex,:);
+        data{iController,1} = inputDataCellArray{iController,1}.(thisProperty).data(thisCostIndex,:,1);
         % When comparing controllers is "only" makes sense to compare
         % in absolute time in case that the data was stored at a different
         % regularity
-        dimPerTime      = inputDataCellArray{iController,1}.cost.dimPerTime;
+        dimPerTime      = inputDataCellArray{iController,1}.(thisProperty).dimPerTime;
         timeLength      = size( data{iController,1} , dimPerTime+1 );
-        timeForPlot{iController,1} = inputDataCellArray{iController,1}.time.data(2,1:timeLength);
+        timeForPlot{iController,1} = inputDataCellArray{iController,1}.(thisTimeProperty).data(2,1:timeLength);
         
         % Compute the cumulative
         dataCumulativeCost(iController,1) = sum( data{iController,1} );
@@ -316,17 +324,17 @@ for iCost = 1:numCostsToCompare
     if (iCost == 1)
         thisPlotOptions{1,2} = [];
         thisPlotOptions{2,2} = [];
-        thisPlotOptions{3,2} = inputDataCellArray{iController,1}.cost.labelPerDim{1}{thisCostIndex};
+        thisPlotOptions{3,2} = inputDataCellArray{iController,1}.(thisProperty).labelPerDim{1}{thisCostIndex};
         thisPlotOptions{4,2} = 'on';
     elseif (iCost == numCostsToCompare)
         thisPlotOptions{1,2} = thisTimeLabel;
         thisPlotOptions{2,2} = [];
-        thisPlotOptions{3,2} = inputDataCellArray{iController,1}.cost.labelPerDim{1}{thisCostIndex};
+        thisPlotOptions{3,2} = inputDataCellArray{iController,1}.(thisProperty).labelPerDim{1}{thisCostIndex};
         thisPlotOptions{4,2} = 'off';
     else
         thisPlotOptions{1,2} = [];
         thisPlotOptions{2,2} = [];
-        thisPlotOptions{3,2} = inputDataCellArray{iController,1}.cost.labelPerDim{1}{thisCostIndex};
+        thisPlotOptions{3,2} = inputDataCellArray{iController,1}.(thisProperty).labelPerDim{1}{thisCostIndex};
         thisPlotOptions{4,2} = 'off';
     end
     
@@ -337,7 +345,7 @@ for iCost = 1:numCostsToCompare
     Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotOptions  );
         
     % Display the Cumulative cost
-    disp([' ... NOTE: FOR COST COMPONENT: ',inputDataCellArray{1,1}.cost.labelPerDim{1}{thisCostIndex} ]);
+    disp([' ... NOTE: FOR COST COMPONENT: ',inputDataCellArray{1,1}.(thisProperty).labelPerDim{1}{thisCostIndex} ]);
     for iController = 1:numControllers
         disp(['  ',num2str(dataCumulativeCost(iController,1),'%10.1f'),'   for "',labelPerController{iController},'"' ]);
         
@@ -362,6 +370,256 @@ temp = 1;
 %         % We are not handling this case properly
 %         numLinesToPlot = 0;
 %     end
+
+
+%% --------------------------------------------------------------------- %%
+%% plot the CUMULATIVE COST
+thisProperty = 'costCumulative';
+if ismember( thisProperty , inputPropertyNames )
+
+    %% Extract the data to be plotted for "thisProperty
+    data                = inputDataCellArray{1,1}.(thisProperty).data;
+    dimPerRealisation   = inputDataCellArray{1,1}.(thisProperty).dimPerRealisation;
+    labelPerDim         = inputDataCellArray{1,1}.(thisProperty).labelPerDim;
+
+
+    %% Extract the number of realisations
+    % Actually this is not really needed
+    %numRealisations = size( data , dimPerRealisation+1 );
+
+    %% Get the number of lines to be plotted, and the legend text for each
+    if (dimPerRealisation == 1)
+        numCostsToCompare = size(data,1);
+    elseif (dimPerRealisation == 2)
+        numCostsToCompare = size(data,1) * size(data,2);
+    else
+        % We are not handling this case properly
+        disp( ' ... ERROR: This function does NOT handle data with more' );
+        disp( '            than 2 dimensions per time step' );
+        numCostsToCompare = 0;
+    end
+
+    %% Prepare the plotting options
+    legendFontSize_default = 12;
+    xLabelInterpreter_default = 'none';
+    yLabelInterpreter_default = 'none';
+    labelFontSize_default = 12;
+
+    % Specify the plotting options
+    thisPlotOptions = { 'LineColourIndex'   ,  1:numControllers                  ;...    % 01
+                        'LineWidth'         ,  Visualisation.lineWidthDefault    ;...    % 02
+                        'maRkerIndex'       ,  1                                 ;...    % 03 % OPTIONS: '0' gives no marker, other options are: {'o','+','*','.','x','square','diamond','^','v','<','>','pentagram','hexagram'}
+                        'legendOnOff'       ,  'on'                              ;...    % 04 % OPTIONS: 'off', 'on'
+                        'legendStrings'     ,  labelPerController                ;...    % 05
+                        'legendFontSize'    ,  legendFontSize_default            ;...    % 06
+                        'legendFontWeight'  ,  'bold'                            ;...    % 07 % OPTIONS: 'normal', 'bold'
+                        'legendLocation'    ,  'southOutside'                    ;...    % 08 % OPTIONS: see below
+                        'legendInterpreter' ,  'none'                            ;...    % 09 % OPTIONS: 'latex', 'tex', 'none'
+                        'titleString'       ,  []                                ;...    % 10
+                        'titleFontSize'     ,  24                                ;...    % 11
+                        'titleFontWeight'   ,  'bold'                            ;...    % 12 % OPTIONS: 'normal', 'bold'
+                        'titleColour'       ,  'black'                           ;...    % 13
+                        'XLabelString'      ,  []                                ;...    % 14
+                        'YLabelString'      ,  []                                ;...    % 15
+                        'XLabelInterpreter' ,  xLabelInterpreter_default         ;...    % 16 % OPTIONS: 'latex', 'tex', 'none'
+                        'YLabelInterpreter' ,  yLabelInterpreter_default         ;...    % 17 % OPTIONS: 'latex', 'tex', 'none'
+                        'XLabelColour'      ,  'black'                           ;...    % 18
+                        'YLabelColour'      ,  'black'                           ;...    % 19
+                        'LabelFontSize'     ,  labelFontSize_default             ;...    % 20
+                        'LabelFontWeight'   ,  'bold'                            ;...    % 21
+                        'XGridOnOff'        ,  'off'                             ;...    % 22 % OPTIONS: 'off', 'on'
+                        'YGridOnOff'        ,  'on'                              ;...    % 23 % OPTIONS: 'off', 'on'
+                        'gridStyle'         ,  '--'                              ;...    % 24 % OPTIONS: '-', '--', ':', '-.', 'none'
+                        'gridColour'        ,  [0.5 0.5 0.5]                     ;...    % 25 % 
+                        'XGridMinorOnOff'   ,  'off'                             ;...    % 26 % OPTIONS: 'off', 'on'
+                        'YGridMinorOnOff'   ,  'off'                             ;...    % 27 % OPTIONS: 'off', 'on'
+                        'gridMinorStyle'    ,  ':'                               ;...    % 28 % OPTIONS: '-', '--', ':', '-.', 'none'
+                        'gridMinorColour'   ,  [0.5 0.5 0.5]                     ;...
+                        %'XTickNumbersOnOff'
+                        %'YTickNumbersOnOff'
+                      };
+
+    %% ----------------------------------------------------------------- %%
+    %% Create the figure - FOR THE SCATTER PLOT OF COST PER REALISATION
+    thisFigurePosition = Visualisation.getFigurePositionInFullScreenGrid( 2,2, [1,1] , 'rowandcolumn' );
+    hFig = figure('position',thisFigurePosition);
+    set(hFig,'Color', Visualisation.figure_backgroundColour );
+    
+    % Clear the data variable
+    clear data;
+        
+    %% Iterate through the number of Cost Components to compare, making a sub-plot for each
+    for iCost = 1:numCostsToCompare
+        % Get the index of this state
+        thisCostIndex = iCost;
+
+        % Create a cell array for storing the data
+        data = cell(numControllers,1);
+
+        % Handle based on the data structure
+        if (dimPerRealisation == 1)
+            % Construct the data to be plotted
+            for iController = 1:numControllers
+                % Get the data for this controller and this state
+                data{iController,1} = inputDataCellArray{iController,1}.(thisProperty).data(thisCostIndex,:);
+            end
+            
+            % Put in the title string
+            thisPlotOptions{10,2} = labelPerDim{1}{thisCostIndex};
+            
+
+        elseif (dimPerRealisation == 2)
+            
+            % ... NOT HANLDING THIS
+            
+        else
+            % We are not handling this case properly
+            disp( ' ... ERROR: This function does NOT handle data with more' );
+            disp( '            than 2 dimensions per time step' );
+            numCostsToCompare = 0;
+        end
+
+
+        % Create the axes for the subplot for this cost component
+        hAxes = subplot(1, numCostsToCompare, iCost );
+        
+        % Now call the generic plotting function
+        Visualisation.visualise_plotMultipleHistogramAsScatter( hAxes , data , thisPlotOptions  );
+    end
+
+    
+    
+    %% ----------------------------------------------------------------- %%
+    %% NOW Create the figure - FOR THE HISTOGRAM PLOT COST DIFFERECNCE
+    thisFigurePosition = Visualisation.getFigurePositionInFullScreenGrid( 2,2, [2,1] , 'rowandcolumn' );
+    hFig = figure('position',thisFigurePosition);
+    set(hFig,'Color', Visualisation.figure_backgroundColour );
+    
+    % Clear the data variable
+    clear data;
+        
+    %% Iterate through the number of Cost Components to compare, making a sub-plot for each
+    for iCost = 1:numCostsToCompare
+        % Get the index of this state
+        thisCostIndex = iCost;
+
+        % Create a cell array for storing the data
+        data = cell(numControllers-1,1);
+
+        % For now we just compare with the last controller in the list
+        
+        
+        % Handle based on the data structure
+        if (dimPerRealisation == 1)
+            % Construct the data to be plotted
+            data_lastController = inputDataCellArray{numControllers,1}.(thisProperty).data(thisCostIndex,:);
+            
+            for iController = 1:numControllers-1
+                % Get the data for this controller
+                data_thisController = inputDataCellArray{iController,1}.(thisProperty).data(thisCostIndex,:);
+                % Store the difference as the data to be plotted                
+                data{iController,1} = data_thisController - data_lastController;
+            end
+            
+            % Adjust the length of things to remove the last item
+            % For the color index
+            thisPlotOptions{1,2} = 1:(numControllers-1);
+            % For the legnend strings
+            thisPlotOptions{5,2} = labelPerController(1:(numControllers-1),1);
+            
+            
+            % Put in the title string
+            thisPlotOptions{10,2} = labelPerDim{1}{thisCostIndex};
+            
+
+        elseif (dimPerRealisation == 2)
+            
+            % ... NOT HANLDING THIS
+            
+        else
+            % We are not handling this case properly
+            disp( ' ... ERROR: This function does NOT handle data with more' );
+            disp( '            than 2 dimensions per time step' );
+            numCostsToCompare = 0;
+        end
+
+
+        % Create the axes for the subplot for this cost component
+        hAxes = subplot(1, numCostsToCompare, iCost );
+        
+        % Now call the generic plotting function
+        Visualisation.visualise_plotMultipleHistogram( hAxes , data , thisPlotOptions  );
+    end
+    
+    
+    
+    
+    
+    %% ----------------------------------------------------------------- %%
+    %% NOW Create the figure - FOR THE PARETO FRONT
+    thisFigurePosition = Visualisation.getFigurePositionInFullScreenGrid( 2,2, [1,2] , 'rowandcolumn' );
+    hFig = figure('position',thisFigurePosition);
+    set(hFig,'Color', Visualisation.figure_backgroundColour );
+    
+    % Clear the data variable
+    clear data;
+        
+    %% Iterate through the number of Cost Components to compare, making a sub-plot for each
+    if (numCostsToCompare-1) == 2
+
+        % Create a cell array for storing the data
+        data_x = cell(numControllers,1);
+        data_y = cell(numControllers,1);
+        
+        % Handle based on the data structure
+        if (dimPerRealisation == 1)
+            
+            for iController = 1:numControllers
+                % Get the data for this controller
+                data_thisController = inputDataCellArray{iController,1}.(thisProperty).data;
+                % Store the difference as the data to be plotted                
+                data_x{iController,1} = data_thisController(2,:);
+                data_y{iController,1} = data_thisController(3,:);
+            end
+            
+            % Adjust the length of things to remove the last item
+            % For the color index
+            thisPlotOptions{1,2} = 1:(numControllers);
+            % For the legnend strings
+            thisPlotOptions{5,2} = labelPerController(1:numControllers,1);
+            
+            % Put in the title string
+            thisPlotOptions{10,2} = 'Pareto Front';
+            
+            % Put in the title string
+            thisPlotOptions{14,2} = labelPerDim{1}{2,1};
+            thisPlotOptions{15,2} = labelPerDim{1}{3,1};
+            
+
+        elseif (dimPerRealisation == 2)
+            
+            % ... NOT HANLDING THIS
+            
+        else
+            % We are not handling this case properly
+            disp( ' ... ERROR: This function does NOT handle data with more' );
+            disp( '            than 2 dimensions per time step' );
+            numCostsToCompare = 0;
+        end
+
+
+        % Create the axes for the subplot for this cost component
+        %hAxes = subplot(1, numCostsToCompare, iCost );
+        hAxes = subplot(1, 1, 1 );
+        
+        % Now call the generic plotting function
+        Visualisation.visualise_plotParetoFrontAsScatter( hAxes , data_x , data_y , thisPlotOptions  );
+    end
+        
+
+
+
+end   % END OF: "if isfield( inputPropertyNames , thisProperty )"
 
 
 
