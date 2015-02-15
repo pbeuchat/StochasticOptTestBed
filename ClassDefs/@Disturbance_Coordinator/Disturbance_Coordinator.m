@@ -1,4 +1,4 @@
-classdef Disturbance_Coordinator < handle
+classdef Disturbance_Coordinator < matlab.mixin.Copyable
 % This class interfaces the disturbance with everything else
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat

@@ -54,7 +54,7 @@ cd(thisFullPath);
 %% --------------------------------------------------------------------- %%
 %% USER DEFINED INPUTS:
 
-%% SELECT THE BUILDING TO BE USED WITHIN THE BLACK-BOX:
+%% SELECT THE SYSTEM MODEL TO BE USED WITHIN THE BLACK-BOX:
 % The systems to choose from are:
 %   'building'
 %   '...'
@@ -70,19 +70,38 @@ systemIDRequest     = '002_001';
 
 
 % Some options for what to do with the system that is loaded
-sysOptions.displaySystemDetails         = false;
-sysOptions.drawSystem                   = false;
-sysOptions.plotContTimeModelSparisity   = false;
-sysOptions.discretisationMethod         = 'default';  % 'default','euler','expm'
+clear systemOptions;
+systemOptions.displaySystemDetails         = false;
+systemOptions.drawSystem                   = false;
+systemOptions.plotContTimeModelSparisity   = false;
+systemOptions.discretisationMethod         = 'default';  % 'default','euler','expm'
 
 
+
+
+%% SELECT THE DISTURBANCE MODEL TO BE USED WITHIN THE BLACK-BOX:
+
+% Need to make a list of what the various disturbance's are
+
+disturbanceIDRequest  = '002_004';
+
+% Some options for what to do with the disturbance model that is loaded
+clear disturbanceOptions;
+% Use this flag to force the statistics to be recompute
+% OPTIONS: true, false
+disturbanceOptions.recomputeStats  = false;
+% Use this option as a cell array of strings specifying the statistics to
+% be compute in advance of the controller instructing the statistics is
+% requires
+% OPTIONS: 'mean', 'cov', 'bounds_boxtype'
+disturbanceOptions.statsRequired = {'mean','cov','bounds_boxtype'};
 
 
 
 %% SPECIFY THE TIME HORIZON FOR WHICH TO RUN THE SIMULATIONS
 
 timeStart       = 1;
-timeHorizon     = 24*4;% (24*4) * 4;
+timeHorizon     = 2*4;% (24*4) * 4;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
@@ -127,7 +146,7 @@ flag_evaluateOnMultipleRealisations = true;
 % About how many realisations to run:
 evalMultiReal_numSampleMethod       = 'userSpecified';      % OPTIONS: 'userSpecified', 'n_xi^2'
 evalMultiReal_numSamplesMax         =  inf;                 % OPTIONS: set to "inf" for unbounded
-evalMultiReal_numSamplesUserSpec    =  200;
+evalMultiReal_numSamplesUserSpec    =  1;
 
 % About how to parallelise the computations
 evalMultiReal_parallelise_onOff     = true;                 % OPTIONS: 'true', 'false'
@@ -160,10 +179,10 @@ flag_returnObjectsToWorkspace = true;        % "true" or "false"
 % completely, or if the used only wishes to see certain catagories or plots
 
 flag_plotResults                        = true;
-flag_plotResultsPerController           = true;
+flag_plotResultsPerController           = false;
 flag_plotResultsControllerComparison    = true;
 
-plotResults_unitsForTimeAxis            = 'steps';        % "steps"  or "days" or "hours" or "minutes" or "seconds"
+plotResults_unitsForTimeAxis            = 'hours';        % "steps"  or "days" or "hours" or "minutes" or "seconds"
 
 
 
@@ -932,7 +951,10 @@ blackBoxInstructions.fullPath           = thisFullPath;
 
 blackBoxInstructions.systemType         = systemType;
 blackBoxInstructions.systemIDRequest    = systemIDRequest;
-blackBoxInstructions.systemOptions      = sysOptions;
+blackBoxInstructions.systemOptions      = systemOptions;
+
+blackBoxInstructions.disturbanceIDRequest = disturbanceIDRequest;
+blackBoxInstructions.disturbanceOptions = disturbanceOptions;
 
 blackBoxInstructions.controllers        = cell(numCntr,1);
 blackBoxInstructions.controllers(:,1)   = cntrSpecs(1:numCntr,1);

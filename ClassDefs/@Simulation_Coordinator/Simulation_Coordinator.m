@@ -38,6 +38,9 @@ classdef Simulation_Coordinator < handle
         % The Disturbance_Coordinator of the appropriate class
         distCoord@Disturbance_Coordinator;
         
+        % The cell array Disturbance_Coordinator for parallelisation
+        distCoordCell@cell;
+        
         % The Control Coordinator of the appropriate class
         controlCoord@Control_Coordinator;
         
@@ -194,6 +197,9 @@ classdef Simulation_Coordinator < handle
         % FUNCTION DEF
         returnIsReady = checkSimulationIsReadyToRun( obj , flag_throwError );
         
+        % FUNCTION DEF:
+        returnParallelInitialise = initialiseMultipleDistCoordForParallelSimulations( obj );
+        
         
         % FUNCTION: to specify the Precomputed Disturbance Data
         function [ ] = specifyPrecomputedDisturbances( obj , inputDisturbances )
@@ -222,7 +228,17 @@ classdef Simulation_Coordinator < handle
             % Adjust the flags such that "deterministic" is 'false' if
             % "evaulate multiple realisation" is spefied as 'true'
             if inputEvalMultiRealDetails.flag_evaluateOnMultipleRealisations
+                
                 obj.flag_deterministic = false;
+                
+                if inputFlagDeterministic
+                    disp( ' NOTE: Both of these flags were set to be true:' );
+                    disp( '       > "evaluate multiple realisations", and' );
+                    disp( '       > "perform deterministic realisations"');
+                    disp( '       This does NOT make sense because all the realisations will give the same results' );
+                    disp( '       Hence the "perform deterministic realisations" flag has been set to "false"' );
+                end
+                
             end
             
         end

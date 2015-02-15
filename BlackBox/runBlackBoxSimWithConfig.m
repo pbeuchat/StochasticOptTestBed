@@ -1,4 +1,4 @@
-%  ---------------------------------------------------------------------  %
+    %  ---------------------------------------------------------------------  %
 %  ---------------------------------------------------------------------  %
 %  ---------     runBlackBoxSimWithConfig.m
 %  ---------------------------------------------------------------------  %
@@ -26,7 +26,9 @@ sysType     = inputBlackBoxInstructions.systemType;
 sysID       = inputBlackBoxInstructions.systemIDRequest;
 sysOptions  = inputBlackBoxInstructions.systemOptions;
  
-
+% Get the disturbance model ID requested and the options for loading it
+distID       = inputBlackBoxInstructions.disturbanceIDRequest;
+distOptions  = inputBlackBoxInstructions.disturbanceOptions;
 
 % Get the Full File Path to the Black Box location on this machine
 bbFullPath = inputBlackBoxInstructions.fullPath;
@@ -143,11 +145,11 @@ disp('            and wrapping it together as a "Distrubance Coordinator" class'
 
 % Instantiate a "Disturbance Coordinator" object
 % This requires the identifier for the disturbance model to be used
-thisDistIdentifier  = '002_004';
-thisRecomputeStats  = false;
+thisDistIdentifier  = distID;
+thisRecomputeStats  = distOptions.recomputeStats;
 distCoord           = Disturbance_Coordinator(thisDistIdentifier);
 
-statsRequired = {'mean','cov','bounds_boxtype'};
+statsRequired = distOptions.statsRequired;
 
 thisSuccess = checkStatsAreAvailable_ComputingAsRequired( distCoord , statsRequired , thisRecomputeStats);
 if ~thisSuccess
@@ -261,12 +263,22 @@ for iController = 1:numControlTechniques
         disp(' ... ERROR: the simulation for Control Technique number "',num2str(iController),'" is incompatable and will not be run');
     end
     
-    % Finally check that the simulation is ready to be run
+    % Next check that the simulation is ready to be run
     flag_throwError = true;
     this_isReady = checkSimulationIsReadyToRun( mySimCoordArray(iController,1) , flag_throwError );
     if ~(this_isReady)
         disp(' ... ERROR: the simulation Coordinator Object has been instantiated and intialised, but for some reason is not "ready" for simulation');
     end
+    
+    % To allow parallel simulation create cell array of disturbance
+    % coordinators, each initialised with a random number generator to
+    % allow for repeatability of the results
+%     this_parallelInitialised = initialiseMultipleDistCoordForParallelSimulations( mySimCoordArray(iController,1) );
+%     if ~(this_parallelInitialised)
+%         disp(' ... ERROR: the Simulation Coordinator Object could not successfully make a deep copy of the disturbance Coordinator object for parallel simulations');
+%     end
+    
+    
     
     % Put together the setting for the Global Coord Initialise function
     %clear thisSettings;

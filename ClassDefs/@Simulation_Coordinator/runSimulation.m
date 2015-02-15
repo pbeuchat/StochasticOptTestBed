@@ -73,12 +73,12 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         temp_evalMultiReal_details.parallelise_onOff        = false;
         temp_evalMultiReal_details.parallelise_numThreads   = 1;
         
-        temp_evalMultiReal_details.flag_save_x      = true;
-        temp_evalMultiReal_details.flag_save_u      = true;
-        temp_evalMultiReal_details.flag_save_xi     = true;
-        temp_evalMultiReal_details.flag_save_cost   = true;
-        temp_evalMultiReal_details.flag_save_cost_perSubSystem = true;
-        temp_evalMultiReal_details.flag_save_controllerDetails = false;
+        temp_evalMultiReal_details.flag_save_x      = obj.evalMultiReal_details.flag_save_x;
+        temp_evalMultiReal_details.flag_save_u      = obj.evalMultiReal_details.flag_save_u;
+        temp_evalMultiReal_details.flag_save_xi     = obj.evalMultiReal_details.flag_save_xi;
+        temp_evalMultiReal_details.flag_save_cost   = obj.evalMultiReal_details.flag_save_cost;
+        temp_evalMultiReal_details.flag_save_cost_perSubSystem = obj.evalMultiReal_details.flag_save_cost_perSubSystem;
+        temp_evalMultiReal_details.flag_save_controllerDetails = obj.evalMultiReal_details.flag_save_controllerDetails;
         
         % Put this back into the object
         obj.evalMultiReal_details = temp_evalMultiReal_details;
