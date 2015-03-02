@@ -81,6 +81,19 @@ classdef (Abstract) Disturbance_Model < handle
         % NOTE: that this class (ie. "Disturbance_Model") must be included
         % in the access list so that its sub-classes will have acccess
         
+        % FUNCTION: to initialise a "RandStream" from details
+        returnSuccess = initialiseDisturbanceRandStreamWithSeedAndDetails( obj , inputSeed , inputDetails );
+        
+        % FUNCTION: to initialise a "RandStream" directly with a given
+        % "RandStream" object
+        returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj , inputRandStream );
+    end
+    
+    
+    methods (Static = false , Access = {?Disturbance_Model,?Disturbance_ology,?Disturbance_Coordinator})
+        % NOTE: that this class (ie. "Disturbance_Model") must be included
+        % in the access list so that its sub-classes will have acccess
+        
         % FUNCTION: to get a trace for the full length of the cycle
         % This violates the "all properties should be private" structure
         % But is required for interfacing with other components

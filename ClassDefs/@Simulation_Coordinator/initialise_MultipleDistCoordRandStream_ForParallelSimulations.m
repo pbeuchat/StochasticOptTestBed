@@ -108,7 +108,7 @@ function returnParallelInitialised = initialise_MultipleDistCoordRandStream_ForP
         temp_seed = obj.seed_original;
         % Create the "RandStream" for each worker
         for iWorker = 1:evalMulti_numWorkers
-            randStream_perWorkerCellArray{iWorker,1} = RandStream.create('mrg32k3a','numstreams',temp_numStreams,'streamindices',iWorker,'Seed',temp_seed);
+            randStream_perWorkerCellArray{iWorker,1} = RandStream.create(rng_generatorType,'numstreams',temp_numStreams,'streamindices',iWorker,'Seed',temp_seed);
         end
 
     % FOR GENERATORS THAT DON'T SUPPORT "SUB-STREAMS"

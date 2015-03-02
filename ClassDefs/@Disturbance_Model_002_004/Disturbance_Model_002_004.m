@@ -38,6 +38,9 @@ classdef Disturbance_Model_002_004 < Disturbance_Model
         % A flag for whether or not the samples are time-correlated
         isTimeCorrelated@logical = false;
         
+        % Random Number Stream generator object
+        randStreamObject@RandStream;
+        
         % A cell array of the statistic that are available and can be told
         % to the "disturbance-ology department" (to save the need for
         % sampling)
@@ -133,6 +136,17 @@ classdef Disturbance_Model_002_004 < Disturbance_Model
         
     end
     % END OF: "methods (Static = false , Access = public)"
+    
+    
+    methods (Static = false , Access = {?Disturbance_Model,?Disturbance_ology,?Disturbance_Coordinator})
+        % FUNCTION: to initialise a "RandStream" from details
+        returnSuccess = initialiseDisturbanceRandStreamWithSeedAndDetails( obj , inputSeed , inputDetails );
+        
+        % FUNCTION: to initialise a "RandStream" directly with a given
+        % "RandStream" object
+        returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj , inputRandStream );
+    end
+    
     
     
     methods (Static = false , Access = {?Disturbance_Model,?Disturbance_ology,?Disturbance_Coordinator})

@@ -125,11 +125,15 @@ classdef Disturbance_Coordinator < matlab.mixin.Copyable
         
         
         % FUNCTION: to initialise a "RandStream" from details
-        returnSuccess = initialiseDisturbanceRandStreamWithSeedAndDetails( obj , inputSeed , inputDetails );
+        function returnSuccess = initialiseDisturbanceRandStreamWithSeedAndDetails( obj , inputSeed , inputDetails )
+            returnSuccess = initialiseDisturbanceRandStreamWithSeedAndDetails( obj.myDisturbanceModel , inputSeed , inputDetails );
+        end
         
         % FUNCTION: to initialise a "RandStream" directly with a given
         % "RandStream" object
-        returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj , inputRandStream );
+        function returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj , inputRandStream )
+            returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj.myDisturbanceModel , inputRandStream );
+        end
         
         
         % FUNCTION: 
