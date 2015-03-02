@@ -20,12 +20,14 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         error(bbConstants.errorMsg);
     end
     
+    %% ----------------------------------------------------------------- %%
     %% UPDATE THE STATE DEFITION - only the sub-system config part is updated
     % Set the "stateDef" object for the model to have the same masks as for
     % this "Control_Coordinator"
     updateStateDefMasks( obj.progModelEng , obj.controlCoord.stateDef.n_ss , obj.controlCoord.stateDef.mask_x_ss , obj.controlCoord.stateDef.mask_u_ss , obj.controlCoord.stateDef.mask_xi_ss );
     
     
+    %% ----------------------------------------------------------------- %%
     %% SET THE INITIAL CONDITION FOR: 'x', 'xi', 'cost'
     % Get the initial condition
     this_x = obj.stateDef.x0;
@@ -47,6 +49,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     % @TODO - this is a hardcode
     flag_current_xi_isAvailable = false;
     
+    %% ----------------------------------------------------------------- %%
     %% GET THE TIMING SPECIFICATIONS FOR THIS SIMULATION RUN
     % Get the timing
     timeStartIndex  = obj.simTimeIndex_start;
@@ -64,42 +67,42 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     
     
     
-    %% If NOT requested to perform multiple realisations, then set the
-    % details to produce results for 1 realisation
-    if ~obj.evalMultiReal_details.flag_evaluateOnMultipleRealisations
-        clear temp_evalMultiReal_details;
-        temp_evalMultiReal_details.numSampleMethod          = 'userSpecified';
-        temp_evalMultiReal_details.numSamplesMax            = inf;
-        temp_evalMultiReal_details.parallelise_onOff        = false;
-        temp_evalMultiReal_details.parallelise_numThreads   = 1;
-        
-        temp_evalMultiReal_details.flag_save_x      = obj.evalMultiReal_details.flag_save_x;
-        temp_evalMultiReal_details.flag_save_u      = obj.evalMultiReal_details.flag_save_u;
-        temp_evalMultiReal_details.flag_save_xi     = obj.evalMultiReal_details.flag_save_xi;
-        temp_evalMultiReal_details.flag_save_cost   = obj.evalMultiReal_details.flag_save_cost;
-        temp_evalMultiReal_details.flag_save_cost_perSubSystem = obj.evalMultiReal_details.flag_save_cost_perSubSystem;
-        temp_evalMultiReal_details.flag_save_controllerDetails = obj.evalMultiReal_details.flag_save_controllerDetails;
-        
-        % Put this back into the object
-        obj.evalMultiReal_details = temp_evalMultiReal_details;
-    end
+%     %% If NOT requested to perform multiple realisations, then set the
+%     % details to produce results for 1 realisation
+%     if ~obj.evalMultiReal_details.flag_evaluateOnMultipleRealisations
+%         clear temp_evalMultiReal_details;
+%         temp_evalMultiReal_details.numSampleMethod          = 'userSpecified';
+%         temp_evalMultiReal_details.numSamplesMax            = inf;
+%         temp_evalMultiReal_details.parallelise_onOff        = false;
+%         temp_evalMultiReal_details.parallelise_numThreads   = 1;
+%         
+%         temp_evalMultiReal_details.flag_save_x      = obj.evalMultiReal_details.flag_save_x;
+%         temp_evalMultiReal_details.flag_save_u      = obj.evalMultiReal_details.flag_save_u;
+%         temp_evalMultiReal_details.flag_save_xi     = obj.evalMultiReal_details.flag_save_xi;
+%         temp_evalMultiReal_details.flag_save_cost   = obj.evalMultiReal_details.flag_save_cost;
+%         temp_evalMultiReal_details.flag_save_cost_perSubSystem = obj.evalMultiReal_details.flag_save_cost_perSubSystem;
+%         temp_evalMultiReal_details.flag_save_controllerDetails = obj.evalMultiReal_details.flag_save_controllerDetails;
+%         
+%         % Put this back into the object
+%         obj.evalMultiReal_details = temp_evalMultiReal_details;
+%     end
 
     
-    %% COMPUTE OR EXTRACT THE NUMBER OF REALISAISATION TO BE EVALUATED
-    if strcmp(obj.evalMultiReal_details.numSampleMethod , 'userSpecified')
-        evalMulti_numRealisation = obj.evalMultiReal_details.numSamplesUserSpec;
-    elseif strcmp(obj.evalMultiReal_details.numSampleMethod , 'n_xi^2')
-        evalMulti_numRealisation = ( obj.stateDef.n_xi * timeDuration )^2;
-    else
-        disp( ' ... ERROR: the specified number of realisations method was not recognised' );
-        disp(['            The specified method was:   "',obj.evalMultiReal_details.numSampleMethod,'"' ]);
-        disp( '            Setting the number of realisation to 1 instead' );
-        evalMulti_numRealisation = 1;
-    end
+%     %% COMPUTE OR EXTRACT THE NUMBER OF REALISAISATION TO BE EVALUATED
+%     if strcmp(obj.evalMultiReal_details.numSampleMethod , 'userSpecified')
+%         evalMulti_numRealisation = obj.evalMultiReal_details.numSamplesUserSpec;
+%     elseif strcmp(obj.evalMultiReal_details.numSampleMethod , 'n_xi^2')
+%         evalMulti_numRealisation = ( obj.stateDef.n_xi * timeDuration )^2;
+%     else
+%         disp( ' ... ERROR: the specified number of realisations method was not recognised' );
+%         disp(['            The specified method was:   "',obj.evalMultiReal_details.numSampleMethod,'"' ]);
+%         disp( '            Setting the number of realisation to 1 instead' );
+%         evalMulti_numRealisation = 1;
+%     end
     
     
     %% EXTRACT THE RAND NUMBER GENERATOR TYPE TO USE
-    rng_generatorType = obj.randNumGenType;
+%     rng_generatorType = obj.randNumGenType;
     
     % OPTIONS: that can have independent sub-streams
     %       'mrg32k3a', 'mlfg6331_64'
@@ -111,45 +114,45 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     %% CREATE THE CELL ARRAY OF "RandStream" OBJECTS
     % @TODO hardcoded here for how to determine automatically the number of
     % threads available
-    if obj.evalMultiReal_details.parallelise_numThreads == inf
-        obj.evalMultiReal_details.parallelise_numThreads = 1;
-    end
-
-    % Set the number of "workers" to be the number of "threads" (or the
-    % number of realisations to evaluate if that is a smaller number)
-    evalMulti_numWorkers = min( obj.evalMultiReal_details.parallelise_numThreads , evalMulti_numRealisation);
+%     if obj.evalMultiReal_details.parallelise_numThreads == inf
+%         obj.evalMultiReal_details.parallelise_numThreads = 1;
+%     end
+% 
+%     % Set the number of "workers" to be the number of "threads" (or the
+%     % number of realisations to evaluate if that is a smaller number)
+%     evalMulti_numWorkers = min( obj.evalMultiReal_details.parallelise_numThreads , evalMulti_numRealisation);
 
     % Initialise the cell array of "RandSteam" object per worker
-    randStream_perWorkerCellArray = cell(evalMulti_numWorkers,1);
-
-    % From the "Original Seed" initialise a RandStream for each worker
-    % Separate depending on whether the "Generator Type" supports multiple sub-streams
-    % FOR GENERATORS THAT SUPPORT "SUB-STREAMS"
-    if strcmp(rng_generatorType,'mrg32k3a') || strcmp(rng_generatorType,'mlfg6331_64')
-        % A few things for creating the "RandStream" objects
-        temp_numStreams = evalMulti_numWorkers;
-        temp_seed = obj.seed_original;
-        % Create the "RandStream" for each worker
-        for iWorker = 1:evalMulti_numWorkers
-            randStream_perWorkerCellArray{iWorker,1} = RandStream.create('mrg32k3a','numstreams',temp_numStreams,'streamindices',iWorker,'Seed',temp_seed);
-        end
-
-    % FOR GENERATORS THAT DON'T SUPPORT "SUB-STREAMS"
-    elseif strcmp(rng_generatorType,'mt19937ar')
-        % Create a seed per worker starting from the original seed
-        seedPerWorker = obj.seed_original + 1:evalMulti_numWorkers;
-        % Create the "RandStream" for each worker
-        for iWorker = 1:evalMulti_numWorkers
-            temp_seed = seedPerWorker(iWorker);
-            randStream_perWorkerCellArray{iWorker,1} = RandStream.create('mt19937ar','Seed',temp_seed);
-        end
-
-    % FOR GENERATORS THAT ARE NOT RECOGNISED
-    else
-        disp( ' ... ERROR: the specified random number "Generator Type" was not recognised' );
-        disp(['            The specified type was:   "',rng_generatorType,'"' ]);
-        error(bbConstants.errorMsg);
-    end
+%     randStream_perWorkerCellArray = cell(evalMulti_numWorkers,1);
+% 
+%     % From the "Original Seed" initialise a RandStream for each worker
+%     % Separate depending on whether the "Generator Type" supports multiple sub-streams
+%     % FOR GENERATORS THAT SUPPORT "SUB-STREAMS"
+%     if strcmp(rng_generatorType,'mrg32k3a') || strcmp(rng_generatorType,'mlfg6331_64')
+%         % A few things for creating the "RandStream" objects
+%         temp_numStreams = evalMulti_numWorkers;
+%         temp_seed = obj.seed_original;
+%         % Create the "RandStream" for each worker
+%         for iWorker = 1:evalMulti_numWorkers
+%             randStream_perWorkerCellArray{iWorker,1} = RandStream.create('mrg32k3a','numstreams',temp_numStreams,'streamindices',iWorker,'Seed',temp_seed);
+%         end
+% 
+%     % FOR GENERATORS THAT DON'T SUPPORT "SUB-STREAMS"
+%     elseif strcmp(rng_generatorType,'mt19937ar')
+%         % Create a seed per worker starting from the original seed
+%         seedPerWorker = obj.seed_original + 1:evalMulti_numWorkers;
+%         % Create the "RandStream" for each worker
+%         for iWorker = 1:evalMulti_numWorkers
+%             temp_seed = seedPerWorker(iWorker);
+%             randStream_perWorkerCellArray{iWorker,1} = RandStream.create('mt19937ar','Seed',temp_seed);
+%         end
+% 
+%     % FOR GENERATORS THAT ARE NOT RECOGNISED
+%     else
+%         disp( ' ... ERROR: the specified random number "Generator Type" was not recognised' );
+%         disp(['            The specified type was:   "',rng_generatorType,'"' ]);
+%         error(bbConstants.errorMsg);
+%     end
 
     % @TODO: should the "randStream_perWorkerCellArray" be kept as a
     % property of the "Simulation_Coordinator" obj that this function is
@@ -158,74 +161,83 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     
     %% Compute the number of Realisation to evaluate per Worker
     
-    % If there is only 1 worker then the answer is simple
-    if evalMulti_numWorkers == 1
-        evalMulti_numRealisationsPerWorkerVector = evalMulti_numRealisation;
-    else
-        % Spread the number of realisations evenly betweem the workers (to
-        % the nearest integer) and give the remainder to the last worker
-        temp_num = floor(evalMulti_numRealisation / evalMulti_numWorkers);
-        temp_rem = evalMulti_numRealisation - temp_num*evalMulti_numWorkers;
-        evalMulti_numRealisationsPerWorkerVector = [temp_num * ones(evalMulti_numWorkers-1,1) ; temp_num+temp_rem ];
-    end
+%     % If there is only 1 worker then the answer is simple
+%     if evalMulti_numWorkers == 1
+%         evalMulti_numRealisationsPerWorkerVector = evalMulti_numRealisation;
+%     else
+%         % Spread the number of realisations evenly betweem the workers (to
+%         % the nearest integer) and give the remainder to the last worker
+%         temp_num = floor(evalMulti_numRealisation / evalMulti_numWorkers);
+%         temp_rem = evalMulti_numRealisation - temp_num*evalMulti_numWorkers;
+%         evalMulti_numRealisationsPerWorkerVector = [temp_num * ones(evalMulti_numWorkers-1,1) ; temp_num+temp_rem ];
+%     end
     
-    % Also comput the realisation indexing for when the data is saved to
+    % Also compute the realisation indexing for when the data is saved to
     % disk
-    if evalMulti_numWorkers == 1
-        evalMulti_realisationIndexStart     = 1;
-        evalMulti_realisationIndexEnd       = evalMulti_numRealisation;
-    else
-        evalMulti_realisationIndexStart     = (1  :  temp_num  :  (temp_num*evalMulti_numWorkers+1))';
-        evalMulti_realisationIndexEnd       = [(temp_num : temp_num : temp_num*(evalMulti_numWorkers-1))' ; evalMulti_numRealisation];
-    end
+%     if evalMulti_numWorkers == 1
+%         evalMulti_realisationIndexStart     = 1;
+%         evalMulti_realisationIndexEnd       = evalMulti_numRealisation;
+%     else
+%         evalMulti_realisationIndexStart     = (1  :  temp_num  :  (temp_num*evalMulti_numWorkers+1))';
+%         evalMulti_realisationIndexEnd       = [(temp_num : temp_num : temp_num*(evalMulti_numWorkers-1))' ; evalMulti_numRealisation];
+%     end
+    
+    % 
     
     
     %% Create a "result_seed" struct that can be saved 
     % It will be used to unambiguously re-create the same reults
     
-    % Initialise a cell array
-    result_randStreamPerWorker = cell(evalMulti_numWorkers,1);
-    % Step through each worker storing the details
-    for iWorker = 1 : evalMulti_numWorkers
-        % And store all the properties of the Rand Stream
-        result_randStreamPerWorker{iWorker,1}.Type              = randStream_perWorkerCellArray{iWorker,1}.Type;
-        result_randStreamPerWorker{iWorker,1}.Seed              = randStream_perWorkerCellArray{iWorker,1}.Seed;
-        result_randStreamPerWorker{iWorker,1}.NumStreams        = randStream_perWorkerCellArray{iWorker,1}.NumStreams;
-        result_randStreamPerWorker{iWorker,1}.StreamIndex       = randStream_perWorkerCellArray{iWorker,1}.StreamIndex;
-        result_randStreamPerWorker{iWorker,1}.State             = randStream_perWorkerCellArray{iWorker,1}.State;
-        result_randStreamPerWorker{iWorker,1}.Substream         = randStream_perWorkerCellArray{iWorker,1}.Substream;
-        result_randStreamPerWorker{iWorker,1}.NormalTransform   = randStream_perWorkerCellArray{iWorker,1}.NormalTransform;
-        result_randStreamPerWorker{iWorker,1}.Antithetic        = randStream_perWorkerCellArray{iWorker,1}.Antithetic;
-        result_randStreamPerWorker{iWorker,1}.FullPrecision     = randStream_perWorkerCellArray{iWorker,1}.FullPrecision;
-        
-        % Store details about how many samples are drawn per realisation
-        result_randStreamPerWorker{iWorker,1}.numSamplesPerTimeStep         = obj.stateDef.n_xi;
-        result_randStreamPerWorker{iWorker,1}.numTimeStepsPerRealisation    = timeDuration;
-        result_randStreamPerWorker{iWorker,1}.numRealisations               = evalMulti_numRealisationsPerWorkerVector(iWorker,1);
-        
-        % Store the worker number for completeness of cross-checking when
-        % using this data to replicate a specific realisation
-        result_randStreamPerWorker{iWorker,1}.workerNumber      = iWorker;
-    end
+%     % Initialise a cell array
+%     result_randStreamPerWorker = cell(evalMulti_numWorkers,1);
+%     % Step through each worker storing the details
+%     for iWorker = 1 : evalMulti_numWorkers
+%         % And store all the properties of the Rand Stream
+%         result_randStreamPerWorker{iWorker,1}.Type              = randStream_perWorkerCellArray{iWorker,1}.Type;
+%         result_randStreamPerWorker{iWorker,1}.Seed              = randStream_perWorkerCellArray{iWorker,1}.Seed;
+%         result_randStreamPerWorker{iWorker,1}.NumStreams        = randStream_perWorkerCellArray{iWorker,1}.NumStreams;
+%         result_randStreamPerWorker{iWorker,1}.StreamIndex       = randStream_perWorkerCellArray{iWorker,1}.StreamIndex;
+%         result_randStreamPerWorker{iWorker,1}.State             = randStream_perWorkerCellArray{iWorker,1}.State;
+%         result_randStreamPerWorker{iWorker,1}.Substream         = randStream_perWorkerCellArray{iWorker,1}.Substream;
+%         result_randStreamPerWorker{iWorker,1}.NormalTransform   = randStream_perWorkerCellArray{iWorker,1}.NormalTransform;
+%         result_randStreamPerWorker{iWorker,1}.Antithetic        = randStream_perWorkerCellArray{iWorker,1}.Antithetic;
+%         result_randStreamPerWorker{iWorker,1}.FullPrecision     = randStream_perWorkerCellArray{iWorker,1}.FullPrecision;
+%         
+%         % Store details about how many samples are drawn per realisation
+%         result_randStreamPerWorker{iWorker,1}.numSamplesPerTimeStep         = obj.stateDef.n_xi;
+%         result_randStreamPerWorker{iWorker,1}.numTimeStepsPerRealisation    = timeDuration;
+%         result_randStreamPerWorker{iWorker,1}.numRealisations               = evalMulti_numRealisationsPerWorkerVector(iWorker,1);
+%         
+%         % Store the worker number for completeness of cross-checking when
+%         % using this data to replicate a specific realisation
+%         result_randStreamPerWorker{iWorker,1}.workerNumber      = iWorker;
+%     end
     
-    % Make a cell array of these properties
-    tempWorker = 1;
-    propertiesFor_randStreamPerWorker = fieldnames( result_randStreamPerWorker{tempWorker,1} );
+%     % Make a cell array of these properties
+%     tempWorker = 1;
+%     propertiesFor_randStreamPerWorker = fieldnames( obj.detailsOf_randStreamPerWorker{tempWorker,1} );
     
     
     %% ----------------------------------------------------------------- %%
     %% PRE-ALLOCATE VARIABLES FOR STORING TIME-INDEPENDENT RESULTS
     % This is the exception that doesn't need time as the second last
     % dimension because it is the same at every time
-    result_realisationNumber_all        = zeros( 2 , evalMulti_numRealisation );
+    result_realisationNumber_all        = zeros( 2 , obj.evalMulti_numRealisations );
     result_realisationNumber_label      = {'workerNumber' , 'realisationNumber'};
 
     % This is another exception that doesn't need time as the second
     % last dimension because it is a sum over time
-    result_costCumulative_all           = zeros( numCostValues , evalMulti_numRealisation);
-    result_costCumulative_per_ss_all    = zeros( numCostValues , obj.stateDef.n_ss_original , evalMulti_numRealisation);
+    result_costCumulative_all           = zeros( numCostValues , obj.evalMulti_numRealisations );
+    result_costCumulative_per_ss_all    = zeros( numCostValues , obj.stateDef.n_ss_original , obj.evalMulti_numRealisations );
     
     
+    %% ----------------------------------------------------------------- %%
+    %% INITIALISE THE RANDOM NUMBER GENERATOR FOR EACH WORKER
+    this_parallelInitialised = initialise_MultipleDistCoordRandStream_ForParallelSimulations( obj );
+    if ~(this_parallelInitialised)
+        disp(' ... ERROR: the Simulation Coordinator Object could not successfully make a deep copy of the disturbance Coordinator object for parallel simulations');
+    end
+
     %% ----------------------------------------------------------------- %%
     %% THIS IS THE PARALLELISATION POINT - Hints from some website
     %
@@ -240,22 +252,22 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     
     %% ----------------------------------------------------------------- %%
     %% NOW SPLIT UP THE REALISATION EVALUATION WORKLOAD AMONGST THE WORKERS
-    for iWorker = 1 : evalMulti_numWorkers
+    for iWorker = 1 : obj.evalMulti_numWorkers
 
         % Get the number of realisation to compute for this worker
-        thisNumRealisations = evalMulti_numRealisationsPerWorkerVector(iWorker,1);
+        thisNumRealisations = obj.evalMulti_numRealisationsPerWorkerVector(iWorker,1);
         
         % The The "RandStream" object that will be used by this worker for
         % generating random samples
-        thisRandStream = randStream_perWorkerCellArray{iWorker,1};
+        thisRandStream = obj.randStream_perWorkerCellArray{iWorker,1};
 
         % @TODO - this is a HACK, should retreive the number from the
         % diturbance
         thisLengthRandSamplePerXi = obj.stateDef.n_xi;
         
         % Get the indexing in the context of the overall realisations
-        thisRealisationIndexStart   = evalMulti_realisationIndexStart(iWorker,1);
-        thisRealisationIndexEnd     = evalMulti_realisationIndexEnd(iWorker,1);
+        thisRealisationIndexStart   = obj.evalMulti_realisationIndexStart(iWorker,1);
+        thisRealisationIndexEnd     = obj.evalMulti_realisationIndexEnd(iWorker,1);
         
         %% ----------------------------------------------------------------- %%
         %% PRE-ALLOCATE VARIABLES FOR STORING THE RESULTS
@@ -504,7 +516,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         % --------------------------- %
         % For 'time' - Always save this
         iDataName                   = iDataName + 1;
-        if evalMulti_numWorkers == 1
+        if obj.evalMulti_numWorkers == 1
             savedDataNames_thisWorker{iDataName,1}  = 'time';
         else
             savedDataNames_thisWorker{iDataName,1}  = ['time_worker_',num2str(iWorker,'%04d')];
@@ -526,7 +538,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         % For 'x'
         if obj.evalMultiReal_details.flag_save_x
             iDataName                   = iDataName + 1;
-            if evalMulti_numWorkers == 1
+            if obj.evalMulti_numWorkers == 1
                 savedDataNames_thisWorker{iDataName,1}  = 'x';
             else
                 savedDataNames_thisWorker{iDataName,1}  = ['x_worker_',num2str(iWorker,'%04d')];
@@ -549,7 +561,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         % For 'u'
         if obj.evalMultiReal_details.flag_save_u
             iDataName                   = iDataName + 1;
-            if evalMulti_numWorkers == 1
+            if obj.evalMulti_numWorkers == 1
                 savedDataNames_thisWorker{iDataName,1}  = 'u';
             else
                 savedDataNames_thisWorker{iDataName,1}  = ['u_worker_',num2str(iWorker,'%04d')];
@@ -573,7 +585,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         % For 'xi'
         if obj.evalMultiReal_details.flag_save_xi
             iDataName                   = iDataName + 1;
-            if evalMulti_numWorkers == 1
+            if obj.evalMulti_numWorkers == 1
                 savedDataNames_thisWorker{iDataName,1}  = 'xi';
             else
                 savedDataNames_thisWorker{iDataName,1}  = ['xi_worker_',num2str(iWorker,'%04d')];
@@ -597,7 +609,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         % For 'cost'
         if obj.evalMultiReal_details.flag_save_cost
             iDataName                   = iDataName + 1;
-            if evalMulti_numWorkers == 1
+            if obj.evalMulti_numWorkers == 1
                 savedDataNames_thisWorker{iDataName,1}  = 'cost';
             else
                 savedDataNames_thisWorker{iDataName,1}  = ['cost_worker_',num2str(iWorker,'%04d')];
@@ -620,7 +632,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         % For 'cost_per_ss'
         if obj.evalMultiReal_details.flag_save_cost_perSubSystem
             iDataName                   = iDataName + 1;
-            if evalMulti_numWorkers == 1
+            if obj.evalMulti_numWorkers == 1
                 savedDataNames_thisWorker{iDataName,1}  = 'cost_per_ss';
             else
                 savedDataNames_thisWorker{iDataName,1}  = ['cost_per_ss_worker_',num2str(iWorker,'%04d')];
@@ -811,9 +823,10 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     % For 'RandStreamPerWorker'
     iDataName                       = iDataName + 1;
     savedDataNames_all{iDataName,1} = 'randStreamPerWorker';
-    tempResult.data                 = result_randStreamPerWorker;
+    tempResult.data                 = obj.detailsOf_randStreamPerWorker;
     tempResult.dataRepresents       = 'randStreamPerWorker';
-    tempResult.propertiesPerCell    = propertiesFor_randStreamPerWorker;
+    tempWorker = 1;
+    tempResult.propertiesPerCell    = fieldnames( obj.detailsOf_randStreamPerWorker{tempWorker,1} );
 
     results_all.(savedDataNames_all{iDataName}) = tempResult;
     clear tempResult;

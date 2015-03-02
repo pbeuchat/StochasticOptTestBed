@@ -39,7 +39,7 @@ classdef Simulation_Coordinator < handle
         distCoord@Disturbance_Coordinator;
         
         % The cell array Disturbance_Coordinator for parallelisation
-        distCoordCell@cell;
+        distCoordArray@Disturbance_Coordinator;
         
         % The Control Coordinator of the appropriate class
         controlCoord@Control_Coordinator;
@@ -81,8 +81,26 @@ classdef Simulation_Coordinator < handle
         % The "Generator Type" to use for the "RandStream" objects
         randNumGenType@string;
         
+        % The number of workers to be used for simulating multiple
+        % realisations
+        evalMulti_numWorkers@uint32;
+        
         % A cell array that will be filled with "RandStream" objects
+        % And the details thereof
         randStream_perWorkerCellArray@cell;
+        detailsOf_randStreamPerWorker@cell;
+        
+        % The number of realisation to be performed
+        evalMulti_numRealisations@uint32;
+        
+        % A vector of length "number of workers" that provides the number
+        % realisations to be simulated by each worker
+        evalMulti_numRealisationsPerWorkerVector@uint32;
+        
+        % A vector of length "number of workers" that provides the indexing
+        % in the context of the overall realisations
+        evalMulti_realisationIndexStart@uint32;
+        evalMulti_realisationIndexEnd@uint32;
         
         % Struct with the details about evaluating controllers by
         % simulating over multiple realisation of the uncertainty
@@ -198,7 +216,13 @@ classdef Simulation_Coordinator < handle
         returnIsReady = checkSimulationIsReadyToRun( obj , flag_throwError );
         
         % FUNCTION DEF:
-        returnParallelInitialise = initialiseMultipleDistCoordForParallelSimulations( obj );
+        returnParallelInitialise = prepareDetailsFor_MultipleDistCoord_ForParallelSimulations( obj );
+        
+        % FUNCTION DEF:
+        returnParallelInitialise = initialise_MultipleDistCoordRandStream_ForParallelSimulations( obj );
+        
+        % FUNCTION DEF:
+        returnParallelInitialise = initialiseMultipleProgEngModelForParallelSimulations( obj );
         
         
         % FUNCTION: to specify the Precomputed Disturbance Data

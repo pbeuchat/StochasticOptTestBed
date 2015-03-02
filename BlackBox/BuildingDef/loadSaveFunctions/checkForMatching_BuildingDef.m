@@ -28,7 +28,7 @@ existResult = exist( loadFileName , 'file' );
 % If it exists then load it (or delete it)
 if (existResult == 2)
     if ~flag_deleteMatch
-        % Load the file, this should store the saved Building Model into a
+        % Load the file, this should load the saved Building Model into a
         % struct propterty called:
         %     "savedData"
         disp( ' DEBUGGING: my bet is that the next line is where it often crashes' );

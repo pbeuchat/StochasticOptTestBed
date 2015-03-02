@@ -1,4 +1,4 @@
-function returnParallelInitialise = initialiseMultipleDistCoordForParallelSimulations( obj )
+function returnParallelInitialised = initialise_MultipleDistCoordRandStream_ForParallelSimulations( obj )
 % Defined for the "Simulation_Coordinator" class, this function make a cell
 % array of DEEP copies of the "disturbance coordinator" object to make the
 % simulations compatible for parallelisation and reproducability
@@ -12,9 +12,14 @@ function returnParallelInitialise = initialiseMultipleDistCoordForParallelSimula
 
 
     
-    %% ----------------------------------------------------------------- %%
-    %% SPECIFY HOW THE EVALUATION OF MULTIPLE REALISATIONS SHOULD BE HANDLED
-    
+    % ITERATED THROUGH THE NUMBER OF WORKERS
+    for iWorker = 1 : obj.evalMulti_numWorkers
+        
+        this_
+        
+    end
+
+
     
     %% If NOT requested to perform multiple realisations, then set the
     % details to produce results for 1 realisation
@@ -37,19 +42,25 @@ function returnParallelInitialise = initialiseMultipleDistCoordForParallelSimula
     end
 
     
+    %% ----------------------------------------------------------------- %%
     %% COMPUTE OR EXTRACT THE NUMBER OF REALISAISATION TO BE EVALUATED
     if strcmp(obj.evalMultiReal_details.numSampleMethod , 'userSpecified')
-        evalMulti_numRealisation = obj.evalMultiReal_details.numSamplesUserSpec;
+        evalMulti_numRealisations = obj.evalMultiReal_details.numSamplesUserSpec;
     elseif strcmp(obj.evalMultiReal_details.numSampleMethod , 'n_xi^2')
-        evalMulti_numRealisation = ( obj.stateDef.n_xi * timeDuration )^2;
+        evalMulti_numRealisations = ( obj.stateDef.n_xi * timeDuration )^2;
     else
         disp( ' ... ERROR: the specified number of realisations method was not recognised' );
         disp(['            The specified method was:   "',obj.evalMultiReal_details.numSampleMethod,'"' ]);
         disp( '            Setting the number of realisation to 1 instead' );
-        evalMulti_numRealisation = 1;
+        evalMulti_numRealisations = 1;
     end
     
+    % Put the "num of realisation" into the resepctive "obj" property, this
+    % number gets its own property because it is a "critical" number
+    obj.evalMulti_numRealisations = uint32( evalMulti_numRealisations );
     
+    
+    %% ----------------------------------------------------------------- %%
     %% EXTRACT THE RAND NUMBER GENERATOR TYPE TO USE
     rng_generatorType = obj.randNumGenType;
     
@@ -59,8 +70,8 @@ function returnParallelInitialise = initialiseMultipleDistCoordForParallelSimula
     %       'mt19937ar'
 
     
-    
-    %% CREATE THE CELL ARRAY OF "RandStream" OBJECTS
+    %% ----------------------------------------------------------------- %%
+    %% COMPUTE THE NUMBER OF WORKERS TO BE USED FOR SIMULATING THE REALISATIONS    
     
     % Get the number of threads available on the current machine:
     % The Matlab command "maxNumCompThreads" which returns this number will
@@ -75,8 +86,16 @@ function returnParallelInitialise = initialiseMultipleDistCoordForParallelSimula
 
     % Set the number of "workers" to be the number of "threads" (or the
     % number of realisations to evaluate if that is a smaller number)
-    evalMulti_numWorkers = min( obj.evalMultiReal_details.parallelise_numThreads , evalMulti_numRealisation);
+    evalMulti_numWorkers = min( obj.evalMultiReal_details.parallelise_numThreads , evalMulti_numRealisations);
 
+    % Put the "num of workers" into the resepctive "obj" property, this
+    % number gets its own property because it is also "critical" number
+    obj.evalMulti_numWorkers = uint32( evalMulti_numWorkers );
+    
+    
+    %% ----------------------------------------------------------------- %%
+    %% CREATE THE CELL ARRAY OF "RandStream" OBJECTS
+    
     % Initialise the cell array of "RandSteam" object per worker
     randStream_perWorkerCellArray = cell(evalMulti_numWorkers,1);
 
@@ -109,36 +128,43 @@ function returnParallelInitialise = initialiseMultipleDistCoordForParallelSimula
         error(bbConstants.errorMsg);
     end
 
-    % @TODO: should the "randStream_perWorkerCellArray" be kept as a
-    % property of the "Simulation_Coordinator" obj that this function is
-    % running under
+    % Put the cell array "Random Number Stream" objects into the resepctive
+    % "obj" property
+    obj.randStream_perWorkerCellArray = randStream_perWorkerCellArray;
     
     
-    %% Compute the number of Realisation to evaluate per Worker
+    %% ----------------------------------------------------------------- %%
+    %% COMPUTE THE NUMBER FOR REALISATIONS TO EVALUATE PER WORKER
     
     % If there is only 1 worker then the answer is simple
     if evalMulti_numWorkers == 1
-        evalMulti_numRealisationsPerWorkerVector = evalMulti_numRealisation;
+        evalMulti_numRealisationsPerWorkerVector = evalMulti_numRealisations;
     else
         % Spread the number of realisations evenly betweem the workers (to
         % the nearest integer) and give the remainder to the last worker
-        temp_num = floor(evalMulti_numRealisation / evalMulti_numWorkers);
-        temp_rem = evalMulti_numRealisation - temp_num*evalMulti_numWorkers;
+        temp_num = floor(evalMulti_numRealisations / evalMulti_numWorkers);
+        temp_rem = evalMulti_numRealisations - temp_num*evalMulti_numWorkers;
         evalMulti_numRealisationsPerWorkerVector = [temp_num * ones(evalMulti_numWorkers-1,1) ; temp_num+temp_rem ];
     end
     
-    % Also comput the realisation indexing for when the data is saved to
+    % Also compute the realisation indexing for when the data is saved to
     % disk
     if evalMulti_numWorkers == 1
-        evalMulti_realisationIndexStart     = 1;
-        evalMulti_realisationIndexEnd       = evalMulti_numRealisation;
+        evalMulti_realisationIndexStart     = uint32(1);
+        evalMulti_realisationIndexEnd       = uint32(evalMulti_numRealisations);
     else
-        evalMulti_realisationIndexStart     = (1  :  temp_num  :  (temp_num*evalMulti_numWorkers+1))';
-        evalMulti_realisationIndexEnd       = [(temp_num : temp_num : temp_num*(evalMulti_numWorkers-1))' ; evalMulti_numRealisation];
+        evalMulti_realisationIndexStart     = uint32( (1  :  temp_num  :  (temp_num*evalMulti_numWorkers+1))' );
+        evalMulti_realisationIndexEnd       = uint32( [(temp_num : temp_num : temp_num*(evalMulti_numWorkers-1))' ; evalMulti_numRealisations] );
     end
     
+    % Put the split and indexing into the resepctive "obj" property
+    obj.evalMulti_numRealisationsPerWorkerVector    = uint32( evalMulti_numRealisationsPerWorkerVector );
+    obj.evalMulti_realisationIndexStart             = evalMulti_realisationIndexStart;
+    obj.evalMulti_realisationIndexEnd               = evalMulti_realisationIndexEnd;
     
-    %% Create a "result_seed" struct that can be saved 
+    
+    %% ----------------------------------------------------------------- %%
+    %% CREATE A CELL ARRAY OF "result_seed" STRUCTS
     % It will be used to unambiguously re-create the same reults
     
     % Initialise a cell array
@@ -158,7 +184,7 @@ function returnParallelInitialise = initialiseMultipleDistCoordForParallelSimula
         
         % Store details about how many samples are drawn per realisation
         result_randStreamPerWorker{iWorker,1}.numSamplesPerTimeStep         = obj.stateDef.n_xi;
-        result_randStreamPerWorker{iWorker,1}.numTimeStepsPerRealisation    = timeDuration;
+        result_randStreamPerWorker{iWorker,1}.numTimeStepsPerRealisation    = obj.simTimeIndex_end - obj.simTimeIndex_start;
         result_randStreamPerWorker{iWorker,1}.numRealisations               = evalMulti_numRealisationsPerWorkerVector(iWorker,1);
         
         % Store the worker number for completeness of cross-checking when
@@ -170,16 +196,40 @@ function returnParallelInitialise = initialiseMultipleDistCoordForParallelSimula
     %tempWorker = 1;
     %propertiesFor_randStreamPerWorker = fieldnames( result_randStreamPerWorker{tempWorker,1} );
     
+    % Put the cell array of "randStreamPerWorker" into the resepctive "obj"
+    % property
+    obj.detailsOf_randStreamPerWorker = result_randStreamPerWorker;
     
     
+    %% ----------------------------------------------------------------- %%
+    %% CREATE AN ARRAY OF IDENTICAL "disturbance coordinator" OBJECTS
+    % The initialisation of the disturbance coordinators random number
+    % generator will be perform immediately prior to entering the
+    % simulation cycle. This will ensure "almost-surely" that the results
+    % are repeatable
+    myDistCoordArray    = Disturbance_Coordinator.empty(evalMulti_numWorkers,0);
+    
+    % Step through the "number of workers" and make a deep copy of the
+    % "disturbance coordinator" for each worker
+    for iWorker = 1 : evalMulti_numWorkers
+        myDistCoordArray(iWorker,1) = copy(obj.distCoord);
+    end
+    
+    % Now put the "distCoord" array into the resepctive "obj"
+    % property
+    obj.distCoordArray = myDistCoordArray;
+    
+    % NOTE: see this website for an explanation and example about
+    % implementing deep copies:
+    % http://ch.mathworks.com/help/matlab/ref/matlab.mixin.copyable-class.html
     
     
+    %% ----------------------------------------------------------------- %%
     %% SET THAT THE SIMULATION WAS SUCCESSFUL IF WE MADE IT HERE
     % Put the error flag in to the return variable
     %diagnostics.error       = errorOccurred;
     %diagnostics.errorMsg    = errorMsg;
-    
-    returnCompletedSuccessfully = true;
+    returnParallelDetailsPrepared = true;
             
 end
 % END OF FUNCTION
@@ -194,4 +244,9 @@ end
 %       http://ch.mathworks.com/help/matlab/math/creating-and-controlling-a-random-number-stream.html
 %       http://ch.mathworks.com/help/matlab/ref/randstream.html
 %
+
+%% A FEW DETAILS ABOUT MAKING A "DEEP COPY" OF AN OBJECT
+%
+% See these websites:
+%       http://ch.mathworks.com/help/matlab/ref/matlab.mixin.copyable-class.html
 %

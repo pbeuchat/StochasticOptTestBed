@@ -273,10 +273,10 @@ for iController = 1:numControlTechniques
     % To allow parallel simulation create cell array of disturbance
     % coordinators, each initialised with a random number generator to
     % allow for repeatability of the results
-%     this_parallelInitialised = initialiseMultipleDistCoordForParallelSimulations( mySimCoordArray(iController,1) );
-%     if ~(this_parallelInitialised)
-%         disp(' ... ERROR: the Simulation Coordinator Object could not successfully make a deep copy of the disturbance Coordinator object for parallel simulations');
-%     end
+    this_parallelInitialised = prepareDetailsFor_MultipleDistCoord_ForParallelSimulations( mySimCoordArray(iController,1) );
+    if ~(this_parallelInitialised)
+        disp(' ... ERROR: the Simulation Coordinator Object could not successfully make a deep copy of the disturbance Coordinator object for parallel simulations');
+    end
     
     
     

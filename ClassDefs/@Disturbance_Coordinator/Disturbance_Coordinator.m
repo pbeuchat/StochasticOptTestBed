@@ -17,6 +17,9 @@ classdef Disturbance_Coordinator < matlab.mixin.Copyable
     end
    
     properties (Access = public)
+        % A token public property to confirm that copies are deep
+        tokenPublicProperty@double = 1;
+        
         % Very few properties should have public access, otherwise the
         % concept and benefits of Object-Orientated-Programming will be
         % degraded...
@@ -115,7 +118,19 @@ classdef Disturbance_Coordinator < matlab.mixin.Copyable
     end
     % END OF: "methods"
     
+    
+    
+    
     methods (Static = false , Access = public)
+        
+        
+        % FUNCTION: to initialise a "RandStream" from details
+        returnSuccess = initialiseDisturbanceRandStreamWithSeedAndDetails( obj , inputSeed , inputDetails );
+        
+        % FUNCTION: to initialise a "RandStream" directly with a given
+        % "RandStream" object
+        returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj , inputRandStream );
+        
         
         % FUNCTION: 
         function returnSuccess = checkStatsAreAvailable_ComputingAsRequired( obj, requestedStats , flag_RecomputeStats )
@@ -192,15 +207,6 @@ classdef Disturbance_Coordinator < matlab.mixin.Copyable
         end
         %END OF: "function ... = sampleAndComputePredictions()"
         
-        
-        % FUNCTION:
-        function returnSuccess = initialiseDisturbanceRealisationWithRandSeed( obj , inputSeed )
-            %...
-            
-            % If made it here then successful
-            returnSuccess = 1;
-        end
-        %END OF: "function ... = sampleAndComputePredictions()"
         
         
         % FUNCTION:
