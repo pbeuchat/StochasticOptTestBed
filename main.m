@@ -4,11 +4,12 @@
 %  ---------------------------------------------------------------------  %
 %  ---------------------------------------------------------------------  %
 
+% VERSION:          v1.01
+% DATE PUBLISHED:   23-Jan-2015
 
 %  ---------------------------------------------------------------------  %
 %  PACKAGE:     Black-Box Simulation-Based Stochastic Optimisation Test-Bed
 %  AUTHOR:      Paul N. Beuchat - Copyright (C) 2014
-%  DATE:        13-Oct-2014
 %  GOAL:        Black-Box Simulation-Based Stochastic Optimisation Test-Bed
 %
 %  DESCRIPTION: > This script should be all that is required to run a test
@@ -58,27 +59,72 @@ cd(thisFullPath);
 %   'building'
 %   '...'
 
-% For 'building's, the "systemIDRequest" should be a string of length 3,
+% For 'building's, the "systemIDRequest" should be a string of length 7,
 % that selects from the following:
-% '001' = a small 8 room building
-% '002' = ...
-% '003' = ...
+% '001_001' = a small 1 room building
+% '002_001' = a small 7 room, 2 storey building
+% '003_001' = a single floor in the Basel OptiControl 2 Building
 
 systemType          = 'building';
-systemIDRequest     = '001';
+systemIDRequest     = '002_001';
+
+
+% Some options for what to do with the system that is loaded
+sysOptions.displaySystemDetails         = false;
+sysOptions.drawSystem                   = false;
+sysOptions.plotContTimeModelSparisity   = false;
+sysOptions.discretisationMethod         = 'default';  % 'default','euler','expm'
+
+
 
 
 
 %% SPECIFY THE TIME HORIZON FOR WHICH TO RUN THE SIMULATIONS
 
 timeStart       = 1;
-timeHorizon     = (24*4) * 5;
+timeHorizon     = 24*4;% (24*4) * 4;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
 %% SPECIFY WHETHER THE SIMULATION RESULTS SHOULD BE SAVED FOR NOT
 
-flag_saveSimResults = true;
+flag_saveSimResults = false;        % "true" or "false"
+
+
+%% SPECIFY WHETHER THE CONTROL SIMULATIONS SHOULD BE RUN OR NOT
+% This option can be used if the user only wants to plot the system or
+% interogate other details about the system or disturbance
+
+flag_performControlSimulations = true;        % "true" or "false"
+
+
+%% SPECIFY WHERE THE SIMULATION SHOULD BE RUN DETERMINISTICALLY OR NOT
+% This option can be used so that the mean uncertainty predicition is the
+% actual uncertainty that occurs
+
+flag_deterministicSimulation = true;
+
+
+
+%% SPECIFY WHETHER THE VARIOUS OBJECT SHOULD BE RETURNED TO THE WORKSPACE OR NOT
+% This option can be used if the user only wants the restuls, system, and
+% disturbance object to be returned to the workspace so that they can be
+% interogated
+
+flag_returnObjectsToWorkspace = false;        % "true" or "false"
+
+
+
+%% SPECIFY SOME THINGS ABOUT WHAT RESULTS SHOULD BE PLOTTED
+% This option can be used the if user wants to turn plotting off
+% completely, or if the used only wishes to see certain catagories or plots
+
+flag_plotResults                        = true;
+flag_plotResultsPerController           = true;
+flag_plotResultsControllerComparison    = true;
+
+plotResults_unitsForTimeAxis            = 'steps';        % "steps"  or "days" or "hours" or "minutes" or "seconds"
+
 
 
 %% SPECIFY THE CONTROLLERS TO BE SIMULATED ON THE TEST-BED
@@ -128,20 +174,97 @@ cntrSpecs = cell(20,1);
 numCntr = 0;
 
 
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Null Controller Local Only';
+% cntrSpecs{numCntr}.legend           = 'Null Local';
+% cntrSpecs{numCntr}.saveFolderName   = 'Null_Local';
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = [];
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Null';
+% cntrSpecs{numCntr}.classNameGlobal  = [];
+% cntrSpecs{numCntr}.globalInit       = false;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A Null controller that always returns 0 input';
+% thisVararginLocal                   = 'one';
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% cntrSpecs{numCntr}.vararginGlobal   = [];
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Null Controller Central';
+% cntrSpecs{numCntr}.legend           = 'Null Central';
+% cntrSpecs{numCntr}.saveFolderName   = 'Null_Central';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Null_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_Null_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A Null controller that always returns 0 input';
+% thisVararginLocal                   = 'one';
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
+% cntrSpecs{numCntr}.legend           = 'Constant Local';
+% cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = [];
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
+% cntrSpecs{numCntr}.classNameGlobal  = [];
+% cntrSpecs{numCntr}.globalInit       = false;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
+% thisVararginLocal                   = 0;        % This is the constant control action that will be applied
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% cntrSpecs{numCntr}.vararginGlobal   = [];
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
+% cntrSpecs{numCntr}.legend           = 'Constant Local';
+% cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = [];
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
+% cntrSpecs{numCntr}.classNameGlobal  = [];
+% cntrSpecs{numCntr}.globalInit       = false;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
+% thisVararginLocal                   = 10;        % This is the constant control action that will be applied
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% cntrSpecs{numCntr}.vararginGlobal   = [];
+
 % -----------------------------------
 % Add a Controller Spec
 numCntr = numCntr + 1;
 % Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'Null Controller Local Only';
-cntrSpecs{numCntr}.legend           = 'Null Local';
+cntrSpecs{numCntr}.label            = 'Constant Action Controller Local Only';
+cntrSpecs{numCntr}.legend           = 'Constant Local';
+cntrSpecs{numCntr}.saveFolderName   = 'Constant_Local';
 cntrSpecs{numCntr}.modelFree        = true;
 cntrSpecs{numCntr}.trueModelBased   = [];
-cntrSpecs{numCntr}.classNameLocal   = 'Control_Null';
+cntrSpecs{numCntr}.classNameLocal   = 'Control_Constant';
 cntrSpecs{numCntr}.classNameGlobal  = [];
 cntrSpecs{numCntr}.globalInit       = false;
 % Optional Specifications
-cntrSpecs{numCntr}.description      = 'A Null controller that always returns 0 input';
-thisVararginLocal                   = 'one';
+cntrSpecs{numCntr}.description      = 'A constant controller that always returns the same input';
+thisVararginLocal                   = 20;        % This is the constant control action that will be applied
 cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
 cntrSpecs{numCntr}.vararginGlobal   = [];
 
@@ -150,28 +273,9 @@ cntrSpecs{numCntr}.vararginGlobal   = [];
 % Add a Controller Spec
 numCntr = numCntr + 1;
 % Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'Null Controller Central';
-cntrSpecs{numCntr}.legend           = 'Null Central';
-cntrSpecs{numCntr}.modelFree        = false;
-cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_Null_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_Null_Global';
-cntrSpecs{numCntr}.globalInit       = true;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'A Null controller that always returns 0 input';
-thisVararginLocal                   = 'one';
-cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-thisVararginGlobal                  = 'two';
-cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
-
-
-
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
 cntrSpecs{numCntr}.label            = 'Random Controller with Central Coordinator';
 cntrSpecs{numCntr}.legend           = 'Rand w Coord';
+cntrSpecs{numCntr}.saveFolderName   = 'Rand_with_GlobalCoord';
 cntrSpecs{numCntr}.modelFree        = false;
 cntrSpecs{numCntr}.trueModelBased   = true;
 cntrSpecs{numCntr}.classNameLocal   = 'Control_Rand_Local';
@@ -185,24 +289,379 @@ thisVararginGlobal                  = 'two';
 cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Using 1-step predicition only';
+% cntrSpecs{numCntr}.legend           = 'Naive - One Step Prediciton';
+% cntrSpecs{numCntr}.saveFolderName   = 'OneStepPred';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_OneStepPred_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_OneStepPred_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A controller that simply minimises the cost at every step based on the prediciton for the next step';
+% clear thisVararginLocal;
+% thisVararginLocal.discretisationMethod = 'none';   % 'none' , 'euler'
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;      
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'Using 1-step predicition only';
+% cntrSpecs{numCntr}.legend           = 'Naive - One Step Prediciton';
+% cntrSpecs{numCntr}.saveFolderName   = 'OneStepPred';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_OneStepPred_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_OneStepPred_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A controller that simply minimises the cost at every step based on the prediciton for the next step';
+% clear thisVararginLocal;
+% thisVararginLocal.discretisationMethod = 'euler';   % 'none' , 'euler'
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;      
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'MPC';
+% cntrSpecs{numCntr}.legend           = 'MPC - One Step Horizon';
+% cntrSpecs{numCntr}.saveFolderName   = 'MPC';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A typical MPC controller';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler' , 'expm'
+% thisVararginLocal.predHorizon               = 1;
+% thisVararginLocal.computeMPCEveryNumSteps   = 1;
+% cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'MPC';
+% cntrSpecs{numCntr}.legend           = 'MPC - T=12h, Recede=2h';
+% cntrSpecs{numCntr}.saveFolderName   = 'MPC';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A typical MPC controller';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler'
+% thisVararginLocal.predHorizon               = 12*4;
+% thisVararginLocal.computeMPCEveryNumSteps   = 2*4;
+% cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'MPC';
+% cntrSpecs{numCntr}.legend           = 'MPC - Full Horizon';
+% cntrSpecs{numCntr}.saveFolderName   = 'MPC';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A typical MPC controller';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler'
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeMPCEveryNumSteps   = timeHorizon;
+% cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+
 
 % % -----------------------------------
 % % Add a Controller Spec
 % numCntr = numCntr + 1;
 % % Mandatory Specifications
 % cntrSpecs{numCntr}.label            = 'ADP Centralised';
-% cntrSpecs{numCntr}.legend           = 'ADP_Cent';
-% cntrSpecs{numCntr}.modelFree        = 0;
-% cntrSpecs{numCntr}.trueModelBased   = 1;
-% cntrSpecs{numCntr}.classNameLocal   = str2func( 'Control_ADPCentral' );
-% cntrSpecs{numCntr}.classNameGlobal  = str2func( 'Control_ADPCentral' );
-% cntrSpecs{numCntr}.globalInit       = 1;
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - via Sampling';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
 % % Optional Specifications
 % cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
-% thisVararginLocal                   = 'one';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'samplingWithLeastSquaresFit';    % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                       % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 22.5 - 3;
+% thisVararginLocal.VFitting_xInternal_upper  = 22.5 + 3;
+% thisVararginLocal.VFitting_xExternal_lower  = 16.0 - 3;
+% thisVararginLocal.VFitting_xExternal_upper  = 16.0 + 3;
+% 
 % cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-% thisVararginMain                    = 'two';
-% cntrSpecs{numCntr}.vararginGlobal   = thisVararginMain;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - +/-3';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.computeAllVsAtInitialisation = true;                           % OPTIONS: 'true', 'false'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 22.5 - 3;
+% thisVararginLocal.VFitting_xInternal_upper  = 22.5 + 3;
+% thisVararginLocal.VFitting_xExternal_lower  = 16.0 - 2;
+% thisVararginLocal.VFitting_xExternal_upper  = 16.0 + 2;
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+ 
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - +0.5 -3';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 22.5 - 3;
+% thisVararginLocal.VFitting_xInternal_upper  = 22.5 + 0.5;
+% thisVararginLocal.VFitting_xExternal_lower  = 16.0 - 3;
+% thisVararginLocal.VFitting_xExternal_upper  = 16.0 + 0.5;
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - 10-30';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 10;
+% thisVararginLocal.VFitting_xInternal_upper  = 30;
+% thisVararginLocal.VFitting_xExternal_lower  = 10;
+% thisVararginLocal.VFitting_xExternal_upper  = 20;
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Distributable P - 10-30';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'distributable';                  % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 10;
+% thisVararginLocal.VFitting_xInternal_upper  = 30;
+% thisVararginLocal.VFitting_xExternal_lower  = 10;
+% thisVararginLocal.VFitting_xExternal_upper  = 20;
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Dense P - 10-30';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'dense';                          % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 10;
+% thisVararginLocal.VFitting_xInternal_upper  = 30;
+% thisVararginLocal.VFitting_xExternal_lower  = 10;
+% thisVararginLocal.VFitting_xExternal_upper  = 20;
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+ 
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - 0-50';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 0;
+% thisVararginLocal.VFitting_xInternal_upper  = 50;
+% thisVararginLocal.VFitting_xExternal_lower  = 10;
+% thisVararginLocal.VFitting_xExternal_upper  = 20;
+% 
+% 
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+
+
+
+
 
 
 % % -----------------------------------
@@ -211,11 +670,11 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 % % Mandatory Specifications
 % cntrSpecs{numCntr}.label            = 'Model Free';
 % cntrSpecs{numCntr}.legend           = 'ModelFree';
-% cntrSpecs{numCntr}.modelFree        = 1;
-% cntrSpecs{numCntr}.trueModelBased   = 0;
-% cntrSpecs{numCntr}.classNameLocal   = str2func( 'Control_ModelFree' );
-% cntrSpecs{numCntr}.classNameGlobal  = str2func( 'Control_ModelFree' );
-% cntrSpecs{numCntr}.globalInit       = 0;
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = false;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ModelFree';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ModelFree';
+% cntrSpecs{numCntr}.globalInit       = false;
 % % Optional Specifications
 % cntrSpecs{numCntr}.description      = 'Model Free Controller';
 % thisVararginLocal                   = 'three';
@@ -237,6 +696,7 @@ blackBoxInstructions.fullPath           = thisFullPath;
 
 blackBoxInstructions.systemType         = systemType;
 blackBoxInstructions.systemIDRequest    = systemIDRequest;
+blackBoxInstructions.systemOptions      = sysOptions;
 
 blackBoxInstructions.controllers        = cell(numCntr,1);
 blackBoxInstructions.controllers(:,1)   = cntrSpecs(1:numCntr,1);
@@ -248,9 +708,18 @@ blackBoxInstructions.timeUnits          = timeUnits;
 
 blackBoxInstructions.flag_saveResults   = flag_saveSimResults;
 
+blackBoxInstructions.flag_performControlSimulations    = flag_performControlSimulations;
+blackBoxInstructions.flag_returnObjectsToWorkspace     = flag_returnObjectsToWorkspace;
+
+blackBoxInstructions.flag_deterministicSimulation      = flag_deterministicSimulation;
+
+blackBoxInstructions.flag_plotResults                        = flag_plotResults;
+blackBoxInstructions.flag_plotResultsPerController           = flag_plotResultsPerController;
+blackBoxInstructions.flag_plotResultsControllerComparison    = flag_plotResultsControllerComparison;
+blackBoxInstructions.plotResults_unitsForTimeAxis            = plotResults_unitsForTimeAxis;
 
 % Initialise some variables to contain the results
-allResults = runBlackBoxSimWithConfig(blackBoxInstructions);
+[allResults, object_system, object_disturbance]  = runBlackBoxSimWithConfig(blackBoxInstructions);
 
 disp(' '); disp(' ');
 disp('------------------------------------------------------------------');
@@ -259,9 +728,9 @@ disp(' Black-Box has finished running and all results returned to main.m');
 
 %% --------------------------------------------------------------------- %%
 %% PLOT SOME COMPARITIVE RESULTS
-disp(' '); disp(' ');
-disp('------------------------------------------------------------------');
-disp(' Now plotting some comparitive results');
+%disp(' '); disp(' ');
+%disp('------------------------------------------------------------------');
+%disp(' Now plotting some comparitive results');
 %plotAll(allResults);
 
 

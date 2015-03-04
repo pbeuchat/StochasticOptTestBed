@@ -35,6 +35,7 @@ classdef Control_Coordinator < handle
         % concept and benefits of Object-Orientated-Programming will be
         % degraded...
         distStatsRequired@cell;
+        distStatsHorizon@uint32;
         
         % The "StateDef" object with the size of the State, Input and
         % Uncertainty vectors, there labels and the masks
@@ -172,9 +173,9 @@ classdef Control_Coordinator < handle
     
     methods (Static = false , Access = public)
         
-        [ ] = initialiseControllers(obj , inputSettings , inputModel)
+        [ ] = initialiseControllers(obj , inputSettings , inputModel , inputDisturbance_ology)
         
-        [u , diagnostics] = computeControlAction( obj , currTime , x , xi , stageCost , stageCost_per_ss , prediciton , statsRequired_mask , timeHorizon );
+        [u , computationTime_per_ss , diagnostics] = computeControlAction( obj , currTime , x , xi , stageCost , stageCost_per_ss , prediciton , statsRequired_mask , timeHorizon );
         
         
     end

@@ -41,6 +41,9 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         % A flag showing if the model is valid or not
         isValid@logical = false;
         
+        % The Absolute Time elapsed per time step
+        t_perInc_hrs@double;
+        
         % PROPERTIES REQUIRED FOR BUILDINGS
         % These sort of have to be public
         % Building Model
@@ -119,7 +122,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
                 % Now check "inputBuilding" has the required properties
                 % An "inputModel" of type "building" should have:
                 %  ".building"  , ".costs"  ,  ".constraints"
-                inputBuildingFields = {'building','costs','constraints','x0'};
+                inputBuildingFields = {'building','costDef','constraints','x0'};
                 checkBuilding = checkForFields(inputBuilding,inputBuildingFields);
                 if ~checkBuilding
                     disp( ' ... ERROR: The "inputBuilding" variable was a struct but did not have the correct fields');
@@ -135,13 +138,16 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
 
                 % Store the inputs into the properties of this "obj"
                 obj.building            = copy(inputBuilding.building);
-                obj.costParams          = inputBuilding.costs;
+                obj.costDef             = inputBuilding.costDef;
                 obj.constraintParams    = inputBuilding.constraints;
                 obj.x0                  = inputBuilding.x0;
                 
                 % Check that the model is valid, and store the result
                 returnIsValid   = checkValidity(obj);
                 obj.isValid     = returnIsValid;
+                
+                % Store the time increment elaspsed per discrete time step
+                obj.t_perInc_hrs = inputBuilding.building.building_model.Ts_hrs;
                 
                 
                 % TO SPEED UP THE "performStateUpdate" FUNCTION
@@ -172,6 +178,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
     % END OF: "methods"
     
     
+    %% methods (Static = false , Access = public)
     methods (Static = false , Access = public)
         % Define functions directly implemented here:
         % -----------------------------------------------
@@ -210,16 +217,27 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         % FUNCTION: to build a "CostDef" object from the model
         %       > This function is defined in the SUPER-CLASS as ABSTRACT
         function returnCostDef = requestCostDefObject( obj )
-            returnCostDef = buildAndReturnCostDefObject( obj );
-            obj.costDef = returnCostDef;
+            %returnCostDef = buildAndReturnCostDefObject( obj );
+            %obj.costDef = returnCostDef;
+            returnCostDef = obj.costDef;
         end
         % END OF: "function [...] = requestCostDefObject(...)"
         
         
         
-    end % END OF: "methods (Static = false , Access = private)"
+    end % END OF: "methods (Static = false , Access = public)"
     
     
+    %% methods (Static = true , Access = public)
+    methods (Static = true , Access = public)
+        % FUNCTION: to build a "StateDef" object for this type of model
+        returnStateDef = buildStateDefObjectFromBuildingObject( B , x0 );
+        
+    end
+    % END OF: "methods (Static = false , Access = private)"
+    
+    
+    %% methods (Static = false , Access = private)
     methods (Static = false , Access = private)
         % Define functions implemented in other files:
         % -----------------------------------------------
@@ -242,6 +260,8 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
     end
     % END OF: "methods (Static = false , Access = private)"
 
+    
+    
     
 end
 
