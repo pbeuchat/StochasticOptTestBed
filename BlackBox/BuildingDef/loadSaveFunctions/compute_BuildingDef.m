@@ -3,7 +3,7 @@
 %  ---------     computeDistributionInfo.m
 %  ---------------------------------------------------------------------  %
 %  ---------------------------------------------------------------------  %
-function [returnDistComputed] = compute_BuildingDef(inMin,inMax,inNumSidesPerDim,inSplit,inType)
+function [returnDistComputed] = computeDistributionInfo(inMin,inMax,inNumSidesPerDim,inSplit,inType)
 
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        01-Jun-2014

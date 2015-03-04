@@ -11,7 +11,7 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
 % ----------------------------------------------------------------------- %
 
     % Null controller for now
-    u = 2 * ones( obj.n_u , 1 );
+    u = zeros( obj.n_u , 1 );
     
     
     

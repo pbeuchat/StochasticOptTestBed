@@ -3,7 +3,7 @@
 %  ---------     load_forBlackBox_BuildingModel.m
 %  ---------------------------------------------------------------------  %
 %  ---------------------------------------------------------------------  %
-function [returnB , returnX0 , returnConstraintParams , returnCostDef ] = load_forBlackBox_BuildingModel( inputBuildingIdentifierString , bbFullPath , sysOptions )
+function [returnB , returnConstraintParams , returnCostParams , returnV , returnX0 , returnTmax , returnDims] = load_forBlackBox_BuildingModel( inputBuildingIdentifierString , bbFullPath )
 
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
@@ -19,16 +19,49 @@ function [returnB , returnX0 , returnConstraintParams , returnCostDef ] = load_f
 %                       - Load the saved model`
 %
 
+%% --------------------------------------------------------------------- %%
+%% CHECK FOR AN ALREADY SAVED MODEL OF THE REQUESTED BUILDING
+
+[isMatch, modelMatch] = checkForMatching_BuildingDef( inputBuildingIdentifierString );
+
 
 
 %% --------------------------------------------------------------------- %%
-%% SPECIFY THE ROOT PATH WHERE THE REQUEST BUILDING DEFINITION IS LOCATED
-thisBuildingDefFunctionString = [bbConstants.loadDefFunctionPrefix_forBuilding , inputBuildingIdentifierString , bbConstants.loadDefFolderSuffixTrue ];
+%% IF NOT A MATCH, THEN GENERATE AND SAVE THE REQUESTED BUILDING MODEL
 
-thisBuildingDefFunctionHandle = str2func( thisBuildingDefFunctionString );
+if not( isMatch )
+    % Keep the user updated
+    disp('******************************************************************');
+    disp(' Black-Box: Building Model not previously generated');
+    % Generate a Building Model with the BRCM Toolbox
+    [returnB , returnConstraintParams , returnCostParams , returnV , returnX0 , returnTmax , returnDims] = load_BuildingDef( inputBuildingIdentifierString , bbFullPath );
+    
+    % Save the Building Model
+    saveSuccess = save_BuildingDef( inputBuildingIdentifierString , returnB , returnConstraintParams , returnCostParams , returnV , returnX0 , returnTmax , returnDims , bbFullPath );
+    
+    if not(saveSuccess)
+        disp(' ... ERROR: The building model generated could not be saved for some reason');
+        error('Terminating now :-( See previous messages and ammend');
+    end
+    
+else
+    disp('******************************************************************');
+    disp(' Black-Box: successfully loaded a previously generated Building Model');
+    % Extract the return variables from the "modelMatch" struct that was
+    % loaded
+    returnB                     = modelMatch.B;
+    returnConstraintParams      = modelMatch.constraintParams;
+    returnCostParams            = modelMatch.costParams;
+    returnV                     = modelMatch.V;
+    returnX0                    = modelMatch.X0;
+    returnTmax                  = modelMatch.Tmax;
+    returnDims                  = modelMatch.n_dims;
+end
 
-[returnB , returnX0 , returnConstraintParams, returnCostDef, returnV, returnTmax , returnDims] = thisBuildingDefFunctionHandle( inputBuildingIdentifierString , bbFullPath , sysOptions );
 
+%% --------------------------------------------------------------------- %%
+%% A MODEL IS LOADED BY NOW, CHECK A FEW THINGS AND RETURN IT
+% Check the ...
 
 
 

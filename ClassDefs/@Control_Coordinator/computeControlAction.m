@@ -1,4 +1,4 @@
-function [u , computationTime_per_ss , diagnostics] = computeControlAction( obj , currTime , x , xi , stageCost , stageCost_per_ss , prediction , statsRequired_mask , timeHorizon )
+function [u , diagnostics] = computeControlAction( obj , currTime , x , xi , stageCost , stageCost_per_ss , prediction , statsRequired_mask , timeHorizon )
 %stageCost.localcost
 %stageCost.globalcost
 %stageCost.comfort local and global
@@ -31,9 +31,6 @@ function [u , computationTime_per_ss , diagnostics] = computeControlAction( obj 
     % Intialise the return "u"
     u = zeros(obj.stateDef.n_u,1);
     
-    % Initialise the return timing
-    computationTime_per_ss = zeros( obj.numControllers , 1 );
-    
     % Check if the predicitons are even required
     if isempty( prediction)
         getPrediction = false;
@@ -44,8 +41,6 @@ function [u , computationTime_per_ss , diagnostics] = computeControlAction( obj 
     
     % Step through each of the "Local" controllers
     for iCtrl = 1 : obj.numControllers
-        % Start the timer for this sub-system
-        thisStartTime = clock;
         
         % Get the mask for this controller
         thisMask_x   = mask_x_local(  : , iCtrl );
@@ -65,8 +60,6 @@ function [u , computationTime_per_ss , diagnostics] = computeControlAction( obj 
         % the full vector using the mask indexing)
         u(thisMask_u,1) = computeControlAction( obj.localControllerArray(iCtrl) , currTime , this_x , this_xi , stageCost , stageCost_per_ss(:,iCtrl) , this_prediction);
         
-        % End the time for this sub-system
-        computationTime_per_ss( iCtrl , 1 ) = etime(clock,thisStartTime);
     end
     
     % Put the error flag in to the return variable

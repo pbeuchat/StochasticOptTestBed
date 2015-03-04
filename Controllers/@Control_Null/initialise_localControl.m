@@ -1,4 +1,4 @@
-function [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl( obj , inputModelType , inputModel , vararginLocal)
+function flag_successfullyInitialised = initialise_localControl( obj , inputModelType , inputModel , vararginLocal)
 % Defined for the "Control_LocalControl" class, this function will be
 % called once before the simulation is started
 % This function should be used to perform off-line possible
@@ -14,11 +14,6 @@ function [flag_successfullyInitialised , flag_requestDisturbanceData] = initiali
 
     % You can except the "inputModel" parameter to be empty when the
     % control is specified to be "Model-Free" and non-empty otherwise
-    
-    % In general this "flag_requestDisturbanceData" flag should be left as
-    % "false" and only set to true if access to the disturbance data is
-    % required for computational speed up purposes
-    flag_requestDisturbanceData = false;
     
     % When using the "Null" controller as a template, insert your code here
     % to pre-compute off-line parts of your controllers so the the "on-line

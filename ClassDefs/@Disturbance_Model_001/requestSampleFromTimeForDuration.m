@@ -24,43 +24,15 @@ function returnSample = requestSampleFromTimeForDuration( obj , startTime , dura
     % "mod" the start time back into the cycle range
     startTime_mod = mod(startTime-1 , obj.N_max)+1;
     
-    % Compute an internal gain sample
-    sineWave_mean_IG = 0.1;
-    sineWave_amp_IG  = 0.1;
-    n_IG = 7;
-    sampleMean_IG =  ( - sineWave_amp_IG * cos( double(startTime_mod) * (2*pi()/double(obj.N_max)) ) + sineWave_mean_IG) * ones(n_IG,1);
+    % Copmute a sample
+    sineWave_mean = 15;
+    sineWave_amp  = 5;
+    sampleMean =  ( - sineWave_amp * cos( double(startTime_mod) * (2*pi()/double(obj.N_max)) ) + sineWave_mean) * ones(obj.n_xi,1);
     
-    bounds_lower_IG = - 0.05 * ones(n_IG,1);
-    bounds_upper_IG =   0.05 * ones(n_IG,1);
+    bounds_lower = - 1.5 * ones(obj.n_xi,1);
+    bounds_upper =   1.5 * ones(obj.n_xi,1);
     
-    covMatrix_IG = diag( 0.02^2 * ones(n_IG,1) );
-    
-    % Copmute an Ambient Temperature sample
-    sineWave_mean_Tamb = 7.5;
-    sineWave_amp_Tamb  = 7.5;
-    n_Tamb = 1;
-    sampleMean_Tamb =  ( - sineWave_amp_Tamb * cos( double(startTime_mod) * (2*pi()/double(obj.N_max)) ) + sineWave_mean_Tamb) * ones(n_Tamb,1);
-    
-    bounds_lower_Tamb = - 20 * ones(n_Tamb,1);
-    bounds_upper_Tamb =   20 * ones(n_Tamb,1);
-    
-    covMatrix_Tamb = diag( 1^2 * ones(n_Tamb,1) );
-    
-    % Copmute a Solar Radiation sample
-    sineWave_mean_SolarRad = 0.5;
-    sineWave_amp_SolarRad  = 0.5;
-    n_SolarRad = 1;
-    sampleMean_SolarRad =  ( - sineWave_amp_SolarRad * cos( double(startTime_mod) * (2*pi()/double(obj.N_max)) ) + sineWave_mean_SolarRad) * ones(n_SolarRad,1);
-    
-    bounds_lower_SolarRad = - 0.5 * ones(n_SolarRad,1);
-    bounds_upper_SolarRad =   0.5 * ones(n_SolarRad,1);
-    
-    covMatrix_SolarRad = diag( 0.25^2 * ones(n_SolarRad,1) );
-    
-    bounds_lower = [ bounds_lower_IG ; bounds_lower_Tamb ; bounds_lower_SolarRad ];
-    bounds_upper = [ bounds_upper_IG ; bounds_upper_Tamb ; bounds_upper_SolarRad ];
-    
-    covMatrix = blkdiag( covMatrix_IG , covMatrix_Tamb , covMatrix_SolarRad );
+    covMatrix = diag( 0.7^2 * ones(obj.n_xi,1) );
     
     foundValidSample = 0;
     while ~foundValidSample
@@ -78,7 +50,7 @@ function returnSample = requestSampleFromTimeForDuration( obj , startTime , dura
     sampleNoise = thisSample;
     
     
-    returnSample = [sampleMean_IG ; sampleMean_Tamb ; sampleMean_SolarRad ] + sampleNoise;
+    returnSample = sampleMean + sampleNoise;
     
     % Finally check the sample to be passed back is the expected size
     

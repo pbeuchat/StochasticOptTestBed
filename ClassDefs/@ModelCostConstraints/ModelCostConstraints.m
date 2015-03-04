@@ -34,9 +34,6 @@ classdef (Abstract) ModelCostConstraints < matlab.mixin.Copyable
         % A flag showing if the model is valid or not
         isValid@logical;
         
-        % The Absolute Time elapsed per time step
-        t_perInc_hrs@double;
-        
         % Very few properties should have public access, otherwise the
         % concept and benefits of Object-Orientated-Programming will be
         % degraded...

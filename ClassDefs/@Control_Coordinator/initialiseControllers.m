@@ -1,4 +1,4 @@
-function initialiseControllers( obj , inputSettings , inputModel , inputDisturbanceCoord)
+function initialiseControllers( obj , inputSettings , inputModel)
 % Defined for the "ControllerInterface" class, this function builds a cell
 % array of initialised controllers
 % ----------------------------------------------------------------------- %
@@ -8,14 +8,6 @@ function initialiseControllers( obj , inputSettings , inputModel , inputDisturba
 %
 %  DESCRIPTION: > ...
 % ----------------------------------------------------------------------- %
-
-%% --------------------------------------------------------------------- %%
-%% NOTE: THE "inputDisturbanceCoord" INPUT SHOULD NOT BE USED
-%        This is passed here only for the case that the controller
-%        initialisation requires access to it to speed up computations!!
-% See the call below to the function:
-%       "initialise_localControl_withDisturbanceInfo"
-
 
 %% --------------------------------------------------------------------- %%
 %% CHECK IF ALREADY INITIALISED (before doing anything else)
@@ -149,31 +141,13 @@ function initialiseControllers( obj , inputSettings , inputModel , inputDisturba
         tempLocalControllerObjectArray(iController,1) = myClassFuncLocal( uint32(iController) , thisStateDef , thisConstraintDef , obj.globalController);
         
         % And initilise it
-        [flag_successfullyInitialised , flag_requestedDisturbanceData] = initialise_localControl( tempLocalControllerObjectArray(iController,1) , obj.modelType , inputModel , obj.vararginLocal);
+        flag_successfullyInitialised = initialise_localControl( tempLocalControllerObjectArray(iController,1) , obj.modelType , inputModel , obj.vararginLocal);
         
         % Check that the initialisation was successful
         if ~flag_successfullyInitialised
-            disp([' ... ERROR: UNSUCCESSFUL initialisation of local controller of class "',obj.classNameLocal ])
+            disp(' ERROR: ...')
             error(bbConstants.errorMsg);
         end
-        
-        if flag_requestedDisturbanceData
-            disp([' ... NOTE: that the local controller of class "',obj.classNameLocal,'" requested access to the']);
-            disp( '           disturbance model as part of it initialisation');
-            disp( '           This option should only be used to speed up computations and NOT to cheat...' );
-            
-            % Pass a handle to the "disturbance-ologists" who can supply
-            % the predicitons
-            flag_successfullyInitialised_withDisturbance = initialise_localControl_withDisturbanceInfo( tempLocalControllerObjectArray(iController,1) , inputDisturbanceCoord , obj.vararginLocal );
-            
-            % Check that the initialisation with Disturbance was successful
-            if ~flag_successfullyInitialised_withDisturbance
-                disp([' ... ERROR: UNSUCCESSFUL initialisation "with disturbance info" of local controller of class "',obj.classNameLocal ])
-                error(bbConstants.errorMsg);
-            end
-        end
-        
-        
     end
 
     % Finally store the array of Local Controller objects into the
@@ -191,7 +165,6 @@ function initialiseControllers( obj , inputSettings , inputModel , inputDisturba
     % Initialise a blank cell array for the list of stats
     numStatsRequired = 0;
     statsRequired = cell( numStatsRequired , 1);
-    statsRequiredHorizon = uint32(0);
     
     % Iterate through the controllers
     for iController = 1:myNumControllers
@@ -223,16 +196,10 @@ function initialiseControllers( obj , inputSettings , inputModel , inputDisturba
                 end
             end
         end
-        % If Stats were required (ie. if "thisNumStats > 0"), then check
-        % what time horizon is required
-        if thisNumStats > 0
-            statsRequiredHorizon = max( statsRequiredHorizon , obj.localControllerArray(1).statsPredictionHorizon );
-        end
     end
 
     % Finally put the list into the appropriate property
     obj.distStatsRequired = statsRequired;
-    obj.distStatsHorizon  = statsRequiredHorizon;
     clear statsRequired;
 
 end

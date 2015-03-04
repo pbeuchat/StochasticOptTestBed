@@ -25,18 +25,30 @@ function [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( ob
     n_x   = obj.n_x;
     n_u   = obj.n_u;
     n_xi  = obj.n_xi;
-    %n_ss  = obj.stateDef.n_ss;
+    n_ss  = obj.stateDef.n_ss;
 
 
 %% COMPUTE THE STAGE COST, BOTH GLOBAL AND PER-SUB-SYSTE<
     
-    % OLD CODE TO GIVE AN IDEA OF WHERE THE PARAMETERS COME FROM:
-    %numCostValues  = obj.costDef.subCosts_num + 1;
-    %l              = zeros(numCostValues , 1);
-    %l_per_ss       = zeros(numCostValues , n_ss);
+    % PER-SUB-SYSTEM:
+    numCostValues = 3;
+    l_per_ss = zeros(numCostValues , n_ss);
+    l = zeros(numCostValues,1);
     
-    % Call the "computeCost" function
-    [l , l_per_ss] = computeCost( obj.costDef , x , u , xi , currentTime );
+    % For the energy comsumption
+    l_per_ss(2,:)      = 2 .* ( ( obj.stateDef.mask_u_ss' .* repmat(obj.costDef.r',n_ss,1) ) * u )';
+    % For the comfort score
+    comfortRef = 22.5*ones(n_ss,1);
+    l_per_ss(3,:)      = (x(1:n_ss).^2 - 2.*comfortRef.*x(1:n_ss) + comfortRef.^2)';
+    % For the total cost
+    l_per_ss(1,:)      = l_per_ss(2,:) + l_per_ss(3,:);
+
+    % GLOBAL:
+    % Compute the Stage Cost for the whole system
+    %l = x'*obj.costDef.Q*x  +  u'*obj.costDef.R*u  +  2*u'*obj.costDef.S*x  +  2*obj.costDef.q'*x  +  2*obj.costDef.r'*u  +  obj.costDef.c;
+    l(2,1)    = 2*obj.costDef.r'*u;
+    l(3,1)    = sum(l_per_ss(3,:));
+    l(1,1)    = l(2,1) + l(3,1);
     
     
     

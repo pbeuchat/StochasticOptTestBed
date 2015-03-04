@@ -245,7 +245,7 @@ for iCycleTime = 1:distCycleTimeSteps
     % Get directly those stats that were available directly
     if getDirectlyMean
         thisStat = 'mean';
-        [running_mean , successFlag] = requestStatDirectly( obj.myDisturbanceModel , thisStat , iCycleTime , timeHorizon , [] );
+        [running_mean , successFlag] = requestStatDirectly( obj.myDisturbanceModel , thisStat );
         if ~successFlag
             disp([' ... ERROR: The Disturbance Model specified that ',thisStat,' was directly available']);
             disp(['            BUT, when the ',thisStat,' was requested from the Disturbance Model, it returned an error']);
@@ -254,7 +254,7 @@ for iCycleTime = 1:distCycleTimeSteps
     end
     if getDirectlyCov
         thisStat = 'cov';
-        [running_cov , successFlag] = requestStatDirectly( obj.myDisturbanceModel , thisStat  , iCycleTime , timeHorizon , [] );
+        [running_cov , successFlag] = requestStatDirectly( obj.myDisturbanceModel , thisStat );
         if ~successFlag
             disp([' ... ERROR: The Disturbance Model specified that ',thisStat,' was directly available']);
             disp(['            BUT, when the ',thisStat,' was requested from the Disturbance Model, it returned an error']);
@@ -263,7 +263,7 @@ for iCycleTime = 1:distCycleTimeSteps
     end
     if getDirectlyBoundsBox
         thisStat = 'bounds_boxtype';
-        [running_boundsBox , successFlag] = requestStatDirectly( obj.myDisturbanceModel , thisStat  , iCycleTime , timeHorizon , [] );
+        [running_boundsBox , successFlag] = requestStatDirectly( obj.myDisturbanceModel , thisStat );
         if ~successFlag
             disp([' ... ERROR: The Disturbance Model specified that ',thisStat,' was directly available']);
             disp(['            BUT, when the ',thisStat,' was requested from the Disturbance Model, it returned an error']);

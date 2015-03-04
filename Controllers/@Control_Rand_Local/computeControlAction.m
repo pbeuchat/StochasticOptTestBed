@@ -19,7 +19,7 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     n_u = obj.stateDef.n_u;
     
     % Seed the Random Number Generator
-    %rng( sum(x) );
+    rng( sum(x) );
 
     % Now compute the input
     u = u_lower + rand(n_u,1) * (u_upper - u_lower);
