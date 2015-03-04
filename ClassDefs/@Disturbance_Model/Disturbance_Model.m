@@ -87,6 +87,9 @@ classdef (Abstract) Disturbance_Model < handle
         % FUNCTION: to initialise a "RandStream" directly with a given
         % "RandStream" object
         returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj , inputRandStream );
+        
+        % FUNCTION: to set the stream number of the Random Stream object
+        setSubStreamNumberForDisturbanceRandStream( thisDistCoord , thisStream );
     end
     
     

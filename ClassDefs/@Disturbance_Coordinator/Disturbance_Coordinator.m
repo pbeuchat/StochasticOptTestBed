@@ -135,6 +135,11 @@ classdef Disturbance_Coordinator < matlab.mixin.Copyable
             returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj.myDisturbanceModel , inputRandStream );
         end
         
+        % FUNCTION: to set the stream number of the Random Stream object
+        function setSubStreamNumberForDisturbanceRandStream( obj , inputSubStream )
+            setSubStreamNumberForDisturbanceRandStream( obj.myDisturbanceModel , inputSubStream );
+        end
+        
         
         % FUNCTION: 
         function returnSuccess = checkStatsAreAvailable_ComputingAsRequired( obj, requestedStats , flag_RecomputeStats )

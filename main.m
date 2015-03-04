@@ -125,8 +125,8 @@ flag_deterministicSimulation = false;
 
 
 %% SPECIFY A SEED TO CONTROL THE SIMULATION RESULTS
-seed_forSimulation = sum(clock);        % <-- This will give random runs
-%seed_forSimulation = 10;               % <-- This could give repeatable runs
+%seed_forSimulation = sum(clock);        % <-- This will give random runs
+seed_forSimulation = 10;               % <-- This could give repeatable runs
 
 seed_RandNumGeneratorType   = 'mrg32k3a';
 % OPTIONS: that can have independent sub-streams
@@ -419,29 +419,29 @@ thisVararginGlobal                  = 'two';
 cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'MPC';
-cntrSpecs{numCntr}.legend           = 'MPC - T=12h, Recede=2h';
-cntrSpecs{numCntr}.saveFolderName   = 'MPC_T12h_R2h';
-cntrSpecs{numCntr}.modelFree        = false;
-cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
-cntrSpecs{numCntr}.globalInit       = true;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'A typical MPC controller';
-
-clear thisVararginLocal;
-thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler'
-thisVararginLocal.predHorizon               = 12*4;
-thisVararginLocal.computeMPCEveryNumSteps   = 2*4;
-cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
-
-thisVararginGlobal                  = 'two';
-cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'MPC';
+% cntrSpecs{numCntr}.legend           = 'MPC - T=12h, Recede=2h';
+% cntrSpecs{numCntr}.saveFolderName   = 'MPC_T12h_R2h';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A typical MPC controller';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler'
+% thisVararginLocal.predHorizon               = 12*4;
+% thisVararginLocal.computeMPCEveryNumSteps   = 2*4;
+% cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 % -----------------------------------
@@ -605,7 +605,7 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
-% 
+
 % % -----------------------------------
 % % Add a Controller Spec
 % numCntr = numCntr + 1;
@@ -642,43 +642,43 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'ADP Centralised';
-cntrSpecs{numCntr}.legend           = 'ADP - Diag P - 10-30, T=12h, Recede=2h';
-cntrSpecs{numCntr}.saveFolderName   = 'ADP_Diag_10-30_T12h_R2h';
-cntrSpecs{numCntr}.modelFree        = false;
-cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
-cntrSpecs{numCntr}.globalInit       = true;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
-
-clear thisVararginLocal;
-thisVararginLocal.predHorizon               = 12*4;%timeHorizon;
-thisVararginLocal.computeVEveryNumSteps     = 2*4;%timeHorizon;
-thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
-thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
-thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
-
-thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
-
-thisVararginLocal.computeAllVsAtInitialisation = true;                           % OPTIONS: 'true', 'false'
-thisVararginLocal.usePreviouslySavedVs         = true;                           % OPTIONS: 'true', 'false'
-
-
-thisVararginLocal.VFitting_xInternal_lower  = 10;
-thisVararginLocal.VFitting_xInternal_upper  = 30;
-thisVararginLocal.VFitting_xExternal_lower  = 10;
-thisVararginLocal.VFitting_xExternal_upper  = 20;
-
-cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-
-thisVararginGlobal                  = 'two';
-cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - 10-30, T=12h, Recede=2h';
+% cntrSpecs{numCntr}.saveFolderName   = 'ADP_Diag_10-30_T12h_R2h';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = 12*4;%timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = 2*4;%timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.computeAllVsAtInitialisation = true;                           % OPTIONS: 'true', 'false'
+% thisVararginLocal.usePreviouslySavedVs         = true;                           % OPTIONS: 'true', 'false'
+% 
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 10;
+% thisVararginLocal.VFitting_xInternal_upper  = 30;
+% thisVararginLocal.VFitting_xExternal_lower  = 10;
+% thisVararginLocal.VFitting_xExternal_upper  = 20;
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 % -----------------------------------
@@ -719,42 +719,46 @@ thisVararginGlobal                  = 'two';
 cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'ADP Centralised';
-cntrSpecs{numCntr}.legend           = 'ADP - Dense P - 10-30, T=12h, Recede=2h';
-cntrSpecs{numCntr}.saveFolderName   = 'ADP_Dens_10-30_T12h_R2h';
-cntrSpecs{numCntr}.modelFree        = false;
-cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
-cntrSpecs{numCntr}.globalInit       = true;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
-
-clear thisVararginLocal;
-thisVararginLocal.predHorizon               = 12*4;%timeHorizon;
-thisVararginLocal.computeVEveryNumSteps     = 2*4;%timeHorizon;
-thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
-thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
-thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
-
-thisVararginLocal.PMatrixStructure          = 'dense';                          % OPTIONS: 'diag', 'dense', 'distributable'
-
-thisVararginLocal.computeAllVsAtInitialisation = true;                           % OPTIONS: 'true', 'false'
-thisVararginLocal.usePreviouslySavedVs         = true;                           % OPTIONS: 'true', 'false'
-
-thisVararginLocal.VFitting_xInternal_lower  = 10;
-thisVararginLocal.VFitting_xInternal_upper  = 30;
-thisVararginLocal.VFitting_xExternal_lower  = 10;
-thisVararginLocal.VFitting_xExternal_upper  = 20;
-
-cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-
-thisVararginGlobal                  = 'two';
-cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Dense P - 10-30, T=12h, Recede=2h, u=Kx';
+% cntrSpecs{numCntr}.saveFolderName   = 'ADP_Dens_10-30_T12h_R2h';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = 12*4;%timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = 2*4;%timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'dense';                          % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.usePWAPolicyApprox        = true;                             % OPTIONS: 'true', 'false'
+% thisVararginLocal.liftingNumSidesPerDim     = 1;                                % OPTIONS: 'true', 'false'
+% 
+% 
+% thisVararginLocal.computeAllVsAtInitialisation = true;                           % OPTIONS: 'true', 'false'
+% thisVararginLocal.usePreviouslySavedVs         = true;                           % OPTIONS: 'true', 'false'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 10;
+% thisVararginLocal.VFitting_xInternal_upper  = 30;
+% thisVararginLocal.VFitting_xExternal_lower  = 10;
+% thisVararginLocal.VFitting_xExternal_upper  = 20;
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 
@@ -936,6 +940,27 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 % cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
 % thisVararginGlobal                  = 'four';
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+
+% -----------------------------------
+% Add a Controller Spec
+numCntr = numCntr + 1;
+% Mandatory Specifications
+cntrSpecs{numCntr}.label            = 'PCAO';
+cntrSpecs{numCntr}.legend           = 'PCAO';
+cntrSpecs{numCntr}.modelFree        = true;
+cntrSpecs{numCntr}.trueModelBased   = false;
+cntrSpecs{numCntr}.classNameLocal   = 'Control_PCAO_Local_pnbEdits';
+cntrSpecs{numCntr}.classNameGlobal  = '';
+cntrSpecs{numCntr}.globalInit       = false;
+% Optional Specifications
+cntrSpecs{numCntr}.description      = 'PCAO - Model Free Controller';
+thisVararginLocal                   = 'three';
+cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+thisVararginGlobal                  = 'four';
+cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
 
 
 %% --------------------------------------------------------------------- %%

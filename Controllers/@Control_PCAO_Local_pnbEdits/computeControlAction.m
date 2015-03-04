@@ -17,8 +17,10 @@ function u = computeControlAction(obj , currentTime , x , xi_prev , stageCost_pr
    iter=double(currentTime.index);
    day=floor((iter-1)/96)+1;
   
-   current_folder=['C:\Users\christos\Desktop\Certh_Results\ConstituentSystem',num2str(obj.idnum),'\Day',num2str(day),'\'];
-   Symbolic_folder=['C:\Users\christos\Desktop\Certh_Results\Symbolic\ConstituentSystem',num2str(obj.idnum),'\'];
+   %current_folder=['C:\Users\christos\Desktop\Certh_Results\ConstituentSystem',num2str(obj.idnum),'\Day',num2str(day),'\'];
+   %Symbolic_folder=['C:\Users\christos\Desktop\Certh_Results\Symbolic\ConstituentSystem',num2str(obj.idnum),'\'];
+   current_folder=['/Users/pbeuchat/Documents/ETHZ_2014_PhD/L4G/Code/L4G_BuildingTestEnvironment/PCAO/ConstituentSystem',num2str(obj.idnum),'/Day',num2str(day),'/'];
+   Symbolic_folder=['/Users/pbeuchat/Documents/ETHZ_2014_PhD/L4G/Code/L4G_BuildingTestEnvironment/PCAO/ConstituentSystem',num2str(obj.idnum),'/'];
    Update_flag=0;
    if mod(iter,96)==0
      Update_flag=1;

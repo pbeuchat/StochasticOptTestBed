@@ -1,4 +1,4 @@
-function flag_successfullyInitialised = initialise_localControl( obj , inputModelType , inputModel , vararginLocal)
+function [flag_successfullyInitialised , flag_requestedDisturbanceData] = initialise_localControl( obj , inputModelType , inputModel , vararginLocal)
 % Defined for the "Control_LocalControl" class, this function will be
 % called once before the simulation is started
 % This function should be used to perform off-line possible
@@ -22,6 +22,7 @@ function flag_successfullyInitialised = initialise_localControl( obj , inputMode
     
     % Initialise the return flag
     flag_successfullyInitialised = true;
+    flag_requestedDisturbanceData = false;
     
     % Store the model type in the appropriate property
     obj.modelType = inputModelType;

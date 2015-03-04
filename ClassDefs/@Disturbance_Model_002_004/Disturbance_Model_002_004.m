@@ -67,7 +67,7 @@ classdef Disturbance_Model_002_004 < Disturbance_Model
         bounds_upper@double;
         
         flag_tempFirst@logical = true;
-        tempOffset@double;
+        tempOffset@double = 0;
         
         
     end
@@ -145,6 +145,9 @@ classdef Disturbance_Model_002_004 < Disturbance_Model
         % FUNCTION: to initialise a "RandStream" directly with a given
         % "RandStream" object
         returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj , inputRandStream );
+        
+        % FUNCTION: to set the stream number of the Random Stream object
+        setSubStreamNumberForDisturbanceRandStream( obj , inputSubStream );
     end
     
     

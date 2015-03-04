@@ -61,162 +61,6 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
     this_time = struct( 'index' , 0 , 'abs_hours' , 0 , 'abs_increment_hrs' , timeHoursPerInc );
 
     
-    %% ----------------------------------------------------------------- %%
-    %% SPECIFY HOW THE EVALUATION OF MULTIPLE REALISATIONS SHOULD BE HANDLED
-    
-    
-    
-    
-%     %% If NOT requested to perform multiple realisations, then set the
-%     % details to produce results for 1 realisation
-%     if ~obj.evalMultiReal_details.flag_evaluateOnMultipleRealisations
-%         clear temp_evalMultiReal_details;
-%         temp_evalMultiReal_details.numSampleMethod          = 'userSpecified';
-%         temp_evalMultiReal_details.numSamplesMax            = inf;
-%         temp_evalMultiReal_details.parallelise_onOff        = false;
-%         temp_evalMultiReal_details.parallelise_numThreads   = 1;
-%         
-%         temp_evalMultiReal_details.flag_save_x      = obj.evalMultiReal_details.flag_save_x;
-%         temp_evalMultiReal_details.flag_save_u      = obj.evalMultiReal_details.flag_save_u;
-%         temp_evalMultiReal_details.flag_save_xi     = obj.evalMultiReal_details.flag_save_xi;
-%         temp_evalMultiReal_details.flag_save_cost   = obj.evalMultiReal_details.flag_save_cost;
-%         temp_evalMultiReal_details.flag_save_cost_perSubSystem = obj.evalMultiReal_details.flag_save_cost_perSubSystem;
-%         temp_evalMultiReal_details.flag_save_controllerDetails = obj.evalMultiReal_details.flag_save_controllerDetails;
-%         
-%         % Put this back into the object
-%         obj.evalMultiReal_details = temp_evalMultiReal_details;
-%     end
-
-    
-%     %% COMPUTE OR EXTRACT THE NUMBER OF REALISAISATION TO BE EVALUATED
-%     if strcmp(obj.evalMultiReal_details.numSampleMethod , 'userSpecified')
-%         evalMulti_numRealisation = obj.evalMultiReal_details.numSamplesUserSpec;
-%     elseif strcmp(obj.evalMultiReal_details.numSampleMethod , 'n_xi^2')
-%         evalMulti_numRealisation = ( obj.stateDef.n_xi * timeDuration )^2;
-%     else
-%         disp( ' ... ERROR: the specified number of realisations method was not recognised' );
-%         disp(['            The specified method was:   "',obj.evalMultiReal_details.numSampleMethod,'"' ]);
-%         disp( '            Setting the number of realisation to 1 instead' );
-%         evalMulti_numRealisation = 1;
-%     end
-    
-    
-    %% EXTRACT THE RAND NUMBER GENERATOR TYPE TO USE
-%     rng_generatorType = obj.randNumGenType;
-    
-    % OPTIONS: that can have independent sub-streams
-    %       'mrg32k3a', 'mlfg6331_64'
-    % OPTIONS: that need sub-streams to be defined separately
-    %       'mt19937ar'
-
-    
-    
-    %% CREATE THE CELL ARRAY OF "RandStream" OBJECTS
-    % @TODO hardcoded here for how to determine automatically the number of
-    % threads available
-%     if obj.evalMultiReal_details.parallelise_numThreads == inf
-%         obj.evalMultiReal_details.parallelise_numThreads = 1;
-%     end
-% 
-%     % Set the number of "workers" to be the number of "threads" (or the
-%     % number of realisations to evaluate if that is a smaller number)
-%     evalMulti_numWorkers = min( obj.evalMultiReal_details.parallelise_numThreads , evalMulti_numRealisation);
-
-    % Initialise the cell array of "RandSteam" object per worker
-%     randStream_perWorkerCellArray = cell(evalMulti_numWorkers,1);
-% 
-%     % From the "Original Seed" initialise a RandStream for each worker
-%     % Separate depending on whether the "Generator Type" supports multiple sub-streams
-%     % FOR GENERATORS THAT SUPPORT "SUB-STREAMS"
-%     if strcmp(rng_generatorType,'mrg32k3a') || strcmp(rng_generatorType,'mlfg6331_64')
-%         % A few things for creating the "RandStream" objects
-%         temp_numStreams = evalMulti_numWorkers;
-%         temp_seed = obj.seed_original;
-%         % Create the "RandStream" for each worker
-%         for iWorker = 1:evalMulti_numWorkers
-%             randStream_perWorkerCellArray{iWorker,1} = RandStream.create('mrg32k3a','numstreams',temp_numStreams,'streamindices',iWorker,'Seed',temp_seed);
-%         end
-% 
-%     % FOR GENERATORS THAT DON'T SUPPORT "SUB-STREAMS"
-%     elseif strcmp(rng_generatorType,'mt19937ar')
-%         % Create a seed per worker starting from the original seed
-%         seedPerWorker = obj.seed_original + 1:evalMulti_numWorkers;
-%         % Create the "RandStream" for each worker
-%         for iWorker = 1:evalMulti_numWorkers
-%             temp_seed = seedPerWorker(iWorker);
-%             randStream_perWorkerCellArray{iWorker,1} = RandStream.create('mt19937ar','Seed',temp_seed);
-%         end
-% 
-%     % FOR GENERATORS THAT ARE NOT RECOGNISED
-%     else
-%         disp( ' ... ERROR: the specified random number "Generator Type" was not recognised' );
-%         disp(['            The specified type was:   "',rng_generatorType,'"' ]);
-%         error(bbConstants.errorMsg);
-%     end
-
-    % @TODO: should the "randStream_perWorkerCellArray" be kept as a
-    % property of the "Simulation_Coordinator" obj that this function is
-    % running under
-    
-    
-    %% Compute the number of Realisation to evaluate per Worker
-    
-%     % If there is only 1 worker then the answer is simple
-%     if evalMulti_numWorkers == 1
-%         evalMulti_numRealisationsPerWorkerVector = evalMulti_numRealisation;
-%     else
-%         % Spread the number of realisations evenly betweem the workers (to
-%         % the nearest integer) and give the remainder to the last worker
-%         temp_num = floor(evalMulti_numRealisation / evalMulti_numWorkers);
-%         temp_rem = evalMulti_numRealisation - temp_num*evalMulti_numWorkers;
-%         evalMulti_numRealisationsPerWorkerVector = [temp_num * ones(evalMulti_numWorkers-1,1) ; temp_num+temp_rem ];
-%     end
-    
-    % Also compute the realisation indexing for when the data is saved to
-    % disk
-%     if evalMulti_numWorkers == 1
-%         evalMulti_realisationIndexStart     = 1;
-%         evalMulti_realisationIndexEnd       = evalMulti_numRealisation;
-%     else
-%         evalMulti_realisationIndexStart     = (1  :  temp_num  :  (temp_num*evalMulti_numWorkers+1))';
-%         evalMulti_realisationIndexEnd       = [(temp_num : temp_num : temp_num*(evalMulti_numWorkers-1))' ; evalMulti_numRealisation];
-%     end
-    
-    % 
-    
-    
-    %% Create a "result_seed" struct that can be saved 
-    % It will be used to unambiguously re-create the same reults
-    
-%     % Initialise a cell array
-%     result_randStreamPerWorker = cell(evalMulti_numWorkers,1);
-%     % Step through each worker storing the details
-%     for iWorker = 1 : evalMulti_numWorkers
-%         % And store all the properties of the Rand Stream
-%         result_randStreamPerWorker{iWorker,1}.Type              = randStream_perWorkerCellArray{iWorker,1}.Type;
-%         result_randStreamPerWorker{iWorker,1}.Seed              = randStream_perWorkerCellArray{iWorker,1}.Seed;
-%         result_randStreamPerWorker{iWorker,1}.NumStreams        = randStream_perWorkerCellArray{iWorker,1}.NumStreams;
-%         result_randStreamPerWorker{iWorker,1}.StreamIndex       = randStream_perWorkerCellArray{iWorker,1}.StreamIndex;
-%         result_randStreamPerWorker{iWorker,1}.State             = randStream_perWorkerCellArray{iWorker,1}.State;
-%         result_randStreamPerWorker{iWorker,1}.Substream         = randStream_perWorkerCellArray{iWorker,1}.Substream;
-%         result_randStreamPerWorker{iWorker,1}.NormalTransform   = randStream_perWorkerCellArray{iWorker,1}.NormalTransform;
-%         result_randStreamPerWorker{iWorker,1}.Antithetic        = randStream_perWorkerCellArray{iWorker,1}.Antithetic;
-%         result_randStreamPerWorker{iWorker,1}.FullPrecision     = randStream_perWorkerCellArray{iWorker,1}.FullPrecision;
-%         
-%         % Store details about how many samples are drawn per realisation
-%         result_randStreamPerWorker{iWorker,1}.numSamplesPerTimeStep         = obj.stateDef.n_xi;
-%         result_randStreamPerWorker{iWorker,1}.numTimeStepsPerRealisation    = timeDuration;
-%         result_randStreamPerWorker{iWorker,1}.numRealisations               = evalMulti_numRealisationsPerWorkerVector(iWorker,1);
-%         
-%         % Store the worker number for completeness of cross-checking when
-%         % using this data to replicate a specific realisation
-%         result_randStreamPerWorker{iWorker,1}.workerNumber      = iWorker;
-%     end
-    
-%     % Make a cell array of these properties
-%     tempWorker = 1;
-%     propertiesFor_randStreamPerWorker = fieldnames( obj.detailsOf_randStreamPerWorker{tempWorker,1} );
-    
     
     %% ----------------------------------------------------------------- %%
     %% PRE-ALLOCATE VARIABLES FOR STORING TIME-INDEPENDENT RESULTS
@@ -257,19 +101,25 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         % Get the number of realisation to compute for this worker
         thisNumRealisations = obj.evalMulti_numRealisationsPerWorkerVector(iWorker,1);
         
-        % The The "RandStream" object that will be used by this worker for
-        % generating random samples
-        thisRandStream = obj.randStream_perWorkerCellArray{iWorker,1};
-
-        % @TODO - this is a HACK, should retreive the number from the
-        % diturbance
-        thisLengthRandSamplePerXi = obj.stateDef.n_xi;
-        
         % Get the indexing in the context of the overall realisations
         thisRealisationIndexStart   = obj.evalMulti_realisationIndexStart(iWorker,1);
         thisRealisationIndexEnd     = obj.evalMulti_realisationIndexEnd(iWorker,1);
         
-        %% ----------------------------------------------------------------- %%
+        % Get the Disturbance Coordinator object for this worker
+        thisDistCoord = obj.distCoordArray(iWorker,1);
+        
+        
+        %% LEGACY CODE
+        % LEGACY CODE: from when the Simulation Coordinator provided the
+        % Stream of Random numbers
+        % The The "RandStream" object that will be used by this worker for
+        % generating random samples
+        %thisRandStream = obj.randStream_perWorkerCellArray{iWorker,1};
+        % @TODO - this is a HACK, should retreive the number from the
+        % diturbance
+        %thisLengthRandSamplePerXi = obj.stateDef.n_xi;
+        
+        
         %% PRE-ALLOCATE VARIABLES FOR STORING THE RESULTS
         
         % The convention we use is that the last dimension is the number of
@@ -332,13 +182,21 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         for iRealisation = 1 : thisNumRealisations
         
             %% SET THE STREAM NUMBER FOR THE RANDOM STREAM NUMBER GENERATOR
+            thisStream = iRealisation;
+            setSubStreamNumberForDisturbanceRandStream( thisDistCoord , thisStream );
             
+            %% LEGACY CODE: 
+            % SET THE STREAM NUMBER FOR THE RANDOM STREAM NUMBER GENERATOR
+            % LEGACY CODE: from when the Simulation Coordinator provided
+            % the Stream of Random numbers
             % For Generator Types that handle sub-streams
-            if strcmp(thisRandStream.Type,'mrg32k3a') || strcmp(thisRandStream.Type,'mlfg6331_64')
-                thisRandStream.Substream = iRealisation;
-            end
-
+            %if strcmp(thisRandStream.Type,'mrg32k3a') || strcmp(thisRandStream.Type,'mlfg6331_64')
+            %    thisRandStream.Substream = iRealisation;
+            %end
             % For other generator type we just sample continously
+            
+            
+            %% Store the realisation number in the results
             result_realisationNumber(2,iRealisation) = iRealisation;
     
         
@@ -391,12 +249,12 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
                     if obj.flag_precomputedDisturbancesAvailable
                         this_xi = obj.precomputedDisturbances(:,this_time.index);
                     else
-                        
-                        %this_xi = getDisturbanceSampleForOneTimeStep( obj.distCoord , this_time.index );
+                        % Draw a sample from the Disturbance Coordinator
+                        this_xi = getDisturbanceSampleForOneTimeStep( obj.distCoord , this_time.index );
                         
                         % Draw a sample from the RandStream for this worker
-                        tempSample = randn( thisRandStream , thisLengthRandSamplePerXi , 1 );
-                        this_xi = getDisturbanceSampleForOneTimeStep_withRandInput( obj.distCoord , this_time.index , tempSample );
+                        %tempSample = randn( thisRandStream , thisLengthRandSamplePerXi , 1 );
+                        %this_xi = getDisturbanceSampleForOneTimeStep_withRandInput( obj.distCoord , this_time.index , tempSample );
                     end
                 else
                     this_prediction_forDeterminisitic = getPredictions( obj.distCoord , statsRequiredDeterministic_mask , this_time.index , 1 );

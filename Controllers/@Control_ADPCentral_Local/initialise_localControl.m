@@ -40,6 +40,13 @@ function [flag_successfullyInitialised , flag_requestDisturbanceData] = initiali
     % FOR THE "P" MATRIX STRUCTURE TO ENFORCE
     PMatrixStructure = 'diag';
     
+    % FOR THE FLAG ABOUT FITTING A PWA POLICY TO THE BELLMAN OPERATOR
+    % (and the number of pieces to split each "x" dimension when doing it)
+    usePWAPolicyApprox = false;
+    liftingNumSidesPerDim = uint32(1);
+    
+    
+    
     % THE STATE RANGE FOR WHERE TO FIT THE APPROXIMATE VALUE FUNCTION
     VFitting_xInternal_lower = 0;
     VFitting_xInternal_upper = 50;
@@ -99,6 +106,24 @@ function [flag_successfullyInitialised , flag_requestDisturbanceData] = initiali
         else
             disp( ' ... ERROR: The "vararginLocal" did not contain a field "PMatrixStructure"');
             disp([' ... NOTE: Using the default of "',PMatrixStructure,'" instead']);
+        end
+        
+        % --------------------------------------------------------------- %
+        % GET THE FLAG FOR WHETHER TO "use a PWA Policy Approx" OR NOT
+        if isfield( vararginLocal , 'usePWAPolicyApprox' )
+            usePWAPolicyApprox = vararginLocal.usePWAPolicyApprox;
+        else
+            disp( ' ... ERROR: The "vararginLocal" did not contain a field "usePWAPolicyApprox"');
+            disp([' ... NOTE: Using the default of "',num2str(usePWAPolicyApprox),'" instead']);
+        end
+        
+        % --------------------------------------------------------------- %
+        % GET THE NUMBER OF SIDES IN WHICH TO SPLIT EACH DIMENSION
+        if isfield( vararginLocal , 'liftingNumSidesPerDim' )
+            liftingNumSidesPerDim = uint32( vararginLocal.usePWAPolicyApprox );
+        else
+            disp( ' ... ERROR: The "vararginLocal" did not contain a field "liftingNumSidesPerDim"');
+            disp([' ... NOTE: Using the default of "',liftingNumSidesPerDim,'" instead']);
         end
         
         
@@ -163,6 +188,12 @@ function [flag_successfullyInitialised , flag_requestDisturbanceData] = initiali
     % Store which "P" matrix structure to enforce
     obj.PMatrixStructure                = PMatrixStructure;
     
+    % Store whether to "usa a PWA Policy Approximation" or not
+    % (and the "number of sides per dimension" to use for it)
+    obj.usePWAPolicyApprox      = usePWAPolicyApprox;
+    obj.liftingNumSidesPerDim   = liftingNumSidesPerDim;
+    
+    
     % Store the state fitting range
     obj.VFitting_xInternal_lower        = VFitting_xInternal_lower;
     obj.VFitting_xInternal_upper        = VFitting_xInternal_upper;
@@ -173,10 +204,16 @@ function [flag_successfullyInitialised , flag_requestDisturbanceData] = initiali
     obj.computeAllVsAtInitialisation    = computeAllVsAtInitialisation;
     
     % Create a cell array for storing the Value function at each time step
+    % (and the "State Feedback" if it will be used)
     if ~computeAllVsAtInitialisation
         obj.P = cell( obj.statsPredictionHorizon+1 , 1 );
         obj.p = cell( obj.statsPredictionHorizon+1 , 1 );
         obj.s = cell( obj.statsPredictionHorizon+1 , 1 );
+        
+        if usePWAPolicyApprox
+            obj.K = cell( obj.statsPredictionHorizon+1 , 1 );
+        end
+        
     else
         
         % All the Value Function approximations will be computed at once so

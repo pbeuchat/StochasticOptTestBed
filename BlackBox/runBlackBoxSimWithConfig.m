@@ -99,6 +99,8 @@ disp('            and wrapping it together as a "Progress Model Engine" class');
 % Load the building
 [bbBuilding , bbX0 , bbStateDef, bbConstraints , bbCostDef ] = load_forBlackBox_BuildingModel( sysID , bbFullPath , sysOptions );
 
+disp(' DEBUGGING: If this is displayed then the load function was finished before the crash...');
+
 clear buildingModelStruct;
 buildingModelStruct.building        = bbBuilding;
 buildingModelStruct.stateDef        = bbStateDef;

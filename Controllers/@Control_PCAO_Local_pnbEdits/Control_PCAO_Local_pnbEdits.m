@@ -1,4 +1,4 @@
-classdef Control_Rand_Local < Control_LocalController
+classdef Control_PCAO_Local_pnbEdits < Control_LocalController
 % This class runs the local control algorithms
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
@@ -49,7 +49,7 @@ classdef Control_Rand_Local < Control_LocalController
     
     methods
         % This is the "CONSTRUCTOR" method
-        function obj = Control_Rand_Local( input_idnum , inputStateDef , inputConstraintDef , inputGlobalControlObject)
+        function obj = Control_PCAO_Local_pnbEdits( input_idnum , inputStateDef , inputConstraintDef , inputGlobalControlObject)
             % Allow the Constructor method to pass through when called with
             % no nput arguments (required for the "empty" object array
             % creator)
@@ -126,7 +126,7 @@ classdef Control_Rand_Local < Control_LocalController
         % This function should be used to perform off-line possible
         % computations so that the controller computation speed during
         % simulation run-time is faster
-        flag_successfullyInitialised = initialise_localControl( obj , inputModelType , inputModel , vararginLocal);
+        [flag_successfullyInitialised , flag_requestedDisturbanceData] = initialise_localControl( obj , inputModelType , inputModel , vararginLocal);
         
     end
     % END OF: "methods (Static = false , Access = public)"

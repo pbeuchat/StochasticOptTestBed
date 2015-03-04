@@ -4,7 +4,8 @@ function CAO_TRAIN_EST( CenterPosition, Global_Cost_buffer,day,Systems )
     
 for Instance = 1:Systems
 %     h0 = figure(Instance+1);
-    current_folder=['C:\Users\christos\Desktop\Certh_Results\ConstituentSystem',num2str(Instance),'\Day',num2str(day),'\'];
+    %current_folder=['C:\Users\christos\Desktop\Certh_Results\ConstituentSystem',num2str(Instance),'\Day',num2str(day),'\'];
+    current_folder=['/Users/pbeuchat/Documents/ETHZ_2014_PhD/L4G/Code/L4G_BuildingTestEnvironment/PCAO/ConstituentSystem',num2str(Instance),'/Day',num2str(day),'/'];
     load([current_folder,'Simulation_Parameters.mat'],'Param');
     load([current_folder,'Buffer.mat'],'Cost_buffer','E_buffer','E_est_buffer','P_ij_buffer','X_buffer','V_buffer','Beta_buffer');
      
@@ -61,7 +62,8 @@ for Instance = 1:Systems
     
     
     save([current_folder,'Buffer.mat'],'Cost_buffer','E_buffer','E_est_buffer','P_ij_buffer','X_buffer','V_buffer','Beta_buffer');
-    current_folder=['C:\Users\christos\Desktop\Certh_Results\ConstituentSystem',num2str(Instance),'\Day',num2str(day+1),'\'];
+    %current_folder=['C:\Users\christos\Desktop\Certh_Results\ConstituentSystem',num2str(Instance),'\Day',num2str(day+1),'\'];
+    current_folder=['/Users/pbeuchat/Documents/ETHZ_2014_PhD/L4G/Code/L4G_BuildingTestEnvironment/PCAO/ConstituentSystem',num2str(Instance),'/Day',num2str(day+1),'/'];
     mkdir(current_folder)
     save([current_folder,'Buffer.mat'],'Cost_buffer','E_buffer','E_est_buffer','P_ij_buffer','X_buffer','V_buffer','Beta_buffer');
     

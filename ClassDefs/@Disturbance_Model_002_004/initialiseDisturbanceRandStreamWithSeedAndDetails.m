@@ -11,9 +11,9 @@ function returnSuccess = initialiseDisturbanceRandStreamWithSeedAndDetails( obj 
 % ----------------------------------------------------------------------- %
 
     %% EXTRACT THE DETAILS FROM THE INPUT
-    rng_generatorType = inputDetails.randNumGenType;
-    rng_numStreams = inputDetails.numStreams;
-    rng_streamIndices = inputDetails.streamIndices;
+    rng_generatorType   = inputDetails.Type;
+    rng_numStreams      = inputDetails.NumStreams;
+    rng_streamIndices   = inputDetails.StreamIndex;
 
 
     % Separate depending on whether the "Generator Type" supports multiple sub-streams
@@ -40,3 +40,22 @@ function returnSuccess = initialiseDisturbanceRandStreamWithSeedAndDetails( obj 
 
 end
 % END OF FUNCTION
+
+
+%% THE EXPECTED FORMAT OF THE DETAILS STRUCT
+%
+%         .Type
+%         .Seed
+%         .NumStreams
+%         .StreamIndex
+%         .State
+%         .Substream
+%         .NormalTransform
+%         .Antithetic
+%         .FullPrecision
+% 
+%         % Other likely present properties but that shouldn't be needed
+%         .numSamplesPerTimeStep
+%         .numTimeStepsPerRealisation
+%         .numRealisations
+%         .workerNumber

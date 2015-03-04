@@ -3,7 +3,7 @@ function [ P_ij_buffer, E_buffer, E_est_buffer, Cost_buffer, X_buffer, V_buffer,
 
 % THIS FUNCTION UPDATES THE BUFFERED VALUES
 
-P_ij_vec = Control_Rand_Local.vectorise3Dmatrix( P_ij );
+P_ij_vec = Control_PCAO_Local_pnbEdits.vectorise3Dmatrix( P_ij );
 fprintf('\nUpdating buffer...')
 if timestep_counter<=T_buffer
     P_ij_buffer(:,timestep_counter) = P_ij_vec;

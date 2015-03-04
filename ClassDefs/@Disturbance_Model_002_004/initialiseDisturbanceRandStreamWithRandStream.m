@@ -20,21 +20,22 @@ function returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj , in
     % "Random Stream" and hence destroy the reproducability of the results
 
     %% EXTRACT THE DETAILS FROM THE INPUT
-    rng_generatorType   = inputRandStream.randNumGenType;
-    rng_numStreams      = inputRandStream.numStreams;
-    rng_streamIndices   = inputRandStream.streamIndices;
+    rng_seed            = inputRandStream.Seed;
+    rng_generatorType   = inputRandStream.Type;
+    rng_numStreams      = inputRandStream.NumStreams;
+    rng_streamIndices   = inputRandStream.StreamIndex;
 
 
     % Separate depending on whether the "Generator Type" supports multiple sub-streams
     % FOR GENERATORS THAT SUPPORT "SUB-STREAMS"
     if strcmp(rng_generatorType,'mrg32k3a') || strcmp(rng_generatorType,'mlfg6331_64')
         % Create the Rand Stream Object
-        obj.randStreamObject = RandStream.create(rng_generatorType,'numstreams',rng_numStreams,'streamindices',rng_streamIndices,'Seed',inputSeed);
+        obj.randStreamObject = RandStream.create(rng_generatorType,'numstreams',rng_numStreams,'streamindices',rng_streamIndices,'Seed',rng_seed);
 
     % FOR GENERATORS THAT DON'T SUPPORT "SUB-STREAMS"
     elseif strcmp(rng_generatorType,'mt19937ar')
         % Create the Rand Stream Object
-        obj.randStreamObject = RandStream.create(rng_generatorType,'Seed',inputSeed);
+        obj.randStreamObject = RandStream.create(rng_generatorType,'Seed',rng_seed);
 
     % FOR GENERATORS THAT ARE NOT RECOGNISED
     else
@@ -49,3 +50,16 @@ function returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj , in
 
 end
 % END OF FUNCTION
+
+
+%% THE DETAILS ACCESSIBLE FROM A RAND STREAM OBJECT
+%
+%         .Type
+%         .Seed
+%         .NumStreams
+%         .StreamIndex
+%         .State
+%         .Substream
+%         .NormalTransform
+%         .Antithetic
+%         .FullPrecision

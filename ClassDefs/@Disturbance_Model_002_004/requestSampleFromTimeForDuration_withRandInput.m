@@ -9,7 +9,7 @@ function returnSample = requestSampleFromTimeForDuration_withRandInput( obj , st
 %  DESCRIPTION: > ...
 % ----------------------------------------------------------------------- %
 
-    if startTime == 1
+    if startTime == 2
         obj.flag_tempFirst = false;
         obj.tempOffset = 2*inputRandNumbers(1,1);
     end

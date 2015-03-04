@@ -14,26 +14,26 @@ for i=1:perturb_num
     success_chars = 0;
     fprintf('%d',i)
 	
-    [ P_ij_cand ] = Control_Rand_Local.perturbPDMrandomly( P_ij, a, e1, e2 );
-    P_ij_candidate = Control_Rand_Local.vectorise3Dmatrix( P_ij_cand );
+    [ P_ij_cand ] = Control_PCAO_Local_pnbEdits.perturbPDMrandomly( P_ij, a, e1, e2 );
+    P_ij_candidate = Control_PCAO_Local_pnbEdits.vectorise3Dmatrix( P_ij_cand );
     % STATIC CONTROLLER SIMULATIONS OF AIMSUN SHOULD BE PLUGGED HERE AND RETURN SUM(E) TO DECIDE THE BEST PERTURB
 	E_candidate = 0;
     
 	switch PerturbValidationMethod
         case 0
             for ii=1:size(X_buffer,2)
-                [ x ] = Control_Rand_Local.createTRAININGdata(X_buffer, P_ij_candidate, Global_Cost_buffer, GlobalCapBuffer, ii);
+                [ x ] = Control_PCAO_Local_pnbEdits.createTRAININGdata(X_buffer, P_ij_candidate, Global_Cost_buffer, GlobalCapBuffer, ii);
 %                 [ x ] = [ P_ij_candidate ];
-                [ phi ] = Control_Rand_Local.calcPHI( x, orders );
-                [ phi ] = Control_Rand_Local.vectorBOUNDnormalisation( phi, bounds, w );
+                [ phi ] = Control_PCAO_Local_pnbEdits.calcPHI( x, orders );
+                [ phi ] = Control_PCAO_Local_pnbEdits.vectorBOUNDnormalisation( phi, bounds, w );
                 E_candidate = E_candidate + theta*phi';
             end
 			Ecur_est = E_candidate;
         case 1
-            [ x ] = Control_Rand_Local.createTRAININGdata(X_buffer, P_ij_candidate, Global_Cost_buffer, GlobalCapBuffer, size(X_buffer,2));
+            [ x ] = Control_PCAO_Local_pnbEdits.createTRAININGdata(X_buffer, P_ij_candidate, Global_Cost_buffer, GlobalCapBuffer, size(X_buffer,2));
 %             [ x ] = [ P_ij_candidate ];
-            [ phi ] = Control_Rand_Local.calcPHI( x, orders );
-            [ phi ] = Control_Rand_Local.vectorBOUNDnormalisation( phi, bounds, w );
+            [ phi ] = Control_PCAO_Local_pnbEdits.calcPHI( x, orders );
+            [ phi ] = Control_PCAO_Local_pnbEdits.vectorBOUNDnormalisation( phi, bounds, w );
             E_candidate = theta*phi';
             Ecur_est = E_candidate;
     end
