@@ -25,7 +25,8 @@ function [flag_successfullyInitialised , flag_requestDisturbanceData] = initiali
     % computation time is minimised when the "copmuteControlAction"
     % function is called at each time step
     
-    %% SPECIFY A FEW DEFAULTS TO USE
+    %% ----------------------------------------------------------------- %%
+    %% SPECIFY A FEW DEFAULTS TO USE IN CASE A FIELDS IS MISSING FROM "vararginLocal"
     
     % FOR THE ADP METHOD TO USE:
     useMethod_samplingWithLSFit = false;
@@ -162,7 +163,7 @@ function [flag_successfullyInitialised , flag_requestDisturbanceData] = initiali
     end
     
     
-    %% NOW PERFORM THE INITIALISATION
+    %% PUT THE EXTRACTED OPTIONS INTO THE APPROPRIATE PROPERTIES OF THE OBJECT
     % Initialise the return flag
     flag_successfullyInitialised = true;
     
@@ -203,6 +204,10 @@ function [flag_successfullyInitialised , flag_requestDisturbanceData] = initiali
     % Store "fit all V's at initialisation" flag
     obj.computeAllVsAtInitialisation    = computeAllVsAtInitialisation;
     
+    
+    
+    %% ----------------------------------------------------------------- %%
+    %% INITIALISE A CELL ARRAY FOR THE "P" AND "K" MATRICES
     % Create a cell array for storing the Value function at each time step
     % (and the "State Feedback" if it will be used)
     if ~computeAllVsAtInitialisation
@@ -215,7 +220,8 @@ function [flag_successfullyInitialised , flag_requestDisturbanceData] = initiali
         end
         
     else
-        
+
+    %% OR SPECIFY THAT THE INITIALISATION SHOULD BE CALLED AGAIN WITH "DisturbanceData"
         % All the Value Function approximations will be computed at once so
         % that multiple scenarios can be played at maximum computational
         % speed

@@ -72,8 +72,14 @@ function returnSample = requestSampleFromTimeForDuration( obj , startTime , dura
         if (~checkLower) && (~checkUpper)
             foundValidSample = 1;
         end
-        
     end
+    
+    
+    % This should be doing something like the following instead of what it
+    % is doing above in teh while loop...
+    % tempRandNumbers = randn( obj.randStreamObject , obj.lengthRandInputVector , 1);
+    
+    
     
     sampleNoise = thisSample;
     

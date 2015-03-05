@@ -15,26 +15,7 @@ classdef Control_ADPCentral_Local < Control_LocalController
         thisClassName@string = 'Control_Null_Local';
     end
     
-    properties (Constant)
-        varargin_fields_forComputingP@cell = ...
-            {   'predHorizon' ...
-                'computeVEveryNumSteps' ...
-                'ADPMethod' ...
-                'systemDynamics' ...
-                'bellmanIneqType' ...
-                'PMatrixStructure' ...
-                'usePWAPolicyApprox' ...
-                'liftingNumSidesPerDim' ...
-                'computeAllVsAtInitialisation' ...
-                'usePreviouslySavedVs' ...
-                'VFitting_xInternal_lower' ...
-                'VFitting_xInternal_upper' ...
-                'VFitting_xExternal_lower' ...
-                'VFitting_xExternal_upper' ...
-            };
-
-    end
-   
+    
     properties (Access = public)
         % A cell array of strings with the statistics required
         statsRequired@cell = {'mean','cov'};
@@ -187,7 +168,7 @@ classdef Control_ADPCentral_Local < Control_LocalController
         % simulation run-time is faster
         [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl( obj , inputModelType , inputModel , vararginLocal);
         
-        [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl_withDisturbanceInfo( obj , inputModelType , inputModel , vararginLocal);
+        [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl_withDisturbanceInfo( obj , inputModelID , inputDisturbanceID , inputDistCoord , vararginLocal);
         
         % --------------------------------------------------------------- %
         % FUNCTIONS SPECIFIC TO THIS CONTROLLER
@@ -208,9 +189,12 @@ classdef Control_ADPCentral_Local < Control_LocalController
     %end
     % END OF: "methods (Static = true , Access = public)"
         
-    %methods (Static = true , Access = private)
+    methods (Static = true , Access = private)
         
-    %end
+        % FUNCTOIN: To save, load, or check for an existing result
+        %           Where the "inputInstruction" specifies which to do
+        [flag_success , loadedObject] = saveLoadCheckFor( inputInstruction , inputObject )
+    end
     % END OF: "methods (Static = true , Access = private)"
     
 end

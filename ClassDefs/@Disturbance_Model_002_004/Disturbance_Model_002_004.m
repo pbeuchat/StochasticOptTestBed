@@ -13,7 +13,7 @@ classdef Disturbance_Model_002_004 < Disturbance_Model
         % Number of properties required for object instantation
         n_properties@uint64 = uint64(1);
         % Name of this class for displaying relevant messages
-        thisClassName@string = 'Disturbance_Model_001';
+        thisClassName@string = 'Disturbance_Model_002_004';
     end
    
     properties (Access = public)

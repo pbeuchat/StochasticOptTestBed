@@ -23,7 +23,7 @@ classdef Control_Coordinator < handle
 
     properties(Hidden,Constant)
         % Number of properties required for object instantation
-        n_properties@uint64 = uint64(7);
+        n_properties@uint64 = uint64(9);
         % Name of this class for displaying relevant messages
         thisClassName@string = 'Control_Coordinator';
         % Model type for knowing how to handle the model object
@@ -62,6 +62,11 @@ classdef Control_Coordinator < handle
         % Model type for knowing how to handle the model object
         modelType@string;
         
+        % Model and Disturbance ID's for saving results to avoid repeat
+        % computations
+        modelID@string;
+        disturbanceID@string;
+        
         % Flag to keep track of whether already Initialised
         initialised@logical = false;
         
@@ -83,7 +88,7 @@ classdef Control_Coordinator < handle
     
     methods
         % This is the "CONSTRUCTOR" method
-        function obj = Control_Coordinator(inputClassNameLocal , inputClassNameGlobal , inputVararginLocal , inputVararginGlobal , inputStateDef , inputConstraintDef , inputModelType)
+        function obj = Control_Coordinator(inputClassNameLocal , inputClassNameGlobal , inputVararginLocal , inputVararginGlobal , inputStateDef , inputConstraintDef , inputModelType , inputModelID , inputDisturbanceID )
             % Allow the Constructor method to pass through when called with
             % no nput arguments (required for the "empty" object array
             % creator)
@@ -107,6 +112,21 @@ classdef Control_Coordinator < handle
                     disp( ' ... ERROR: The model type "',inputModelType,'" input to the "ProgressModelEngine" class is not recognised.' );
                     error(bbConstants.errorMsg);
                 end
+                
+                % Check if the "input model type" is a string
+                if ( ~ischar(inputModelID) || isempty(inputModelType) )
+                    disp( ' ... ERROR: The model ID input must be a string. The model ID that was input is:' );
+                    disp inputModelID;
+                    error(bbConstants.errorMsg);
+                end
+                
+                % Check if the "input model type" is a string
+                if ( ~ischar(inputDisturbanceID) || isempty(inputDisturbanceID) )
+                    disp( ' ... ERROR: The disturbance ID input must be a string. The disturbance ID that was input is:' );
+                    disp inputDisturbanceID;
+                    error(bbConstants.errorMsg);
+                end
+                
 
                 % Check that the input handles exists on the current Matlab
                 % path as files of the same name
@@ -149,8 +169,11 @@ classdef Control_Coordinator < handle
                 obj.vararginLocal   = inputVararginLocal;
                 obj.vararginGlobal  = inputVararginGlobal;
                 obj.modelType       = inputModelType;
+                obj.modelID         = inputModelID;
+                obj.disturbanceID   = inputDisturbanceID;
                 obj.stateDef        = copy( inputStateDef );
                 obj.constraintDef   = inputConstraintDef;
+                
                 
                 % We make a copy of the State Definition Object here
                 % because each "Control_Coordinator" may want to adapt its

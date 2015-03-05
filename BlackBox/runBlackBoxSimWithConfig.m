@@ -190,7 +190,7 @@ for iController = 1:numControlTechniques
     thisVararginLocal       = thisControllerSpec.vararginLocal;
     thisVararginGlobal      = thisControllerSpec.vararginGlobal;
     % Create the Global Coordinator for this controller
-    myControlCoordArray(iController,1) = Control_Coordinator(thisClassNameLocal , thisClassNameGlobal , thisVararginLocal , thisVararginGlobal , stateDef , constraintDef , sysType);
+    myControlCoordArray(iController,1) = Control_Coordinator(thisClassNameLocal , thisClassNameGlobal , thisVararginLocal , thisVararginGlobal , stateDef , constraintDef , sysType , sysID , distID );
     
     % Put together the setting for the Global Coord Initialise function
     clear thisSettings;
@@ -366,7 +366,7 @@ for iController = 1:numControlTechniques
     % Start a timer for this control technique
     thisStartTime = clock;
     
-    % Use the previously started timer
+    % Get the specification for this control technique
     thisControllerSpec = controllerSpecArray{iController};
     
     % Create a folder to save the results for this Control Technique
@@ -379,6 +379,12 @@ for iController = 1:numControlTechniques
         savePath_Results_thisTime_thisTechnique = [];
     end
     
+    % Inform the use about the simulation that is about to be run
+    disp( ' ');
+    disp( ' ... INFO: The following simulation will now commence:' );
+    disp(['            Controller:                    "',thisControllerSpec.label ,'"' ]);
+    disp(['            # Time Steps per realisation:   ',num2str((timeIndex_end-timeIndex_start+1)) ]);
+    disp(['            # of realisations:              ',num2str(2) ]);
     
     % RUN THE SIMULATION:
     [thisCompletedSuccessfully , allResults{iController,1} , savedDataFileNames] = runSimulation( mySimCoordArray(iController,1) , savePath_Results_thisTime_thisTechnique );

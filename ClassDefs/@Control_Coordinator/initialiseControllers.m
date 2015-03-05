@@ -164,7 +164,7 @@ function initialiseControllers( obj , inputSettings , inputModel , inputDisturba
             
             % Pass a handle to the "disturbance-ologists" who can supply
             % the predicitons
-            flag_successfullyInitialised_withDisturbance = initialise_localControl_withDisturbanceInfo( tempLocalControllerObjectArray(iController,1) , inputDisturbanceCoord , obj.vararginLocal );
+            flag_successfullyInitialised_withDisturbance = initialise_localControl_withDisturbanceInfo( tempLocalControllerObjectArray(iController,1) , obj.modelID , obj.disturbanceID , inputDisturbanceCoord , obj.vararginLocal );
             
             % Check that the initialisation with Disturbance was successful
             if ~flag_successfullyInitialised_withDisturbance

@@ -110,18 +110,23 @@ classdef bbConstants
         end % Constants
     end %methods(Access=private)
    
+    
+    
     methods(Static=true , Access=public)
         
-        % --------------------------------------------------------------- %
-        % FUNCTIONS IMPLEMENTED IN OTHER FILES:
+        %% --------------------------------------------------------------- %
+        %% FUNCTIONS IMPLEMENTED IN OTHER FILES:
         
         % FUNCTION: [...] = checkExistenceOfFolderAndFiles(..)
         [returnPath , returnSuccess] = checkExistenceOfFolderAndFiles(rootPath , inputFolders, inputFiles , inputErrorMsg , flag_throwError)
         
+        % FUNCTION: [...] = checkForFields(..)
+        [returnSuccess] = checkForFields( inputStruct , inputFieldsCell , throwError )
         
         
-        % --------------------------------------------------------------- %
-        % FUNCTIONS IMPLEMENTED DIRECTLY HERE:
+        
+        %% --------------------------------------------------------------- %
+        %% FUNCTIONS IMPLEMENTED DIRECTLY HERE:
         % FUNCTION: Check that an object is a subclass of another class
         function returnCheck = checkObjIsSubclassOf( inputObj , inputSuperclass , flag_throwError)
             % Check that the class of "inputObj" is a subclass of

@@ -21,9 +21,9 @@ function [ fh_Jacobian_xbar, fh_Jacobian_SQRT_beta, fh_sigma ] = symbolic_calcul
     end
 
     % symbolic creation of saturated control inputs
-    [ u ] = Control_Rand_Local.sigmoid( u_bar, lambda, U_min, U_max, sym_flag );
+    [ u ] = Control_PCAO_Local_pnbEdits.sigmoid( u_bar, lambda, U_min, U_max, sym_flag );
 
-    [ beta ] = Control_Rand_Local.timestep_calc_beta( L, chi, GC_temp, GC_humid, temp_sigma, humid_sigma, sym_flag );
+    [ beta ] = Control_PCAO_Local_pnbEdits.timestep_calc_beta( L, chi, GC_temp, GC_humid, temp_sigma, humid_sigma, sym_flag );
     
 	CONSTR = zeros(number_of_constraints,1); 
     CONSTR = sym(CONSTR);

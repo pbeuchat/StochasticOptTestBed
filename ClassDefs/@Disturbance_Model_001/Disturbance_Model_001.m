@@ -38,6 +38,9 @@ classdef Disturbance_Model_001 < Disturbance_Model
         % A flag for whether or not the samples are time-correlated
         isTimeCorrelated@logical = false;
         
+        % Random Number Stream generator object
+        randStreamObject@RandStream;
+        
         % A cell array of the statistic that are available and can be told
         % to the "disturbance-ology department" (to save the need for
         % sampling)
@@ -80,11 +83,20 @@ classdef Disturbance_Model_001 < Disturbance_Model
     % END OF: "methods"
     
     methods (Static = false , Access = public)
+        % FUNCTION: to initialise properties of the model
+        function [] = initiliaseDisturbanceModelParameters( obj )
+            % Do nothing
+        end
+        
         % FUNCTION: to get a trace for the full length of the cycle
         returnSample = requestSampleForFullCylce( obj );
         
         % FUNCTION: to call for a state update externally
         returnSample = requestSampleFromTimeForDuration( obj , startTime , duration , startXi );
+        
+        % FUNCTION: to get a trace for given duration using the random
+        % input
+        %returnSample = requestSampleFromTimeForDuration_withRandInput( obj , startTime , duration , startXi , inputRandNumbers )
         
         % FUNCTION: to check if a statistics is available directly
         returnCheck = isStatAvailableDirectly( obj , statDesired );
@@ -97,6 +109,19 @@ classdef Disturbance_Model_001 < Disturbance_Model
         
     end
     % END OF: "methods (Static = false , Access = public)"
+    
+    
+    methods (Static = false , Access = {?Disturbance_Model,?Disturbance_ology,?Disturbance_Coordinator})
+        % FUNCTION: to initialise a "RandStream" from details
+        returnSuccess = initialiseDisturbanceRandStreamWithSeedAndDetails( obj , inputSeed , inputDetails );
+        
+        % FUNCTION: to initialise a "RandStream" directly with a given
+        % "RandStream" object
+        returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj , inputRandStream );
+        
+        % FUNCTION: to set the stream number of the Random Stream object
+        setSubStreamNumberForDisturbanceRandStream( obj , inputSubStream );
+    end
     
     
     methods (Static = false , Access = {?Disturbance_Model,?Disturbance_ology,?Disturbance_Coordinator})

@@ -10,7 +10,7 @@ for Instance = 1:Systems
     load([current_folder,'Buffer.mat'],'Cost_buffer','E_buffer','E_est_buffer','P_ij_buffer','X_buffer','V_buffer','Beta_buffer');
      
     [ L, n, m, num_of_dist, e1, e2, max_order, monomial_number, perturb_num,T_buffer, pole, w_norm, PredictDistHorizon, number_of_constraints, alpha, eta,  ...
-      U_MIN, U_MAX, CHI_MIN, CHI_MAX, lambda,PerturbValidationMethod, PerturbCenter,GlobalCapBuffer,NoSystems,dt,Astep ] = Control_Rand_Local.readSIMCONSTANTdata(Param);
+      U_MIN, U_MAX, CHI_MIN, CHI_MAX, lambda,PerturbValidationMethod, PerturbCenter,GlobalCapBuffer,NoSystems,dt,Astep ] = Control_PCAO_Local_pnbEdits.readSIMCONSTANTdata(Param);
     LocalTBuffer = T_buffer;
     
     fprintf('\n*********************************')
@@ -21,26 +21,26 @@ for Instance = 1:Systems
     ActiveBeta_t = Beta_buffer(end);
     cao_counter = size(E_buffer,2)*1; % E_buffer was updated previously on the same timestep
 
-    ActiveBeta_E_buffer = Control_Rand_Local.localiseBuffer( E_buffer, Beta_buffer, ActiveBeta_t, LocalTBuffer );
-    ActiveBeta_X_buffer = Control_Rand_Local.localiseBuffer( X_buffer, Beta_buffer, ActiveBeta_t, LocalTBuffer );
-    ActiveBeta_P_ij_buffer = Control_Rand_Local.localiseBuffer( P_ij_buffer, Beta_buffer, ActiveBeta_t, LocalTBuffer );
+    ActiveBeta_E_buffer = Control_PCAO_Local_pnbEdits.localiseBuffer( E_buffer, Beta_buffer, ActiveBeta_t, LocalTBuffer );
+    ActiveBeta_X_buffer = Control_PCAO_Local_pnbEdits.localiseBuffer( X_buffer, Beta_buffer, ActiveBeta_t, LocalTBuffer );
+    ActiveBeta_P_ij_buffer = Control_PCAO_Local_pnbEdits.localiseBuffer( P_ij_buffer, Beta_buffer, ActiveBeta_t, LocalTBuffer );
 
 
     fprintf('\nActive mixing function: %d\nPerturbation center: %d\n',ActiveBeta_t,CenterPosition)
     
 %     CenterPosition
-    P_perturb_center = Control_Rand_Local.unvectorise3Dmatrix( P_ij_buffer(:,CenterPosition), L );
+    P_perturb_center = Control_PCAO_Local_pnbEdits.unvectorise3Dmatrix( P_ij_buffer(:,CenterPosition), L );
     
-    [ theta, orders, bounds ] = Control_Rand_Local.LIP_approximation( max_order, monomial_number, ActiveBeta_X_buffer, ...
+    [ theta, orders, bounds ] = Control_PCAO_Local_pnbEdits.LIP_approximation( max_order, monomial_number, ActiveBeta_X_buffer, ...
         ActiveBeta_P_ij_buffer, ActiveBeta_E_buffer, Global_Cost_buffer, GlobalCapBuffer, w_norm );
     
-    [ a ] = Control_Rand_Local.calcPERTURBstep( Astep, cao_counter );
+    [ a ] = Control_PCAO_Local_pnbEdits.calcPERTURBstep( Astep, cao_counter );
     
-    [ P_ij, E_est ] = Control_Rand_Local.perturbPvalidation( ActiveBeta_X_buffer, Global_Cost_buffer, P_perturb_center, theta, orders, bounds, ...
+    [ P_ij, E_est ] = Control_PCAO_Local_pnbEdits.perturbPvalidation( ActiveBeta_X_buffer, Global_Cost_buffer, P_perturb_center, theta, orders, bounds, ...
         e1, e2, a, perturb_num, w_norm, GlobalCapBuffer, PerturbValidationMethod );
     
     E_est_buffer(cao_counter) = E_est;
-    P_ij_buffer(:,cao_counter + 1) = Control_Rand_Local.vectorise3Dmatrix( P_ij );
+    P_ij_buffer(:,cao_counter + 1) = Control_PCAO_Local_pnbEdits.vectorise3Dmatrix( P_ij );
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%% ONLINE MONITOR RESULTS %%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

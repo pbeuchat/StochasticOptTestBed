@@ -3,8 +3,7 @@
 %  ---------     load_BuildingDef_001_True.m
 %  ---------------------------------------------------------------------  %
 %  ---------------------------------------------------------------------  %
-function [returnB , returnX0 , returnConstraintParams, returnCostParams, returnV, returnTmax , returnDims] = load_BuildingDef_001_True( inputBuildingIdentifierString, B , bbFullPath , inputSysOptions )
-
+function [B , returnX0 , returnStateDefObject , returnConstraintParams, returnCostDefObject, returnV, returnTmax , returnDims] = load_BuildingDef_001_True( inputBuildingIdentifierString, bbFullPath , inputSysOptions )
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
 %  GOAL:        Black-Box Simulation-Based Test-Bed for Building Control
@@ -31,7 +30,23 @@ function [returnB , returnX0 , returnConstraintParams, returnCostParams, returnV
 
 flag_displaySystem      = inputSysOptions.displaySystemDetails;
 flag_drawSystem         = inputSysOptions.drawSystem;
+flag_plotSparisity      = inputSysOptions.plotContTimeModelSparisity;
 discretisationMethod    = inputSysOptions.discretisationMethod;
+
+
+%% --------------------------------------------------------------------- %%
+%% 1) LOAD OR CONSTRUCT THE BUILDING
+
+% Specify the flags for which "External Heat Flux" (EHF) models to include
+flags_EHFModelsToInclude.BuildingHull        = true;
+flags_EHFModelsToInclude.AHU                 = false;
+flags_EHFModelsToInclude.InternalGains       = true;
+flags_EHFModelsToInclude.BEHeatfluxes        = false;
+flags_EHFModelsToInclude.Radiators           = true;
+
+flags_EHFModelsToInclude.reconstructModel    = false;
+
+B = get_BuildingDef( inputBuildingIdentifierString , flags_EHFModelsToInclude , bbFullPath );
 
 
 %% --------------------------------------------------------------------- %%
@@ -58,6 +73,68 @@ if (flag_displaySystem || flag_drawSystem)
         % B.drawBuilding({'ZoneGrp_CenterWest'}); 
         % B.drawBuilding({'Z0003'});
     end
+end
+
+
+%% --------------------------------------------------------------------- %%
+%% 2) PLOT CONINUOUS TIME SPARSITY
+
+if flag_plotSparisity
+
+    % Set the default interpreter to "latex"
+    set(0, 'defaultTextInterpreter', 'latex');
+    tempFontSize = 24;
+    
+    
+    % First plot the A and B matrices is one plot
+    A_cont = B.building_model.continuous_time_model.A;
+    Bu_cont = B.building_model.continuous_time_model.Bu;
+    Bxi_cont = B.building_model.continuous_time_model.Bv;
+    
+    % Create the figure
+    thisFig = figure('position',[100 100 1200 700]);
+    set(thisFig,'color','w')
+    
+    % Space things a bit nicely so that the matrices will be a similar
+    % height
+    temp_n_x   = size(A_cont   ,2);
+    temp_n_u   = size(Bu_cont  ,2);
+    temp_n_xi  = size(Bxi_cont ,2);
+    temp_n_tot = temp_n_x + temp_n_u + temp_n_xi;
+    
+    lsp = 0.01;
+    csp = 0.01;
+    rsp = 0.05;
+    axbuff = 0.05;
+    axwtot = 1.0-lsp-2*csp-rsp-3*axbuff;
+    
+    tsp = 0.08;
+    bsp = 0.12;
+    axh = 1-tsp-bsp;
+    
+    A_w     = axbuff + axwtot * (temp_n_x  / temp_n_tot);
+    Bu_w    = axbuff + axwtot * (temp_n_u  / temp_n_tot);
+    Bxi_w   = axbuff + axwtot * (temp_n_xi / temp_n_tot);
+    
+    % Plot the A matrix in the first position
+    %subplot(1,3,1);
+    thisAxes_A = axes('position',[lsp,bsp, A_w ,axh]);
+    spy(A_cont);
+    title('$A$','fontsize',tempFontSize);
+    set(thisAxes_A,'fontsize',tempFontSize);
+    % Plot the Bu matrix in the second position
+    %subplot(1,3,2);
+    thisAxes_Bu = axes('position',[lsp+A_w+csp,bsp, Bu_w ,axh]);
+    spy(Bu_cont);
+    title('$B_u$','fontsize',tempFontSize);
+    set(thisAxes_Bu,'fontsize',tempFontSize);
+    % Plot the Bxi matrix in the third position
+    %subplot(1,3,3);
+    thisAxes_Bxi = axes('position',[lsp+A_w+csp+Bu_w+csp,bsp, Bxi_w ,axh]);
+    spy(Bxi_cont);
+    title('$B_xi$','fontsize',tempFontSize);
+    set(thisAxes_Bxi,'fontsize',tempFontSize);
+    
 end
 
 
@@ -98,6 +175,46 @@ B.building_model.discretize();
 
 % Now save this back into the "B" building object under the discrete model
 % property
+
+
+
+
+
+%% --------------------------------------------------------------------- %%
+%% 3) x0 - SPECIFY THE INITIAL CONDITION
+disp('     -> "Reading" the specified initial condition');
+%n_x = size( B.building_model.discrete_time_model.A  , 2 );
+%x0 = 16 * ones( n_x , 1 );
+
+
+internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
+
+x0 = 22.5*internalStates + 16 * ~internalStates;
+%x0 = 22.4*internalStates + 16 * ~internalStates;
+%x0 = 22.0*internalStates + 16 * ~internalStates;
+%x0 = 21.5*internalStates + 16 * ~internalStates;
+%x0 = 20.0*internalStates + 16 * ~internalStates;
+%x0 = 19.0*internalStates + 16 * ~internalStates;
+%x0 = 30*internalStates + 16 * ~internalStates;
+%x0 = 24*internalStates + 16 * ~internalStates;
+
+
+
+%% --------------------------------------------------------------------- %%
+%% 4) BUILD A STATE DEFINITION OBJECT
+disp('     -> Build a "State Definition" object');
+% This is all automatically extracted from the properties of the "B"
+% building object, and requires the initial condition to be specified
+stateDefObject = ModelCostConstraints_Building.buildStateDefObjectFromBuildingObject( B , x0 );
+
+
+% Add the plotting falg to the State Definition Object
+plotMask_x  = [true(7,1) ; false(35,1)];
+plotMask_u  = true( stateDefObject.n_u  , 1);
+plotMask_xi = true( stateDefObject.n_xi , 1);
+
+
+updatePlottingMasks( stateDefObject , plotMask_x, plotMask_u, plotMask_xi );
 
 
 
@@ -186,7 +303,7 @@ costParameters.Rad.costPerJouleHeated = 10;
 % Get the cost vector
 cu = B.building_model.getCostVector(costParameters);
 
-cu = 0*cu;
+%cu = 0*cu;
 
 % If the building_model B.building_model should be saved to use the model in another place, it is necessary that the Classes folder 
 % is on the path, otherwise the saved data can not be loaded correctly. If only the matrices are needed, then just 
@@ -223,22 +340,71 @@ costsByHand.subCosts_num      = uint32(2);
 costsByHand.subCosts_label    = {'energy';'comfort'};
 
 
+%% Put the costs together into the the format required
+% Specify the number of Cost Components that are summed together to make up
+% the total costs
+% i.e. the cost components are the objectives in a multi-objective
+% optimisation and the total cost is the objective in a single objective
+% optimisation given a particular set of scalings
+% This split into components is used to generate plots of a Pareto Front
+% and make Pareto type comparisons of different methods
+
+costComponents_num      = uint32(2);
+costComponents_label    = {'energy';'comfort'};
+costComponents_scaling  = ones( costComponents_num , 1);
+
+% The cost components should be individually defined to allow for clear
+% separation of the costs
+
+% NOTE: can't instatiate an empty array of the correct type because they
+% could all be different types inherritting from the same "CostComponent",
+% super class
+%costComponentArray = CostComponent.empty(costComponents_num,0);
+clear costComponentArray;
 
 
-%% --------------------------------------------------------------------- %%
-%% SPECIFY THE INITIAL CONDITION
-n_x = size( B.building_model.discrete_time_model.A  , 2 );
-x0 = 22.5 * ones( n_x , 1 );
+% Create the "energy" cost as a component array of the linear costs for
+% each sub-system
+for i_ss = 1:7
+    this_cu = sparse( i_ss , 1 , cu(i_ss,1) , n_u , 1 , 1);
+    costComponentArray_energy(i_ss,1) = CostComponent_Linear( sparse([],[],[],n_x,1,0) , this_cu , sparse([],[],[],1,1,0) , stateDefObject );
+end
+
+
+% Create the "comfort" cost as a component array of the linear costs for
+% each sub-system
+x_ref = 22.5;
+for i_ss = 1:7
+    this_Q = sparse( i_ss , i_ss , 1         , n_x , n_x , 1);
+    this_q = sparse( i_ss , 1    , -2*x_ref  , n_x , 1   , 1);
+    this_c = sparse( 1    , 1    , x_ref^2   , 1   , 1   , 1);
+    costComponentArray_comfort(i_ss,1) = CostComponent_Quadratic_StateOnly( this_Q , this_q , this_c , stateDefObject );
+end
+
+
+% Now fill in each element of the array:
+%  -> The "energy" cost, a linear function of the input only
+costComponentArray(1,1) = CostComponent_PerSubSystem( costComponentArray_energy , stateDefObject );
+
+%  -> The "comfort" cost, a quadratic cost of the states
+costComponentArray(2,1) = CostComponent_PerSubSystem( costComponentArray_comfort , stateDefObject );
+
+
+
+% Then the cost components should be wrappen together into a "Cost
+% Definition" object
+costDefObject = CostDef( stateDefObject , costComponents_num , costComponents_label , costComponentArray );
+
 
 
 
 
 
 %% PUT TOGETHER THE RETURN VARIABLES
-returnB                     = B;
 returnX0                    = x0;
+returnStateDefObject        = stateDefObject;
 returnConstraintParams      = constraintsByHand;
-returnCostParams            = costsByHand;
+returnCostDefObject         = costDefObject;
 
 % These are some placeholders that were not yet necessary
 returnV                     = [];

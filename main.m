@@ -66,7 +66,9 @@ cd(thisFullPath);
 % '003_001' = a single floor in the Basel OptiControl 2 Building
 
 systemType          = 'building';
-systemIDRequest     = '002_001';
+systemIDRequest     = '001';
+%systemIDRequest     = '002_001';
+
 
 
 % Some options for what to do with the system that is loaded
@@ -83,7 +85,8 @@ systemOptions.discretisationMethod         = 'default';  % 'default','euler','ex
 
 % Need to make a list of what the various disturbance's are
 
-disturbanceIDRequest  = '002_004';
+disturbanceIDRequest  = '001';
+%disturbanceIDRequest  = '002_004';
 
 % Some options for what to do with the disturbance model that is loaded
 clear disturbanceOptions;
@@ -101,7 +104,7 @@ disturbanceOptions.statsRequired = {'mean','cov','bounds_boxtype'};
 %% SPECIFY THE TIME HORIZON FOR WHICH TO RUN THE SIMULATIONS
 
 timeStart       = 1;
-timeHorizon     = 2*4;% (24*4) * 4;
+timeHorizon     = 5*24*4;% (24*4) * 4;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
@@ -146,7 +149,7 @@ flag_evaluateOnMultipleRealisations = true;
 % About how many realisations to run:
 evalMultiReal_numSampleMethod       = 'userSpecified';      % OPTIONS: 'userSpecified', 'n_xi^2'
 evalMultiReal_numSamplesMax         =  inf;                 % OPTIONS: set to "inf" for unbounded
-evalMultiReal_numSamplesUserSpec    =  4;
+evalMultiReal_numSamplesUserSpec    =  5;
 
 % About how to parallelise the computations
 evalMultiReal_parallelise_onOff     = true;                 % OPTIONS: 'true', 'false'
@@ -179,7 +182,7 @@ flag_returnObjectsToWorkspace = true;        % "true" or "false"
 % completely, or if the used only wishes to see certain catagories or plots
 
 flag_plotResults                        = true;
-flag_plotResultsPerController           = false;
+flag_plotResultsPerController           = true;
 flag_plotResultsControllerComparison    = true;
 
 plotResults_unitsForTimeAxis            = 'hours';        % "steps"  or "days" or "hours" or "minutes" or "seconds"
@@ -232,6 +235,8 @@ cntrSpecs = cell(20,1);
 % Initialise the counter
 numCntr = 0;
 
+
+%% BASIC
 
 % % -----------------------------------
 % % Add a Controller Spec
@@ -393,30 +398,31 @@ numCntr = 0;
 
 
 
+%% MPC
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'MPC';
-cntrSpecs{numCntr}.legend           = 'MPC - One Step Horizon';
-cntrSpecs{numCntr}.saveFolderName   = 'MPC_1step';
-cntrSpecs{numCntr}.modelFree        = false;
-cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
-cntrSpecs{numCntr}.globalInit       = true;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'A typical MPC controller';
-
-clear thisVararginLocal;
-thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler' , 'expm'
-thisVararginLocal.predHorizon               = 1;
-thisVararginLocal.computeMPCEveryNumSteps   = 1;
-cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
-
-thisVararginGlobal                  = 'two';
-cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'MPC';
+% cntrSpecs{numCntr}.legend           = 'MPC - One Step Horizon';
+% cntrSpecs{numCntr}.saveFolderName   = 'MPC_1step';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A typical MPC controller';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler' , 'expm'
+% thisVararginLocal.predHorizon               = 1;
+% thisVararginLocal.computeMPCEveryNumSteps   = 1;
+% cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 % % -----------------------------------
@@ -444,29 +450,29 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'MPC';
-cntrSpecs{numCntr}.legend           = 'MPC - T=24h, Recede=2h';
-cntrSpecs{numCntr}.saveFolderName   = 'MPC_T24h_R2h';
-cntrSpecs{numCntr}.modelFree        = false;
-cntrSpecs{numCntr}.trueModelBased   = true;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
-cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
-cntrSpecs{numCntr}.globalInit       = true;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'A typical MPC controller';
-
-clear thisVararginLocal;
-thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler'
-thisVararginLocal.predHorizon               = 24*4;
-thisVararginLocal.computeMPCEveryNumSteps   = 2*4;
-cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
-
-thisVararginGlobal                  = 'two';
-cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'MPC';
+% cntrSpecs{numCntr}.legend           = 'MPC - T=24h, Recede=2h';
+% cntrSpecs{numCntr}.saveFolderName   = 'MPC_T24h_R2h';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'A typical MPC controller';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler'
+% thisVararginLocal.predHorizon               = 24*4;
+% thisVararginLocal.computeMPCEveryNumSteps   = 2*4;
+% cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 % % -----------------------------------
@@ -495,6 +501,8 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 
+
+%% ADP
 
 % % -----------------------------------
 % % Add a Controller Spec
@@ -642,52 +650,13 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 % cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
-% % -----------------------------------
-% % Add a Controller Spec
-% numCntr = numCntr + 1;
-% % Mandatory Specifications
-% cntrSpecs{numCntr}.label            = 'ADP Centralised';
-% cntrSpecs{numCntr}.legend           = 'ADP - Diag P - 10-30, T=12h, Recede=2h';
-% cntrSpecs{numCntr}.saveFolderName   = 'ADP_Diag_10-30_T12h_R2h';
-% cntrSpecs{numCntr}.modelFree        = false;
-% cntrSpecs{numCntr}.trueModelBased   = true;
-% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
-% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
-% cntrSpecs{numCntr}.globalInit       = true;
-% % Optional Specifications
-% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
-% 
-% clear thisVararginLocal;
-% thisVararginLocal.predHorizon               = 12*4;%timeHorizon;
-% thisVararginLocal.computeVEveryNumSteps     = 2*4;%timeHorizon;
-% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
-% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
-% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
-% 
-% thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
-% 
-% thisVararginLocal.computeAllVsAtInitialisation = true;                           % OPTIONS: 'true', 'false'
-% thisVararginLocal.usePreviouslySavedVs         = true;                           % OPTIONS: 'true', 'false'
-% 
-% 
-% thisVararginLocal.VFitting_xInternal_lower  = 10;
-% thisVararginLocal.VFitting_xInternal_upper  = 30;
-% thisVararginLocal.VFitting_xExternal_lower  = 10;
-% thisVararginLocal.VFitting_xExternal_upper  = 20;
-% 
-% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-% 
-% thisVararginGlobal                  = 'two';
-% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
-
-
 % -----------------------------------
 % Add a Controller Spec
 numCntr = numCntr + 1;
 % Mandatory Specifications
 cntrSpecs{numCntr}.label            = 'ADP Centralised';
-cntrSpecs{numCntr}.legend           = 'ADP - Distributable P - 10-30, T=12h, Recede=2h';
-cntrSpecs{numCntr}.saveFolderName   = 'ADP_Dist_10-30_T12h_R2h';
+cntrSpecs{numCntr}.legend           = 'ADP - Diag P - 10-30, T=12h, Recede=2h';
+cntrSpecs{numCntr}.saveFolderName   = 'ADP_Diag_10-30_T12h_R2h';
 cntrSpecs{numCntr}.modelFree        = false;
 cntrSpecs{numCntr}.trueModelBased   = true;
 cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
@@ -703,10 +672,15 @@ thisVararginLocal.ADPMethod                 = 'bellmanInequality';              
 thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
 thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
 
-thisVararginLocal.PMatrixStructure          = 'distributable';                  % OPTIONS: 'diag', 'dense', 'distributable'
+thisVararginLocal.PMatrixStructure          = 'diag';                            % OPTIONS: 'diag', 'dense', 'distributable'
+
+thisVararginLocal.usePWAPolicyApprox        = true;                            % OPTIONS: 'true', 'false'
+thisVararginLocal.liftingNumSidesPerDim     = 1;                                % OPTIONS: 'true', 'false'
+
 
 thisVararginLocal.computeAllVsAtInitialisation = true;                           % OPTIONS: 'true', 'false'
 thisVararginLocal.usePreviouslySavedVs         = true;                           % OPTIONS: 'true', 'false'
+
 
 thisVararginLocal.VFitting_xInternal_lower  = 10;
 thisVararginLocal.VFitting_xInternal_upper  = 30;
@@ -717,6 +691,47 @@ cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
 
 thisVararginGlobal                  = 'two';
 cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'ADP Centralised';
+% cntrSpecs{numCntr}.legend           = 'ADP - Distributable P - 10-30, T=12h, Recede=2h';
+% cntrSpecs{numCntr}.saveFolderName   = 'ADP_Dist_10-30_T12h_R2h';
+% cntrSpecs{numCntr}.modelFree        = false;
+% cntrSpecs{numCntr}.trueModelBased   = true;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+% cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+% cntrSpecs{numCntr}.globalInit       = true;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+% 
+% clear thisVararginLocal;
+% thisVararginLocal.predHorizon               = 12*4;%timeHorizon;
+% thisVararginLocal.computeVEveryNumSteps     = 2*4;%timeHorizon;
+% thisVararginLocal.ADPMethod                 = 'bellmanInequality';              % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+% thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+% thisVararginLocal.bellmanIneqType           = 'step-by-step';                   % OPTIONS: 'step-by-step', 'iterated'
+% 
+% thisVararginLocal.PMatrixStructure          = 'distributable';                  % OPTIONS: 'diag', 'dense', 'distributable'
+% 
+% thisVararginLocal.usePWAPolicyApprox        = false;                            % OPTIONS: 'true', 'false'
+% thisVararginLocal.liftingNumSidesPerDim     = 1;                                % OPTIONS: 'true', 'false'
+% 
+% thisVararginLocal.computeAllVsAtInitialisation = true;                           % OPTIONS: 'true', 'false'
+% thisVararginLocal.usePreviouslySavedVs         = true;                           % OPTIONS: 'true', 'false'
+% 
+% thisVararginLocal.VFitting_xInternal_lower  = 10;
+% thisVararginLocal.VFitting_xInternal_upper  = 30;
+% thisVararginLocal.VFitting_xExternal_lower  = 10;
+% thisVararginLocal.VFitting_xExternal_upper  = 20;
+% 
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+% thisVararginGlobal                  = 'two';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 % % -----------------------------------
@@ -921,7 +936,7 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 
-
+%% MODEL-FREE
 
 % % -----------------------------------
 % % Add a Controller Spec
@@ -943,23 +958,26 @@ cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 
-% -----------------------------------
-% Add a Controller Spec
-numCntr = numCntr + 1;
-% Mandatory Specifications
-cntrSpecs{numCntr}.label            = 'PCAO';
-cntrSpecs{numCntr}.legend           = 'PCAO';
-cntrSpecs{numCntr}.modelFree        = true;
-cntrSpecs{numCntr}.trueModelBased   = false;
-cntrSpecs{numCntr}.classNameLocal   = 'Control_PCAO_Local_pnbEdits';
-cntrSpecs{numCntr}.classNameGlobal  = '';
-cntrSpecs{numCntr}.globalInit       = false;
-% Optional Specifications
-cntrSpecs{numCntr}.description      = 'PCAO - Model Free Controller';
-thisVararginLocal                   = 'three';
-cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-thisVararginGlobal                  = 'four';
-cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+%% PCAO
+
+% % -----------------------------------
+% % Add a Controller Spec
+% numCntr = numCntr + 1;
+% % Mandatory Specifications
+% cntrSpecs{numCntr}.label            = 'PCAO';
+% cntrSpecs{numCntr}.legend           = 'PCAO';
+% cntrSpecs{numCntr}.saveFolderName   = 'PCAO_Decent';
+% cntrSpecs{numCntr}.modelFree        = true;
+% cntrSpecs{numCntr}.trueModelBased   = false;
+% cntrSpecs{numCntr}.classNameLocal   = 'Control_PCAO_Local_pnbEdits';
+% cntrSpecs{numCntr}.classNameGlobal  = '';
+% cntrSpecs{numCntr}.globalInit       = false;
+% % Optional Specifications
+% cntrSpecs{numCntr}.description      = 'PCAO - Model Free Controller';
+% thisVararginLocal                   = 'three';
+% cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% thisVararginGlobal                  = 'four';
+% cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
 
 
 
