@@ -1,7 +1,6 @@
-function [Knew] = performADP_fitPWA_toP( obj , P_tp1, p_tp1, s_tp1, Exi, Exixi, Ex, Exx, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper , PMatrixStructure )
- %timeStepIndex , timeStepAbsolute
-% Defined for the "ControllerInterface" class, this function builds a cell
-% array of initialised controllers
+function [u0 , K] = performADP_fitPWA_toP( P, p, s, Exi, Exixi, Ex, Exx, Rx, A, Bu, Bxi, Q, R, S, q, r, c, discountFactor, A_poly_x, b_poly_x, A_poly_u, b_poly_u )
+% Defined for the "Control_ADPCentral_Local" class, this function fits a
+% Piece-wise Affine policy to a given value function
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
@@ -10,679 +9,253 @@ function [Knew] = performADP_fitPWA_toP( obj , P_tp1, p_tp1, s_tp1, Exi, Exixi, 
 %  DESCRIPTION: > ...
 % ----------------------------------------------------------------------- %
 
-    %% DIVIDE "p_tp1" BY 2 (and multiply the result by 2 at the end)
-    p_tp1 = 0.5 * p_tp1;
+%% Convert the input "Discount Factor" to a shorter variable name
+g = discountFactor;
 
-    %% FLAGS FOR WHICH LEAST SQUARE FITTING METHOD TO USE
-    %flag_full_01 = false;
-    flag_full_02 = false;
-    flag_diag_01 = false;
-    
-%     if strcmp( PMatrixStructure , 'dense' )
-%         flag_full_01 = true;
-%     elseif strcmp( PMatrixStructure , 'distributable' )
-%         flag_full_02 = true;
-%     elseif strcmp( PMatrixStructure , 'diag' )
-%         flag_diag_01 = true;
-%     else
-%         disp( ' ... NOTE: The specified "P" matrix structure was not recognised');
-%         disp( '           Setting it to be diagonal');
-%         flag_diag_01 = true;
-%     end
-    
-    flag_full_01 = true;
+%% Extract some sizes
+% State and Input sizes
+%n_x         = size(A ,2);
+n_x_lift    = length(Ex);
+n_u         = size(Bu,2);
 
-    %% INFER FROM SIZES FROM THE INPUT VARIABLES
-    n_x = size(A,1);
-    n_u = size(Bu,2);
-    %n_xi = size(Bxi,2);
-    
-    
-    %% NOW FORMULATE THE PROBLEM FOR THE VALUE FUNCTION
-    
-    % Implement the PieceWise Affine fitting using:
-    % > 
+% NOTE: that "n_x_lift" does not include the extra dimension that put a "1"
+% in the first position of the lifted vector
 
-    
-%% --------------------------------------------------------------------- %%
-%% SPECIFY SOME SETTINGS
-    
-
-    
-    
-    
-%% --------------------------------------------------------------------- %%
-%% EXTRACT THE DETAILS FROM THE INPUTS AND PROPERTIES OF THIS OBJECT
-    %myBuilding      = obj.model.building;
-    %myCosts         = obj.model.costDef;
-    myConstraints   = obj.model.constraintDef;
-    
-%     A       = sparse( myBuilding.building_model.discrete_time_model.A   );
-%     Bu      = sparse( myBuilding.building_model.discrete_time_model.Bu  );
-%     Bxi     = sparse( myBuilding.building_model.discrete_time_model.Bv  );
-    
-%     n_x = size(A,1);
-%     n_u = size(Bu,2);
-%     n_xi = size(Bxi,2);
-    
-%     Exi     = predictions.mean(1:n_xi);
-%     Exixi   = predictions.cov(1:n_xi,1:n_xi);
-    
-    
-%% --------------------------------------------------------------------- %%
-%% COMPUTE THE SIZE OF THE PROBLEM
-
-    % To be used to dimensioning things
-    %n_z = 1 + n_x + n_u;
-
-    
-%% --------------------------------------------------------------------- %%
-%% DEFINE THE DISCOUNT FACTOR
-    
-    % Only required if doing infinte horizon ...
-    disFactor = 1.0;
+% The number of inequalities describing each polytope
+n_poly_x = length( b_poly_x );
+n_poly_u = length( b_poly_u );
 
 
 %% --------------------------------------------------------------------- %%
-%% BUILD THE MATRIX FOR "V(f(x,u,xi))"
-   
-    Vhatf = [ A' * P_tp1 * A ,...
-                    A' * P_tp1 * Bu ,...
-                    A' * p_tp1 + A' * P_tp1 * Bxi * Exi ;...
-              Bu' * P_tp1 * A ,...
-                    Bu' * P_tp1 * Bu ,...
-                    Bu' * p_tp1 + Bu' * P_tp1 * Bxi * Exi ;...
-              p_tp1' * A + Exi' * Bxi' * P_tp1 * A ,...
-                    p_tp1' * Bu + Exi' * Bxi' * P_tp1 * Bu ,...
-                    s_tp1 + p_tp1' * Bxi * Exi + trace(Bxi' * P_tp1 * Bxi * Exixi) ...
-            ];
-       
+%% Compute the condensed coefficients of:
+%%   l( Rx x' , u ) + \gamma E[ \hat{V}(f(Rx',u,w)) ]
+% where u is parameterised to be:
+%   u = u0 + U * x = [u0 , U'] * [1 ; x] = U * [1 ; x]
+
+Qu = Rx' * Q * Rx  +  g * Rx' * A' * P * A * Rx;
+Ru = R  +  g * Bu' * P * Bu;
+Su = Rx' * S  +  g * Rx' * A' * P * Bu;
+qu = Rx' * q  +  g * Rx' * ( A' * P * Bxi * Exi + A' * p);
+ru = r  +  g * ( Bu' * P * Bxi * Exi + Bu' * p );
+cu = c  +  g * ( trace(Bxi' * P * Bxi * Exixi) + 2*p' * Bxi * Exi + s );
+
+
+%% SANITY CHECK THE SIZE OF EVERYTHING
+check1 = ( (size(Qu,1)==n_lift) && (size(Qu,2)==n_lift) );
+if not(check1)
+    disp(' ... ERROR: The size of the "Qu" matrix was not as expected');
+    disp(['            size(Qu) = ',num2str(size(Qu,1)),'-by-',num2str(size(Qu,2)),' when it was expected to be size = ',num2str(n_lift),'-by-',num2str(n_lift)]);
+    error(bbConstants.errorMsg);
+end
+
+check2 = ( (size(Ru,1)==m) && (size(Ru,2)==m) );
+if not(check2)
+    disp(' ... ERROR: The size of the "Ru" matrix was not as expected');
+    disp(['            size(Ru) = ',num2str(size(Ru,1)),'-by-',num2str(size(Ru,2)),' when it was expected to be size = ',num2str(m),'-by-',num2str(m)]);
+    error(bbConstants.errorMsg);
+end
+
+check3 = ( (size(Su,1)==n_lift) && (size(S,2)==m) );
+if not(check3)
+    disp(' ... ERROR: The size of the "Su" matrix was not as expected');
+    disp(['            size(Su) = ',num2str(size(Su,1)),'-by-',num2str(size(Su,2)),' when it was expected to be size = ',num2str(n_lift),'-by-',num2str(m)]);
+    error(bbConstants.errorMsg);
+end
+
+check4 = ( (size(qu,1)==n_lift) && (size(qu,2)==1) );
+if not(check4)
+    disp(' ... ERROR: The size of the "qu" matrix was not as expected');
+    disp(['            size(qu) = ',num2str(size(qu,1)),'-by-',num2str(size(qu,2)),' when it was expected to be size = ',num2str(n_lift),'-by-1']);
+    error(bbConstants.errorMsg);
+end
+
+check5 = ( (size(ru,1)==m) && (size(ru,2)==1) );
+if not(check5)
+    disp(' ... ERROR: The size of the "ru" matrix was not as expected');
+    disp(['            size(ru) = ',num2str(size(ru,1)),'-by-',num2str(size(ru,2)),' when it was expected to be size = ',num2str(m),'-by-1']);
+    error(bbConstants.errorMsg);
+end
+
+check5 = ( (size(cu,1)==1) && (size(cu,2)==1) );
+if not(check5)
+    disp(' ... ERROR: The size of the "cu" matrix was not as expected');
+    disp(['            size(cu) = ',num2str(size(cu,1)),'-by-',num2str(size(cu,2)),' when it was expected to be size = 1-by-1']);
+    error(bbConstants.errorMsg);
+end
+
 
 %% --------------------------------------------------------------------- %%
-%% BUILD THE COST MATRIX
-
-%     Lhat =  [  costCoeff.c   ,   costCoeff.q'   ,   costCoeff.r'   ;...
-%                     costCoeff.q   ,   costCoeff.Q    ,   costCoeff.S'   ;...
-%                     costCoeff.r   ,   costCoeff.S    ,   costCoeff.R     ...
-%                  ];
-    
-    Lhat = ...
-             [            Q    ,   0.5 * S'   ,   0.5 * q   ;...
-                    0.5 * S    ,         R    ,   0.5 * r   ;...
-                    0.5 * q'   ,   0.5 * r'   ,         c    ...
-                 ];
-    
-    
-%% --------------------------------------------------------------------- %%
-%% GET THE NUMBER OF CONSTRAINTS
-
-    numCons = 0;
-
-    % Compute the number of constraints
-    if myConstraints.flag_inc_x_rect
-        numCons = numCons + n_x;
-    end
-    
-    if myConstraints.flag_inc_u_rect
-        numCons = numCons + n_u;
-    end
-    
-    if myConstraints.flag_inc_u_poly
-        numCons = numCons + size(myConstraints.u_poly_b,1);
-    end
-
-    % Initiliase a cell array to store the matrix co-efficient for each
-    % constrait
-    constraintCoefficient = cell(numCons,1);
-    thisCon = 0;
-
-    if myConstraints.flag_inc_x_rect
-        % THE QUADRATIC CONSTRAINT PER COMPONENT IS:
-        %   0 <= -x_i^2 + x_i (x_i,upper + x_i,lower) - (x_i,upper * x_i,lower)
-        for iCons = 1:n_x
-            thisMask = sparse( iCons , 1 , true , n_x , 1 , 1 );
-            %this_lower = myConstraints.x_rect_lower(iCons,1);
-            %this_upper = myConstraints.x_rect_upper(iCons,1);
-            this_lower = x_lower(iCons,1);
-            this_upper = x_upper(iCons,1);
-            thisCon = thisCon + 1;
-            constraintCoefficient{thisCon,1} = ...
-                    [   -1 * diag(thisMask)                 ,  sparse([],[],[],n_x,n_u,0)   ,    (this_lower+this_upper)*thisMask    ;...
-                         sparse([],[],[],n_u,n_x,0)         ,  sparse([],[],[],n_u,n_u,0)   ,    sparse([],[],[],n_u,1,0)            ;...
-                         (this_lower+this_upper)*thisMask'  ,  sparse([],[],[],1  ,n_u,0)   ,   -(this_lower*this_upper)             ...
-                    ];
-        end
-    end
-    
-    if myConstraints.flag_inc_u_rect
-        for iCons = 1:n_u
-            thisMask = sparse( iCons , 1 , true , n_u , 1 , 1 );
-            %this_lower = myConstraints.u_rect_lower(iCons,1);
-            %this_upper = myConstraints.u_rect_upper(iCons,1);
-            this_lower = u_lower(iCons,1);
-            this_upper = u_upper(iCons,1);
-            thisCon = thisCon + 1;
-            constraintCoefficient{thisCon,1} = ...
-                    [    sparse([],[],[],n_x,n_x,0)     ,   sparse([],[],[],n_x,n_u,0)          ,    sparse([],[],[],n_x,1,0)            ;...
-                         sparse([],[],[],n_u,n_x,0)     ,  -1 * diag(thisMask)                  ,    (this_lower+this_upper)*thisMask    ;...
-                         sparse([],[],[],1  ,n_x,0)     ,   (this_lower+this_upper)*thisMask'   ,   -(this_lower*this_upper)              ...
-                    ];
-        end
-    end
-    
-    if myConstraints.flag_inc_u_poly
-        % Each row of the polytope is used as
-        % 0 <= -[A]_i u + bi
-        for iCons = 1:size(myConstraints.u_poly_b,1)
-            this_Ai = myConstraints.u_poly_A(iCons,:);
-            this_bi = myConstraints.u_poly_b(iCons,1);
-            thisCon = thisCon + 1;
-            constraintCoefficient{thisCon,1} = ...
-                    [    sparse([],[],[],n_x,n_x,0)     ,   sparse([],[],[],n_x,n_u,0)          ,    sparse([],[],[],n_x,1,0)   ;...
-                         sparse([],[],[],n_u,n_x,0)     ,   sparse([],[],[],n_u,n_u,0)          ,   -0.5*this_Ai'               ;...
-                         sparse([],[],[],1  ,n_x,0)     ,  -0.5*this_Ai                         ,    this_bi                     ...
-                    ];
-        end
-    end
-    
-
+%% BUILD THE "QP" FORMULATION TO SOLVE OF THE PWA POLICY COEFFICIENT
 
 
 
 %% --------------------------------------------------------------------- %%
-%% DECLARE THE OPTIMISATION VARIABLES FOR THE VALUE FUNCTION
-    % ---------------------------------------- %
-    % METHOD "FULL" 01 and 02
-    if ( flag_full_01 || flag_full_02 )
-        P = sdpvar( n_x , n_x ,'symmetric');
-        p = sdpvar( n_x ,  1  ,'full');
-        s = sdpvar(  1  ,  1  ,'full');
-        
-    
-    % ---------------------------------------- %
-    % METHOD "DIAG" 01
-    elseif flag_diag_01
-        P = sdpvar( n_x ,  1  ,'full');
-        p = sdpvar( n_x ,  1  ,'full');
-        s = sdpvar(  1  ,  1  ,'full');
-    end
+%% BUILD THE COST MATRICES FOR THE "ROBUST QP" TO BE SOLVED
+% -> See notes for how these equations are derived
 
-    % ---------------------------------------- %
-    % METHOD "FULL" 01 and 02
-    if ( flag_full_01 || flag_full_02 )
-    Vhat = ...
-            [    P                              ,   sparse([],[],[],n_x,n_u,0)          ,   p                           ;...
-                 sparse([],[],[],n_u,n_x,0)     ,   sparse([],[],[],n_u,n_u,0)          ,   sparse([],[],[],n_u,1,0)    ;...
-                 p'                             ,   sparse([],[],[],1  ,n_u,0)          ,   s                            ...
-            ];
+Mx  = [ 1 , Ex' ; Ex , Exx ];
 
-    % ---------------------------------------- %
-    % METHOD "DIAG" 01
-    elseif flag_diag_01
-        Vhat = ...
-            [    diag(P)                        ,   sparse([],[],[],n_x,n_u,0)          ,   p                           ;...
-                 sparse([],[],[],n_u,n_x,0)     ,   sparse([],[],[],n_u,n_u,0)          ,   sparse([],[],[],n_u,1,0)    ;...
-                 p'                             ,   sparse([],[],[],1  ,n_u,0)          ,   s                            ...
-            ];
-    end
-    
-%% --------------------------------------------------------------------- %%
-%% DECLARE THE OPTIMISATION VARIABLES FOR THE CONSTRAINT S-PROCEDURE
+H   = kron( Mx , Ru );
+f   = 2 * kron( Mx , speye(m) )' * reshape( [r';S] , (n+1)*m , 1 );
 
-    if polyOrderOfMultipliers == 0
-        % Declare the "lambda" multiplier variables
-        lmul = sdpvar(numCons,1,'full');
-        
-        % Step through the "numCons" building up the SDP constraint
-        % P_t+1 - P_t + L - \lambda_i * \sum_i G_i
-        fullMatrix = disFactor * Vhatf - Vhat + Lhat;
-        for iCons = 1:numCons
-            fullMatrix = fullMatrix - lmul(iCons,1) * constraintCoefficient{iCons,1};
-        end
-    end
+costConst = trace( [ c , q' ; q , Q ] * Mx );
 
-   
 
 %% --------------------------------------------------------------------- %%
-%% SPECIFY THE CONSTRAINT FUNCTIONS FOR THE SDP
+%% BUILD THE CONSTRAINT MATRICES FOR THE "ROBUST QP" TO BE SOLVED
+% -> See notes for how these equations are derived
 
-    % The constraint is for the P matrix to be positive semi-definite
-    % (PSD), and for the "Vhatf - Vhat + Lhat - sum lmul*Ghat" matrix to be
-    % PSD
-    % Note: this work for both dense and diagonal only P matrices
-    
-    thisCons = [ P >= 0 , fullMatrix >= 0 , lmul >= 0];
-    
-    if flag_full_02
-        % Add constraints to make P distributable
-        thisCons = [thisCons , P(1,2:7) == 0];
-        thisCons = [thisCons , P(2,3:7) == 0];
-        thisCons = [thisCons , P(3,4:7) == 0];
-        thisCons = [thisCons , P(4,5:7) == 0];
-        thisCons = [thisCons , P(5,6:7) == 0];
-        thisCons = [thisCons , P(6,7)   == 0];
-    end
-    
-    
+% First get the polytopic matrices dscribing the sets "X" and "U"
+%intersectLiftedWithProjection = 0;
+%[Ax, bx, qx, Au, bu, qu] = constructPolytopeMatrices( inSys , flagLifted , intersectLiftedWithProjection );
+
+
+% For the INEQUALITY Constraint:
+%    Au u0 + Z^T bx <= bu
+% Where     u0 \in R^(m)
+%           U' \in R^(m  x mn)
+%           Z  \in R^(qx x qu)
+% Hence this constraint is given by:
+%     [Au  0_{qu x (mn)}  I_qu \otimes bx^T ]
+A_ineq_1 = [ A_poly_u  sparse([],[],[],n_poly_u,n_u*n_x_lift,0)  kron(speye(n_poly_u) , b_poly_x') ];
+b_ineq_1 = b_poly_u;
+
+% For the INEQUALITY Constraint:
+%       Z >= 0 , element-wise
+A_ineq_2 = [ sparse([],[],[],n_poly_x*n_poly_u,n_u*(n_x_lift+1),0)  -speye(n_poly_x*n_poly_u) ];
+b_ineq_2 = sparse([],[],[],n_poly_x*n_poly_u,1,0);
+
+
+% For the EQUALITY Constraint:
+%       -Au U' + Z^T Ax = 0
+% vec(-Au U')  = -( I_n \otimes Au ) vec(U')
+% vec(Z^T Ax) = vec(Z^T [ax1,...,axn]) =  [ (I_qu \otimes ax1^T) ; ... ; (I_qu \otimes axn^T] vec(Z)
+
+tempAeqCell = cell(n_x_lift,1);
+for iDim=1:n_x_lift
+    tempAeqCell{iDim,1} = kron( speye(n_poly_u) , A_poly_x(:,iDim)' );
+end
+
+A_eq_1 = [ sparse([],[],[],n_poly_u*n_x_lift,n_u,0)  -kron(speye(n_x_lift),A_poly_u)  vertcat( tempAeqCell{:,1} ) ];
+clear tempAeqCell;
+b_eq_1 = sparse([],[],[],n_poly_u*n_x_lift,1,0);
+
+
+% Combine things
+A_ineq  = [A_ineq_1 ; A_ineq_2];
+b_ineq  = [b_ineq_1 ; b_ineq_2];
+A_eq    = A_eq_1;
+b_eq    = b_eq_1;
+
+
 %% --------------------------------------------------------------------- %%
-%% SPECIFY THE OBJECTIVE FUNCTION FOR THE SDP
-        
-        
-    % If the "P" matrix is restricted to be diagonal only, then the
-    % objective function can be simplified slightly:
-    %thisObj = [1 , s , p' , P'] * sum_all * [1 ; s ; p ; P] .* 10^-(orderOfMagnitude-3);
+%% SANITY CHECK THE MATRICES THAT WERE BUILT
+
+% Check that "H" is sparse
+check1 = issparse(H);
+if not(check1)
+    disp(' ... ERROR: the quadratic coefficient "H" is not a sparse matrix');
+    disp('            This is not such a bad thing, but "gurobi" is a sparse solver so...');
+    disp('            it is potentially much more efficient if "H" is sparse');
+    error(bbConstants.errorMsg);
+end
+
+check2 = issparse(f);
+if not(check2)
+    disp(' ... NOTE: the linear coefficient "f" is not a sparse vector');
+    error(bbConstants.errorMsg);
+end
+
+% Check the size of "H" and "f"
+check3 = ( (size(H,1)==(n_x_lift+1)*n_u) && (size(H,2)==(n_x_lift+1)*n_u) );
+if not(check3)
+    disp(' ... ERROR: The size of the "H" matrix was not as expected');
+    disp(['            size(H) = ',num2str(size(H,1)),'-by-',num2str(size(H,2)),' when it was expected to be size = ',num2str((n_x_lift+1)*n_u),'-by-',num2str((n_x_lift+1)*n_u)]);
+    error(bbConstants.errorMsg);
+end
+check4 = ( (size(f,1)==(n_x_lift+1)*n_u) && (size(f,2)==1) );
+if not(check4)
+    disp(' ... ERROR: The size of the "f" matrix was not as expected');
+    disp(['            size(f) = ',num2str(size(f,1)),'-by-',num2str(size(f,2)),' when it was expected to be size = ',num2str((n_x_lift+1)*n_u),'-by-1']);
+    error(bbConstants.errorMsg);
+end
 
 
-    % ---------------------------------------- %
-    % METHOD "FULL" 01 and 02
-    if ( flag_full_01 || flag_full_02 )
-        % Take a uniform distribution over the x-space
-        Ex  = 0.5 * (x_lower + x_upper);
-        Exx = 1/3 * diag( (x_lower.^2 + x_lower.*x_upper + x_upper.^2) );
-        % Compute the objective based on this
-        thisObj = - ( trace( P * Exx ) + 2 * Ex' * p + s );
-
-    % ---------------------------------------- %
-    % METHOD "DIAG" 01
-    elseif flag_diag_01
-        % Take a uniform distribution over the x-space
-        Ex  = 0.5 * (x_lower + x_upper);
-        Exx = 1/3 * diag( (x_lower.^2 + x_lower.*x_upper + x_upper.^2) );
-        % Compute the objective based on this
-        thisObj = - ( trace( diag(P) * Exx ) + 2 * Ex' * p + s );
-    end
-
-
-    
+% CHECK THE INEQUALITY CONSTRAINT MATRICES
+check1 = ( size(A_ineq,1) == size(b_ineq,1) );
+if not(check1)
+    disp(' ... ERROR: The height of the "A_ineq" matrix and "b_ineq" vector is not the same');
+    disp(['            size(A_ineq,1) = ',num2str(size(A_ineq,1)),', while size(b_ineq,1) = ',num2str(size(b_ineq,1))]);
+    error(bbConstants.errorMsg);
+end
+check2 = ( size(A_ineq,2) == n_u*(n_x_lift+1) + n_poly_x*n_poly_u );
+if not(check2)
+    disp(' ... ERROR: The width of the "A_ineq" matrix is not conistent with the optimisation decision variable vector size expected');
+    disp(['            size(A_ineq,2) = ',num2str(size(A_ineq,2)),', while it was expeted to be = ',num2str(n_u*(n_x_lift+1) + n_poly_x*n_poly_u)]);
+    error(bbConstants.errorMsg);
+end
+check3 = ( size(b_ineq,2) == 1 );
+if not(check3)
+    disp(' ... ERROR: The width of the "b_ineq" matrix is not "1" as it should be for a vector');
+    disp(['            size(b_ineq,2) = ',num2str(size(b_ineq,2))]);
+    error(bbConstants.errorMsg);
+end
 
 
-    
-    
-    
-    %% Call Yalmip to solve for the next value function
-    
-    % Define the options
-    thisOptions          = sdpsettings;
-    thisOptions.debug    = false;
-    thisOptions.verbose  = false;
-    
-    
-    % Specify the solver
-    %thisSolverStr = 'SeDuMi';
-    thisSolverStr = 'Mosek';
-    %thisSolverStr = 'sdpt3';
-    if strcmp('SeDuMi',thisSolverStr)
-        thisOptions.solver = 'sedumi';
-    elseif strcmp('Mosek',thisSolverStr)
-        thisOptions.solver = 'mosek-sdp';
-    elseif strcmp('sdpt3',thisSolverStr)
-        thisOptions.solver = 'sdpt3';
-    else
-        disp([' ... the specified solver "',thisSolverStr,'" was not recognised']);
-        error(' Terminating :-( See previous messages and ammend');
-    end
-
-    
-    tempTime = clock;
-    
-    % Call the solver via Yalmip
-    % SYNTAX: diagnostics = solvesdp(Constraints,Objective,options)
-    diagnostics = solvesdp(thisCons,thisObj,thisOptions);
-
-    time_forSDP = etime(clock,tempTime);
-    
-    % Interpret the results
-    if diagnostics.problem == 0
-        % Don't display anything if things work
-        %disp(' ... the optimisation formulation was Feasible and has been solved')
-    elseif diagnostics.problem == 1
-        disp(' ... the optimisation formulation was Infeasible');
-        error(' Terminating :-( See previous messages and ammend');
-    else
-        disp(' ... the optimisation formulation was strange, it was neither "Feasible" nor "Infeasible", something else happened...');
-        error(' Terminating :-( See previous messages and ammend');
-    end
-
-    
-    
-    
-    % ---------------------------------------- %
-    % METHOD "FULL" 01 and 02
-    if ( flag_full_01 || flag_full_02 )
-        % Double check that P is positive semi-definite
-        %minEigP = min( eig( double(Pnew) ) );
-        %if minEigP < 0
-        %    disp(' ... ERROR: The coefficient matrix P is not Positive Semi-Definite');
-        %    error(' Terminating :-( See previous messages and ammend');
-        %end
-    
-    % ---------------------------------------- %
-    % METHOD "DIAG" 01
-    elseif flag_diag_01
-        if sum( double(P+10^-8) < 0 ) > 0
-            disp(' ... ERROR: The diagonal entries of the matrix P are NOT all non-negative');
-            %error(' Terminating :-( See previous messages and ammend');
-        end
-        
-    end
-    
-    
-    %% ----------------------------------------------------------------- %%
-    %% DIAGONALLY DOMINANT
-    
-flag_runDiagonallyDominant = false;
-if flag_runDiagonallyDominant
-    
-    % Now try solve it again faster!!!
-    P_dd = sdpvar( n_x , n_x ,'symmetric');
-    p_dd = sdpvar( n_x ,  1  ,'full');
-    s_dd = sdpvar(  1  ,  1  ,'full');
-    
-    Vhat_dd = ...
-            [    P_dd                           ,   sparse([],[],[],n_x,n_u,0)          ,   p_dd                        ;...
-                 sparse([],[],[],n_u,n_x,0)     ,   sparse([],[],[],n_u,n_u,0)          ,   sparse([],[],[],n_u,1,0)    ;...
-                 p_dd'                          ,   sparse([],[],[],1  ,n_u,0)          ,   s_dd                         ...
-            ];
-    
-    % Declare the "lambda" multiplier variables
-    lmul_dd = sdpvar(numCons,1,'full');
-
-    % Step through the "numCons" building up the SDP constraint
-    % P_t+1 - P_t + L - \lambda_i * \sum_i G_i
-    fullMatrix_dd = disFactor * Vhatf - Vhat_dd + Lhat;
-    for iCons = 1:numCons
-        fullMatrix_dd = fullMatrix_dd - lmul_dd(iCons,1) * constraintCoefficient{iCons,1};
-    end
-        
-    % The objective shuoldn't have changed, so we just need to adjust the
-    % constraint to reformulate the SDP constraints as Scaled Diagonally
-    % Dominant constrints
-    % Take a uniform distribution over the x-space
-    Ex  = 0.5 * (x_lower + x_upper);
-    Exx = 1/3 * diag( (x_lower.^2 + x_lower.*x_upper + x_upper.^2) );
-    % Compute the objective based on this
-    thisObj_dd = - ( trace( P_dd * Exx ) + 2 * Ex' * p_dd + s_dd );
-    
-    
-    
-    %% SPECIFY THE CONSTRAINT FUNCTIONS FOR THE SDP
-
-    % The constraints were for the P matrix to be positive semi-definite
-    % (PSD), and for the "Vhatf - Vhat + Lhat - sum lmul*Ghat" matrix to be
-    % PSD
-    % ie. thisCons = [ P >= 0 , fullMatrix >= 0 , lmul >= 0];
-    
-    thisCons_dd = (lmul >= 0);
-    
-    % For P >= 0
-    for i_nx=1:n_x
-        thisTrue = true(n_x,1);
-        thisTrue(i_nx,1) = false;
-        thisCons_dd = [thisCons_dd , P_dd(i_nx,i_nx) >= sum( abs( P_dd(i_nx,thisTrue) ) ) ];
-    end
-    
-    % For fullMatrix >= 0
-    n_temp = size(fullMatrix_dd,1);
-    for i_ntemp=1:n_temp
-        thisTrue = true(n_temp,1);
-        thisTrue(i_ntemp,1) = false;
-        thisCons_dd = [thisCons_dd , fullMatrix_dd(i_ntemp,i_ntemp) >= sum( abs( fullMatrix_dd(i_ntemp,thisTrue) ) ) ];
-    end
-    
-    
-    
-    
-    %% Call Yalmip to solve for the next value function - SHOULD BE AN LP
-    
-    % Define the options
-    thisOptions          = sdpsettings;
-    thisOptions.debug    = true;
-    thisOptions.verbose  = true;
-    
-    
-    % Specify the solver
-    %thisSolverStr = 'SeDuMi';
-    thisSolverStr = 'Mosek';
-    %thisSolverStr = 'sdpt3';
-    if strcmp('SeDuMi',thisSolverStr)
-        thisOptions.solver = 'sedumi';
-    elseif strcmp('Mosek',thisSolverStr)
-        thisOptions.solver = 'mosek';
-    elseif strcmp('sdpt3',thisSolverStr)
-        thisOptions.solver = 'sdpt3';
-    else
-        disp([' ... the specified solver "',thisSolverStr,'" was not recognised']);
-        error(' Terminating :-( See previous messages and ammend');
-    end
-
-    
-    tempTime = clock;
-    
-    % Call the solver via Yalmip
-    % SYNTAX: diagnostics = solvesdp(Constraints,Objective,options)
-    diagnostics = solvesdp(thisCons_dd,thisObj_dd,thisOptions);
-
-    time_forDD = etime(clock,tempTime);
-    
-    % Interpret the results
-    if diagnostics.problem == 0
-        % Don't display anything if things work
-        %disp(' ... the optimisation formulation was Feasible and has been solved')
-    elseif diagnostics.problem == 1
-        disp(' ... the optimisation formulation was Infeasible');
-        error(' Terminating :-( See previous messages and ammend');
-    else
-        disp(' ... the optimisation formulation was strange, it was neither "Feasible" nor "Infeasible", something else happened...');
-        error(' Terminating :-( See previous messages and ammend');
-    end
-    
-    
-    % Check how similar the solution is...
-    
-end % END OF: "if flag_runDiagonallyDominant"
-    
+% CHECK THE EQUALITY CONSTRAINT MATRICES
+check1 = ( size(A_eq,1) == size(b_eq,1) );
+if not(check1)
+    disp(' ... ERROR: The height of the "A_eq" matrix and "b_eq" vector is not the same');
+    disp(['            size(A_eq,1) = ',num2str(size(A_eq,1)),', while size(b_eq,1) = ',num2str(size(b_eq,1))]);
+    error(bbConstants.errorMsg);
+end
+check2 = ( size(A_eq,2) == n_u*(n_x_lift+1) + n_poly_x*n_poly_u );
+if not(check2)
+    disp(' ... ERROR: The width of the "A_eq" matrix is not conistent with the state vector size "n" specified for the system');
+    disp(['            size(A_eq,2) = ',num2str(size(A_eq,2)),', while n = ',num2str(n_u*(n_x_lift+1) + n_poly_x*n_poly_u)]);
+    error(bbConstants.errorMsg);
+end
+check3 = ( size(b_eq,2) == 1 );
+if not(check3)
+    disp(' ... ERROR: The width of the "b_eq" matrix is not "1" as it should be for a vector');
+    disp(['            size(b_eq,2) = ',num2str(size(b_eq,2))]);
+    error(bbConstants.errorMsg);
+end
 
 
 
-    %% ----------------------------------------------------------------- %%
-    %% SCALED DIAGONALLY DOMINANT
-
-flag_runScaledDiagonallyDominant = false;
-if flag_runScaledDiagonallyDominant
-    
-    % Now try solve it again faster!!!
-    P_sdd = sdpvar( n_x , n_x ,'symmetric');
-    p_sdd = sdpvar( n_x ,  1  ,'full');
-    s_sdd = sdpvar(  1  ,  1  ,'full');
-    
-    Vhat_sdd = ...
-            [    P_sdd                           ,   sparse([],[],[],n_x,n_u,0)          ,   p_sdd                        ;...
-                 sparse([],[],[],n_u,n_x,0)     ,   sparse([],[],[],n_u,n_u,0)          ,   sparse([],[],[],n_u,1,0)    ;...
-                 p_sdd'                          ,   sparse([],[],[],1  ,n_u,0)          ,   s_sdd                         ...
-            ];
-    
-    % Declare the "lambda" multiplier variables
-    lmul_sdd = sdpvar(numCons,1,'full');
-
-    % Step through the "numCons" building up the SDP constraint
-    % P_t+1 - P_t + L - \lambda_i * \sum_i G_i
-    fullMatrix_sdd = disFactor * Vhatf - Vhat_sdd + Lhat;
-    for iCons = 1:numCons
-        fullMatrix_sdd = fullMatrix_sdd - lmul_sdd(iCons,1) * constraintCoefficient{iCons,1};
-    end
-        
-    % The objective shuoldn't have changed, so we just need to adjust the
-    % constraint to reformulate the SDP constraints as Scaled Diagonally
-    % Dominant constrints
-    % Take a uniform distribution over the x-space
-    Ex  = 0.5 * (x_lower + x_upper);
-    Exx = 1/3 * diag( (x_lower.^2 + x_lower.*x_upper + x_upper.^2) );
-    % Compute the objective based on this
-    thisObj_sdd = - ( trace( P_sdd * Exx ) + 2 * Ex' * p_sdd + s_sdd );
-    
-    
-    
-    %% SPECIFY THE CONSTRAINT FUNCTIONS FOR THE SDP
-
-    % The constraints were for the P matrix to be positive semi-definite
-    % (PSD), and for the "Vhatf - Vhat + Lhat - sum lmul*Ghat" matrix to be
-    % PSD
-    % ie. thisCons = [ P >= 0 , fullMatrix >= 0 , lmul >= 0];
-    
-    thisCons_sdd = (lmul >= 0);
-    
-    
-    % For P >= 0
-    
-    % Create the "sub-matrix" variables
-    numSubMat = double((n_x-1)*(n_x-2))/2;
-    %M_for_P_sdd = cell(numSubMat,1);
-    %for i=1:numSubMat
-    %    M_for_P_sdd = sdpvar(  3  ,  1  ,'full');
-    %end
-    M_for_P_sdd = sdpvar(  numSubMat  , 3  ,'full');
-    
-    % Enforce the positivity constraints
-    thisCons_sdd = [ thisCons_sdd , M_for_P_sdd(:,1) >= 0, M_for_P_sdd(:,2) >= 0, M_for_P_sdd(:,1) .* M_for_P_sdd(:,2) - M_for_P_sdd(:,3).^2 >= 0 ];
-    
-    % Now build the full "M" matrix
-    M_sum_for_P_sdd = zeros(n_x,n_x);
-    iM = 1;
-    jM = 1;
-    for kSubMat = 1:numSubMat
-        jM = jM + 1;
-        if jM > n_x
-            iM = iM + 1;
-            jM = iM + 1;
-            if iM > n_x
-                error(' ... THIS SHOULD NOT HAVE OCCURRED :-(');
-            end
-            M_sum_for_P_sdd(iM,iM) = M_sum_for_P_sdd(iM,iM) + M_for_P_sdd(kSubMat,1);
-            M_sum_for_P_sdd(jM,jM) = M_sum_for_P_sdd(jM,jM) + M_for_P_sdd(kSubMat,2);
-            M_sum_for_P_sdd(iM,jM) = M_sum_for_P_sdd(iM,jM) + M_for_P_sdd(kSubMat,3);
-            M_sum_for_P_sdd(jM,iM) = M_sum_for_P_sdd(jM,iM) + M_for_P_sdd(kSubMat,3);
-        end
-    end
-    
-    % Lastly put the constraint that P == M
-    thisCons_sdd = [ thisCons_sdd , P_sdd == M_sum_for_P_sdd ];
-    
-    
-    
-    % For fullMatrix >= 0
-    
-    % Create the "sub-matrix" variables
-    n_temp = size(fullMatrix_sdd,1);
-    numSubMat = double((n_temp-1)*(n_temp-2))/2;
-    M_for_fullMatrix_sdd = sdpvar(  numSubMat  , 3  ,'full');
-    
-    % Enforce the positivity constraints
-    thisCons_sdd = [ thisCons_sdd , M_for_fullMatrix_sdd(:,1) >= 0, M_for_fullMatrix_sdd(:,2) >= 0, M_for_fullMatrix_sdd(:,1) .* M_for_fullMatrix_sdd(:,2) - M_for_fullMatrix_sdd(:,3).^2 >= 0 ];
-    
-    
-    % Now build the full "M" matrix
-    M_sum_for_fullMatrix_sdd = zeros(n_temp,n_temp);
-    iM = 1;
-    jM = 1;
-    for kSubMat = 1:numSubMat
-        jM = jM + 1;
-        if jM > n_temp
-            iM = iM + 1;
-            jM = iM + 1;
-            if iM > n_temp
-                error(' ... THIS SHOULD NOT HAVE OCCURRED :-(');
-            end
-            M_sum_for_fullMatrix_sdd(iM,iM) = M_sum_for_fullMatrix_sdd(iM,iM) + M_for_fullMatrix_sdd(kSubMat,1);
-            M_sum_for_fullMatrix_sdd(jM,jM) = M_sum_for_fullMatrix_sdd(jM,jM) + M_for_fullMatrix_sdd(kSubMat,2);
-            M_sum_for_fullMatrix_sdd(iM,jM) = M_sum_for_fullMatrix_sdd(iM,jM) + M_for_fullMatrix_sdd(kSubMat,3);
-            M_sum_for_fullMatrix_sdd(jM,iM) = M_sum_for_fullMatrix_sdd(jM,iM) + M_for_fullMatrix_sdd(kSubMat,3);
-        end
-    end
-    
-    
-    % Lastly put the constraint that P == M
-    thisCons_sdd = [ thisCons_sdd , fullMatrix_sdd == M_sum_for_fullMatrix_sdd ];
-    
-    
-    
-    
-    %% Call Yalmip to solve for the next value function - SHOULD BE AN SOCP
-    
-    % Define the options
-    thisOptions          = sdpsettings;
-    thisOptions.debug    = true;
-    thisOptions.verbose  = true;
-    
-    
-    % Specify the solver
-    %thisSolverStr = 'SeDuMi';
-    thisSolverStr = 'Mosek';
-    %thisSolverStr = 'sdpt3';
-    if strcmp('SeDuMi',thisSolverStr)
-        thisOptions.solver = 'sedumi';
-    elseif strcmp('Mosek',thisSolverStr)
-        thisOptions.solver = 'mosek';
-    elseif strcmp('sdpt3',thisSolverStr)
-        thisOptions.solver = 'sdpt3';
-    else
-        disp([' ... the specified solver "',thisSolverStr,'" was not recognised']);
-        error(' Terminating :-( See previous messages and ammend');
-    end
-
-    
-    tempTime = clock;
-    
-    % Call the solver via Yalmip
-    % SYNTAX: diagnostics = solvesdp(Constraints,Objective,options)
-    diagnostics = solvesdp(thisCons_sdd,thisObj_sdd,thisOptions);
-
-    time_forDD = etime(clock,tempTime);
-    
-    % Interpret the results
-    if diagnostics.problem == 0
-        % Don't display anything if things work
-        %disp(' ... the optimisation formulation was Feasible and has been solved')
-    elseif diagnostics.problem == 1
-        disp(' ... the optimisation formulation was Infeasible');
-        error(' Terminating :-( See previous messages and ammend');
-    else
-        disp(' ... the optimisation formulation was strange, it was neither "Feasible" nor "Infeasible", something else happened...');
-        error(' Terminating :-( See previous messages and ammend');
-    end
-    
-    
-    % Check how similar the solution is...
-    
-end % END OF: "if flag_runScaledDiagonallyDominant"
+%% --------------------------------------------------------------------- %%
+%% EXPAND THE OBJECTIVE TO INCLUDE THE SLACK VARIABLES IN THE CONSTRAINTS
+H = blkdiag( H , sparse([],[],[],n_poly_x*n_poly_u,n_poly_x*n_poly_u,0) );
+f = [ f ; sparse([],[],[],n_poly_x*n_poly_u,1,0) ];
 
 
 
+%% --------------------------------------------------------------------- %%
+%% PASS THE FORMULATION TO A "QP" SOLVER
 
-    %% ----------------------------------------------------------------- %%
-    %% STORE THE RESULTANT VALUE FUNCTION INTO THE RETURN VARIABLES
-    
-    
-    % ---------------------------------------- %
-    % METHOD "FULL" 01 and 02
-    if ( flag_full_01 || flag_full_02 )
-        Pnew = double( P );
-        pnew = double( p );
-        snew = double( s );
-        
-    
-    % ---------------------------------------- %
-    % METHOD "DIAG" 01
-    elseif flag_diag_01
-        Pnew = diag( double( P ) );
-        pnew = double( p );
-        snew = double( s );
-        
-    end
-    
-    optimalObjVal = ( trace( Pnew * Exx ) + 2 * Ex' * pnew + snew );
-    
-    %% MULTIPLY "pnew" BY 2
-    pnew = 2.0 * pnew;
+tempModelSense = 'min';
+tempVerboseOptDisplay = false;
+
+[ opt_decision , ~, ~, flag_solvedSuccessfully ] = opt.solveQP_viaGurobi( H, f, costConst, A_ineq, b_ineq, A_eq, b_eq, tempModelSense, tempVerboseOptDisplay );
+
+
+if flag_solvedSuccessfully
+    % Split out the policy part from the slack variables part
+    opt_u0  = opt_decision(1:n_u,1);
+    opt_K   = reshape( opt_decision( (n_u+1) : ((n_x_lift+1)*n_u) ) , n_u , n_x_lift );
+    %opt_Z   = reshape( opt_decision( ((n_x_lift+1)*n_u+1) :  (n_u*(n_x_lift+1) + n_poly_x*n_poly_u) ) , n_poly_x , n_poly_u );
+end
+
+
+
+%% --------------------------------------------------------------------- %%
+%% PUT IN THE RETURN VARIABLES
+u0 = opt_u0;
+K  = opt_K;
+
+
+
     
 end
 % END OF FUNCTION

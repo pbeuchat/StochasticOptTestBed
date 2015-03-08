@@ -256,7 +256,7 @@ function flag_successfullyInitialised = initialise_localControl_withDisturbanceI
         %% NOW COMPUTE "P" AND "K" AS REQUIRED
         
         
-        %% Adjust the iteration counter
+        %% First, adjust the iteration counter
         obj.iterationCounter = distFullTimeCycleSteps;
         obj.numVsInitialised = distFullTimeCycleSteps;
         
@@ -458,6 +458,8 @@ function flag_successfullyInitialised = initialise_localControl_withDisturbanceI
             Bxi     = sparse( myBuilding.building_model.discrete_time_model.Bv  );
             %Bxu     = myBuilding.building_model.discrete_time_model.Bxu;
             %Bxiu    = myBuilding.building_model.discrete_time_model.Bvu;
+            
+            n_x     = size( A , 2 );
 
             % Get the coefficients for a quadratic cost
             currentTime = [];
@@ -519,26 +521,47 @@ function flag_successfullyInitialised = initialise_localControl_withDisturbanceI
                 thisExi     = this_prediction.mean(thisRange,1);
                 thisExixi   = this_prediction.cov(thisRange,thisRange);
                 
-                % SPECIFY THE FITTIG RANGE
+                % SPECIFY THE "FITTING RANGE"
+                % ie. SPECIFY THE TWO SETS IN THE CONSTRAINT
+                %  u \in \mcal{U} , \forall x \in \mcal{X}
                 internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
                 x_lower = obj.VFitting_xInternal_lower * internalStates  +  obj.VFitting_xExternal_lower * ~internalStates;
                 x_upper = obj.VFitting_xInternal_upper * internalStates  +  obj.VFitting_xExternal_upper * ~internalStates;
-                u_lower = myConstraints.u_rect_lower;
-                u_upper = myConstraints.u_rect_upper;
+                %u_lower = myConstraints.u_rect_lower;
+                %u_upper = myConstraints.u_rect_upper;
+                
+                % THE POLYTOPE FOR "\mcal{X}"
+                A_poly_x = [ speye(n_x)  ;  -speye(n_x)  ];
+                b_poly_x = [ x_upper     ;  - x_lower    ];
+                
+                % THE POLYTOPE FOR "\mcal{U}"
+                A_poly_u = myConstraints.u_all_A;
+                b_poly_u = myConstraints.u_all_b;
+                
+                % SPECIFY THE MOMENTS OF "x" TO USE IN THE FITTING
+                thisEx  = 0.5 * (x_lower + x_upper);
+                thisExx = 1/3 * diag( (x_lower.^2 + x_lower.*x_upper + x_upper.^2) );
 
-                % Get the value function for the future time step
+                % GET THE VALUE FUNCTION FOR THIS TIME STEP
                 thisP = P{iStep};
                 thisp = p{iStep};
                 thiss = s{iStep};
                 
-                % SPECIFY THE MOMENTS OF "x" TO USE IN THE FITTING
-                thisEx = [];
-                thisExx = [];
+                % SPECIFY THE DISCOUNT FACTOR
+                % (1 for finite horizon and <1 otherwise)
+                discountFactor = 1.0;
+                
+                % SPECIFY THE RETRACTION OPERATOR TO USE IN THE FITTING
+                thisRx = speye( size(A,2) );
+                % NOTE: the Retraction Operator is not this:
+                %thisRx = [  sparse([],[],[],size(A,2),1,0)  ,  speye( size(A,2) )  ];
+                % becuase it does not include the first row for the
+                % constant "1" in the lifitng
 
                 % Pass everything to a ADP Sampling method
-                [Knew] = performADP_fitPWA_toP(obj , thisP, thisp, thiss, thisExi, thisExixi, thisEx , thisExx, A, Bu, Bxi, Q, R, S, q, r, c, x_lower, x_upper, u_lower, u_upper , obj.PMatrixStructure);
-
-                K{iStep,1} = Knew;
+                [this_u0 , this_K] = performADP_fitPWA_toP( thisP, thisp, thiss, thisExi, thisExixi, thisEx, thisExx, thisRx, A, Bu, Bxi, Q, R, S, q, r, c, discountFactor, A_poly_x, b_poly_x, A_poly_u, b_poly_u );
+                
+                K{iStep,1}  = [this_u0 , this_K];
 
             end   % END OF: "iStep = 1 : distFullTimeCycleSteps"
 
@@ -551,7 +574,7 @@ function flag_successfullyInitialised = initialise_localControl_withDisturbanceI
             varargin_forSave.disturbanceID = inputDisturbanceID;
             specsForSave.vararginLocal = varargin_forSave;
             
-            specsForSave.K = K;
+            specsForSave.K  = K;
             
             [flag_saved_K , ~] = Control_ADPCentral_Local.saveLoadCheckFor( 'save' , specsForSave );
             

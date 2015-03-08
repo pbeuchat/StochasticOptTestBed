@@ -194,6 +194,10 @@ classdef Control_ADPCentral_Local < Control_LocalController
         % FUNCTOIN: To save, load, or check for an existing result
         %           Where the "inputInstruction" specifies which to do
         [flag_success , loadedObject] = saveLoadCheckFor( inputInstruction , inputObject )
+        
+        % FUNCTION: To fit a Piece-Wise Affine policy to a quadratic value
+        % function approximation
+        [u0 , K] = performADP_fitPWA_toP( P, p, s, Exi, Exixi, Ex, Exx, Rx, A, Bu, Bxi, Q, R, S, q, r, c, discountFactor, A_poly_x, b_poly_x, A_poly_u, b_poly_u )
     end
     % END OF: "methods (Static = true , Access = private)"
     
