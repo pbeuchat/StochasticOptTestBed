@@ -9,6 +9,25 @@ function returnParallelDetailsPrepared = prepareDetailsFor_MultipleDistCoord_For
 %
 %  DESCRIPTION: > ...
 % ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
 
 
     
@@ -22,6 +41,7 @@ function returnParallelDetailsPrepared = prepareDetailsFor_MultipleDistCoord_For
         clear temp_evalMultiReal_details;
         temp_evalMultiReal_details.numSampleMethod          = 'userSpecified';
         temp_evalMultiReal_details.numSamplesMax            = inf;
+        temp_evalMultiReal_details.numSamplesUserSpec       = 1;
         temp_evalMultiReal_details.parallelise_onOff        = false;
         temp_evalMultiReal_details.parallelise_numThreads   = 1;
         
@@ -29,7 +49,7 @@ function returnParallelDetailsPrepared = prepareDetailsFor_MultipleDistCoord_For
         temp_evalMultiReal_details.flag_save_u      = obj.evalMultiReal_details.flag_save_u;
         temp_evalMultiReal_details.flag_save_xi     = obj.evalMultiReal_details.flag_save_xi;
         temp_evalMultiReal_details.flag_save_cost   = obj.evalMultiReal_details.flag_save_cost;
-        temp_evalMultiReal_details.flag_save_cost_perSubSystem = obj.evalMultiReal_details.flag_save_perSubSystem;
+        temp_evalMultiReal_details.flag_save_cost_perSubSystem = obj.evalMultiReal_details.flag_save_cost_perSubSystem;
         temp_evalMultiReal_details.flag_save_controllerDetails = obj.evalMultiReal_details.flag_save_controllerDetails;
         
         % Put this back into the object

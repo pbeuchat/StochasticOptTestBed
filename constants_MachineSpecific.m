@@ -1,5 +1,5 @@
 classdef constants_MachineSpecific
-% 
+% CONSTANTS MACHINE SPECIFIC
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
@@ -11,13 +11,36 @@ classdef constants_MachineSpecific
 %                   - path to the installed BRCM toolbox
 %                   - path to any optimisers required
 % ----------------------------------------------------------------------- %
-   
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
+
+
     properties(Constant)
         %% --------------------------------------------------------------------- %%
         %% PLEASE INPUT THE FOLLOWING PATHS ON YOUR MACHINE
         
         %% Path where the saved data should be stored
         saveDataPath = '/Users/pbeuchat/Documents/ETHZ_2014_PhD/L4G/Code/L4G_BuildingTestEnvironment/Data/';
+        
+        %% Path where the PRIVATE controller class defs are stored
+        privateControllerClasseDefsPath = '/Users/pbeuchat/Desktop/';
         
         
     end %properties(Constant)
@@ -31,7 +54,7 @@ classdef constants_MachineSpecific
     end %methods(Access=private)
     
     
-    methods(Static , Access = public )
+    methods( Static = true , Access = public )
         %% --------------------------------------------------------------------- %%
         %% PLEASE INPUT THE FOLLOWING PATHS ON YOUR MACHINE
         
@@ -41,6 +64,8 @@ classdef constants_MachineSpecific
             % Example: addpath(genpath('/Users/pbeuchat/Documents/MATLAB/tbxmanager/toolboxes/brcm/v1.01'));
             addpath( genpath( '/Users/pbeuchat/Documents/MATLAB/tbxmanager/toolboxes/brcm/v1.01' ) );
 
+            %% THE PATH TO THE PRIVATE CONTROLLER CLASS DEFS
+            addpath( genpath( constants_MachineSpecific.privateControllerClasseDefsPath ) );
 
             %% ANY OPTIMISERS REQUIRED FOR CONTROLLER COMPUTATIONS
             % Example: addpath(genpath('/Users/pbeuchat/Documents/MATLAB/tbxmanager/toolboxes/brcm/v1.01'));
@@ -55,6 +80,9 @@ classdef constants_MachineSpecific
 
             addpath(genpath('/Users/pbeuchat/opt/mosek/7/'));
             setenv MOSEKLM_LICENSE_FILE '/Users/pbeuchat/opt/mosek/mosek.lic'
+            
+            addpath(genpath('/Users/pbeuchat/opt/sedumi-master/'));
+            
             
             % ----------------------------------------------------------- %
             % FOR PAUL BEUCHAT'S Mac Book Pro

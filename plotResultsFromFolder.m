@@ -2,7 +2,13 @@ close all;
 %clear all;
 
 %% SPECIFY THE RESULTS FOLDER TO PLOT
-plotThisFolder = '2015-01-30_12h02m30s_PlusAndMinus';
+clear plotThisFolder;
+%plotThisFolder = '2015-03-15_15h47m42s';
+plotThisFolder = '2015-03-15_23h38m32s';
+%plotThisFolder = '2015-03-16_17h30m19s';
+%plotThisFolder = '2015-03-17_11h07m57s';
+
+
 
 
 %% ADD THE PATH

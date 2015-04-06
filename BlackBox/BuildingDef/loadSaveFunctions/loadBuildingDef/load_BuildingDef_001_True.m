@@ -1,9 +1,6 @@
-%  ---------------------------------------------------------------------  %
-%  ---------------------------------------------------------------------  %
-%  ---------     load_BuildingDef_001_True.m
-%  ---------------------------------------------------------------------  %
-%  ---------------------------------------------------------------------  %
 function [B , returnX0 , returnStateDefObject , returnConstraintParams, returnCostDefObject, returnV, returnTmax , returnDims] = load_BuildingDef_001_True( inputBuildingIdentifierString, bbFullPath , inputSysOptions )
+%  load_BuildingDef_001_True.m
+%  ---------------------------------------------------------------------  %
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
 %  GOAL:        Black-Box Simulation-Based Test-Bed for Building Control
@@ -14,6 +11,25 @@ function [B , returnX0 , returnStateDefObject , returnConstraintParams, returnCo
 %               Copyright (C) 2013  Automatic Control Laboratory, ETH Zurich.
 %               For more infomation check: www.brcm.ethz.ch.
 %
+% ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
 
 
 %% THIS FUNCTION SHOULD PERFORM THE FOLLOWING
@@ -47,7 +63,7 @@ flags_EHFModelsToInclude.Radiators           = true;
 flags_EHFModelsToInclude.reconstructModel    = false;
 
 B = get_BuildingDef( inputBuildingIdentifierString , flags_EHFModelsToInclude , bbFullPath );
-
+disp( ' DEBUGGING: If this is displayed then I was wrong :-( #06' );
 
 %% --------------------------------------------------------------------- %%
 %% 1) DISPLAY AND DRAW BUILDING (optional)
@@ -303,7 +319,7 @@ costParameters.Rad.costPerJouleHeated = 10;
 % Get the cost vector
 cu = B.building_model.getCostVector(costParameters);
 
-%cu = 0*cu;
+cu = 0*cu;
 
 % If the building_model B.building_model should be saved to use the model in another place, it is necessary that the Classes folder 
 % is on the path, otherwise the saved data can not be loaded correctly. If only the matrices are needed, then just 

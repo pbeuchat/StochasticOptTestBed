@@ -8,6 +8,26 @@ function [ ] = visualise_multipleControllers( inputControllerSpecs , inputDataCe
 %
 %  DESCRIPTION: > ...
 % ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
+
 
 % Set the default interpretter for text to be latex
 %   > This will apply to all figures created
@@ -256,7 +276,7 @@ labelPerDim       = inputDataCellArray{1,1}.(thisProperty).labelPerDim;
 data = cell(numControllers,1);
 timeForPlot = cell(numControllers,1);
 
-dataCumulativeCost = zeros(numControllers,1);
+%dataCumulativeCost = zeros(numControllers,1);
 
 % THIS FIGURE WILL HAVE ONE SUB-PLOT PER STATE-TO-COMPARE
 
@@ -302,6 +322,7 @@ for iCost = 1:numCostsToCompare
     % Get the index of this state
     thisCostIndex = iCost;
 
+    dataCumulativeCost = zeros(numControllers,1);
 
     % Construct the data to be plotted
     for iController = 1:numControllers
@@ -345,10 +366,8 @@ for iCost = 1:numCostsToCompare
     Visualisation.visualise_plotMultipleLines( hAxes , timeForPlot, data , thisPlotOptions  );
         
     % Display the Cumulative cost
-    disp([' ... NOTE: FOR COST COMPONENT: ',inputDataCellArray{1,1}.(thisProperty).labelPerDim{1}{thisCostIndex} ]);
+    
     for iController = 1:numControllers
-        disp(['  ',num2str(dataCumulativeCost(iController,1),'%10.1f'),'   for "',labelPerController{iController},'"' ]);
-        
         hAxes = subplot(numCostsToCompare,4,4*iCost);
         % @TODO: THIS IS A HACK BECAUSE THE COLOUR CODING IS NOT CONSISTENT
         % WITH THE OTHER GRAPHS
@@ -485,12 +504,20 @@ if ismember( thisProperty , inputPropertyNames )
         
         % Now call the generic plotting function
         Visualisation.visualise_plotMultipleHistogramAsScatter( hAxes , data , thisPlotOptions  );
+        
+        
+        % DISPLAY THE CUMULATIVE COST SUMMED OVER THE WHOLE TIME HORIZON
+        disp([' ... NOTE: FOR COST COMPONENT: ',inputDataCellArray{1,1}.(thisProperty).labelPerDim{1}{thisCostIndex} ]);
+        for iController = 1:numControllers
+            disp(['  ',num2str(sum(data{iController,1}),'%10.1f'),'   for "',labelPerController{iController},'"' ]);
+        end
+        
     end
 
     
     
     %% ----------------------------------------------------------------- %%
-    %% NOW Create the figure - FOR THE HISTOGRAM PLOT COST DIFFERECNCE
+    %% Create the figure - FOR THE HISTOGRAM PLOT COST DIFFERECNCE
     thisFigurePosition = Visualisation.getFigurePositionInFullScreenGrid( 2,2, [2,1] , 'rowandcolumn' );
     hFig = figure('position',thisFigurePosition);
     set(hFig,'Color', Visualisation.figure_backgroundColour );
@@ -556,7 +583,7 @@ if ismember( thisProperty , inputPropertyNames )
     
     
     %% ----------------------------------------------------------------- %%
-    %% NOW Create the figure - FOR THE PARETO FRONT
+    %% Create the figure - FOR THE PARETO FRONT
     thisFigurePosition = Visualisation.getFigurePositionInFullScreenGrid( 2,2, [1,2] , 'rowandcolumn' );
     hFig = figure('position',thisFigurePosition);
     set(hFig,'Color', Visualisation.figure_backgroundColour );
@@ -615,7 +642,209 @@ if ismember( thisProperty , inputPropertyNames )
         % Now call the generic plotting function
         Visualisation.visualise_plotParetoFrontAsScatter( hAxes , data_x , data_y , thisPlotOptions  );
     end
+       
+    
+    
+    %% ----------------------------------------------------------------- %%
+    %% Create the figure - FOR THE ***IMPROVED*** PARETO FRONT
+    thisFigurePosition = Visualisation.getFigurePositionInFullScreenGrid( 2,2, [2,2] , 'rowandcolumn' );
+    hFig = figure('position',thisFigurePosition);
+    set(hFig,'Color', Visualisation.figure_backgroundColour );
+    
+    % Clear the data variable
+    clear data;
+    clear data_x;
+    clear data_y;
         
+    
+    % Fake the method ID
+    %numControllers = length( inputControllerSpecs );
+%     thisMethodID = 1;
+%     tempMethodName = {'MPC','ADP - Dense P','ADP - Diag P','ADP - Ouput K','ADP - Ouput Decent K','LQR'};
+%     iMethodName = 1;
+%     for iControlMethod = 1:numControllers
+%         inputControllerSpecs{iControlMethod}.methodID_forGroupPlotting = thisMethodID;
+%         inputControllerSpecs{iControlMethod}.methodName_forGroupPlotting = tempMethodName{iMethodName};
+%         if rem(iControlMethod+1,6) == 1
+%             iMethodName = iMethodName + 1;
+%             thisMethodID = thisMethodID + 1;
+%         end
+%     end
+    
+    
+    % Re-specify the plotting options for this graph because it will be a
+    % little tricker than the previous graphs
+    legendFontSize_default = 12;
+    xLabelInterpreter_default = 'none';
+    yLabelInterpreter_default = 'none';
+    labelFontSize_default = 12;
+
+    % Specify the plotting options
+    thisPlotOptions = { 'LineColourIndex'   ,  1                                 ;...    % 01
+                        'LineWidth'         ,  Visualisation.lineWidthDefault    ;...    % 02
+                        'maRkerIndex'       ,  1                                 ;...    % 03 % OPTIONS: '0' gives no marker, other options are: {'o','+','*','.','x','square','diamond','^','v','<','>','pentagram','hexagram'}
+                        'legendOnOff'       ,  'on'                              ;...    % 04 % OPTIONS: 'off', 'on'
+                        'legendStrings'     ,  ' '                               ;...    % 05
+                        'legendFontSize'    ,  legendFontSize_default            ;...    % 06
+                        'legendFontWeight'  ,  'bold'                            ;...    % 07 % OPTIONS: 'normal', 'bold'
+                        'legendLocation'    ,  'southOutside'                    ;...    % 08 % OPTIONS: see below
+                        'legendInterpreter' ,  'none'                            ;...    % 09 % OPTIONS: 'latex', 'tex', 'none'
+                        'titleString'       ,  'Pareto Front'                    ;...    % 10
+                        'titleFontSize'     ,  24                                ;...    % 11
+                        'titleFontWeight'   ,  'bold'                            ;...    % 12 % OPTIONS: 'normal', 'bold'
+                        'titleColour'       ,  'black'                           ;...    % 13
+                        'XLabelString'      ,  []                                ;...    % 14
+                        'YLabelString'      ,  []                                ;...    % 15
+                        'XLabelInterpreter' ,  xLabelInterpreter_default         ;...    % 16 % OPTIONS: 'latex', 'tex', 'none'
+                        'YLabelInterpreter' ,  yLabelInterpreter_default         ;...    % 17 % OPTIONS: 'latex', 'tex', 'none'
+                        'XLabelColour'      ,  'black'                           ;...    % 18
+                        'YLabelColour'      ,  'black'                           ;...    % 19
+                        'LabelFontSize'     ,  labelFontSize_default             ;...    % 20
+                        'LabelFontWeight'   ,  'bold'                            ;...    % 21
+                        'XGridOnOff'        ,  'off'                             ;...    % 22 % OPTIONS: 'off', 'on'
+                        'YGridOnOff'        ,  'on'                              ;...    % 23 % OPTIONS: 'off', 'on'
+                        'gridStyle'         ,  '--'                              ;...    % 24 % OPTIONS: '-', '--', ':', '-.', 'none'
+                        'gridColour'        ,  [0.5 0.5 0.5]                     ;...    % 25 % 
+                        'XGridMinorOnOff'   ,  'off'                             ;...    % 26 % OPTIONS: 'off', 'on'
+                        'YGridMinorOnOff'   ,  'off'                             ;...    % 27 % OPTIONS: 'off', 'on'
+                        'gridMinorStyle'    ,  ':'                               ;...    % 28 % OPTIONS: '-', '--', ':', '-.', 'none'
+                        'gridMinorColour'   ,  [0.5 0.5 0.5]                     ;...
+                        %'XTickNumbersOnOff'
+                        %'YTickNumbersOnOff'
+                      };
+    
+    
+    
+    
+    %% Iterate through the number of Cost Components to compare, making a sub-plot for each
+    if (numCostsToCompare-1) == 2
+
+        % Create a cell array for storing the data
+        %data_x = cell(numControllers,1);
+        %data_y = cell(numControllers,1);
+        
+        % Handle based on the data structure
+        if (dimPerRealisation == 1)
+            
+            % FIRST: parse through all the Controller Methods and make a
+            % list of the various methods
+            clear methodIndex;
+            % Initialise the methodindex to be bigger than required
+            tempBlankSize = 20;
+            tempID      = -999 * ones(tempBlankSize,1);
+            tempIndex   = -999 * ones(tempBlankSize,1);
+            tempName    = cell(tempBlankSize,1);
+            tempControllerIndices = zeros(tempBlankSize,tempBlankSize);
+            tempNumControllers = zeros(tempBlankSize,1);
+            numGroups   = 0;
+            
+            %methodIndex = cell{20,1};
+            %methodIndex.ID = zeros(0,1);
+            %methodIndex.ID = zeros(0,1);
+            
+            % Iterate through the Controller methods
+            for iControlMethod = 1:numControllers
+                thisMethodID = inputControllerSpecs{iControlMethod}.methodID_forGroupPlotting;
+                [thisIsMemberFlag , thisIsMemberIndex] = ismember(thisMethodID , tempID);
+                if not( thisIsMemberFlag )
+                    % Add the new group that we have found
+                    numGroups = numGroups + 1;
+                    tempID(numGroups,1) = thisMethodID;
+                    tempIndex(numGroups,1) = numGroups;
+                    tempName{numGroups,1} = inputControllerSpecs{iControlMethod}.methodName_forGroupPlotting;
+                    tempNumControllers(numGroups,1) = tempNumControllers(numGroups,1) + 1;
+                    tempControllerIndices(numGroups,tempNumControllers(numGroups,1)) = iControlMethod;                    
+                else
+                    % Add this controller to the existing group
+                    tempNumControllers(thisIsMemberIndex,1) = tempNumControllers(thisIsMemberIndex,1) + 1;
+                    tempControllerIndices(thisIsMemberIndex,tempNumControllers(thisIsMemberIndex,1)) = iControlMethod;                    
+                end
+            end
+            % Put all this into a cell array
+            methodIndex = cell(numGroups,1);
+            for iGroup = 1:numGroups
+                methodIndex{iGroup,1}.ID                = tempID(iGroup,1);
+                methodIndex{iGroup,1}.index             = tempIndex(iGroup,1);
+                methodIndex{iGroup,1}.name              = tempName{iGroup,1};
+                methodIndex{iGroup,1}.numControllers    = tempNumControllers(iGroup,1);
+                methodIndex{iGroup,1}.controllerIndices = (tempControllerIndices( iGroup, 1:tempNumControllers(iGroup,1) ))';
+            end
+            clear tempID;
+            clear tempIndex;
+            clear tempName;
+            clear tempControllerIndices;
+            clear tempNumControllers;
+            
+            
+            
+            % Create the axes for the subplot for this cost component
+            %hAxes = subplot(1, numCostsToCompare, iCost );
+            hAxes = subplot(1, 1, 1 );
+            
+            % Put in the title string
+            %thisPlotOptions{10,2} = 'Pareto Front';
+            
+            % Put in the x and y label string
+            thisPlotOptions{14,2} = labelPerDim{1}{2,1};
+            thisPlotOptions{15,2} = labelPerDim{1}{3,1};
+            
+            % For the legnend strings
+            %thisPlotOptions{5,2} = labelPerController(1:numControllers,1);
+        
+            % NOW - Step through the METHOD GROUPINGS
+            % Plotting the Parato Front for that method at each step
+            for iGroup = 1:numGroups
+                % Get the controller indices for this group
+                thisControllerIndices   = methodIndex{iGroup,1}.controllerIndices;
+                thisNumControllers      = methodIndex{iGroup,1}.numControllers;
+                
+                % Clear the previous data
+                clear data_x;
+                clear data_y;
+                
+                % Step through the controllers for this methods and collect
+                % the data
+                for iController = 1:thisNumControllers
+                    thisControllerIndex = thisControllerIndices(iController);
+                    % Get the data for this controller
+                    data_thisController = inputDataCellArray{thisControllerIndex,1}.(thisProperty).data;
+                    % Store the difference as the data to be plotted                
+                    data_x{iController,1} = data_thisController(2,:);
+                    data_y{iController,1} = data_thisController(3,:);
+                end
+                
+                % Set the "color index" plot option
+                thisPlotOptions{1,2} = iGroup;
+                
+                thisPlotOptions{5,2} = {methodIndex{iGroup,1}.name};
+                    
+                % Now call the generic plotting function
+                Visualisation.visualise_plotParetoFrontSummary( hAxes , data_x , data_y , thisPlotOptions  );
+            end
+            
+            
+            
+            
+
+        elseif (dimPerRealisation == 2)
+            
+            % ... NOT HANLDING THIS
+            
+        else
+            % We are not handling this case properly
+            disp( ' ... ERROR: This function does NOT handle data with more' );
+            disp( '            than 2 dimensions per time step' );
+            numCostsToCompare = 0;
+        end
+
+
+        % Create the axes for the subplot for this cost component
+        %hAxes = subplot(1, numCostsToCompare, iCost );
+        %hAxes = subplot(1, 1, 1 );
+        
+        % Now call the generic plotting function
+        %Visualisation.visualise_plotParetoFrontAsScatter( hAxes , data_x , data_y , thisPlotOptions  );
+    end
 
 
 

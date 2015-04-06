@@ -8,6 +8,26 @@ function [ ] = visualise_plotParetoFrontAsScatter( hAxes , data_x , data_y , var
 %
 %  DESCRIPTION: > ...
 % ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
+
 
 
     %% REFERENCES:
@@ -191,7 +211,7 @@ function [ ] = visualise_plotParetoFrontAsScatter( hAxes , data_x , data_y , var
                 case 'linecolourindex'
                     lineColourIndex = inputSettings{iTemp,2};
                     % If entered as a singleton, increase it to a vector
-                    if ( isscalar(lineColourIndex) && ismatrix(lineColourIndex) )
+                    if isscalar(lineColourIndex)
                         lineColourIndex = repmat(lineColourIndex,numScatterToPlot,1);
                     end
                     % Check it is the right size
@@ -676,16 +696,32 @@ function [ ] = visualise_plotParetoFrontAsScatter( hAxes , data_x , data_y , var
     
     
     %% ----------------------------------------------------------------- %%
-    %% COMPUTE THE CONFIDENCE LEVEL OF THE SAMPLE MEAN
-    % See this website for a few hints:
-    %   http://www.itl.nist.gov/div898/handbook/eda/section3/eda352.htm
+    %% COMPUTE THE MEANS TO BE PLOTTED AS A BIGGER CROSS
+    
+    % Initialise a container for the numbers
+    data_x_mean = zeros(numScatterToPlot,1);
+    data_y_mean = zeros(numScatterToPlot,1);
+    
+    % Step through each of the "scatters"
+    for iScatter = 1:numScatterToPlot
+        
+        if iscell(data_y)
+            data_x_mean(iScatter,1) = mean(data_x{iScatter,1});
+            data_y_mean(iScatter,1) = mean(data_y{iScatter,1});
+        else
+            data_x_mean(iScatter,1) = mean(data_x(iScatter,:));
+            data_y_mean(iScatter,1) = mean(data_y(iScatter,:));
+        end
+    end
+    
     
     
     
     %% ----------------------------------------------------------------- %%
     %% PLOT THE DATA
-    % Pre-allocate a vector for the handle to each line
+    % Pre-allocate a vector for the handle to each scatter
     hScatter = cell(numScatterToPlot,1);
+    hScatter_mean = cell(numScatterToPlot,1);
     %hLine = zeros(numScatterToPlot,1);
     
     % Plot the scatter data
@@ -705,6 +741,8 @@ function [ ] = visualise_plotParetoFrontAsScatter( hAxes , data_x , data_y , var
         else
             hScatter{iLine,1} = scatter( hAxes, data_x(iLine,:), data_y(iLine,:) , 'MarkerEdgeColor' , thisColour , 'LineWidth' , thisLineWidth , 'marker' , thisMarker);
         end
+        hScatter_mean{iLine,1} = scatter( hAxes, data_x_mean(iLine,1), data_y_mean(iLine,1) , 'MarkerEdgeColor' , thisColour , 'LineWidth' , 2*thisLineWidth , 'SizeData' , 72*4 , 'marker' , 'x');
+        
     end
     hold off;
     
@@ -802,6 +840,10 @@ function [ ] = visualise_plotParetoFrontAsScatter( hAxes , data_x , data_y , var
         % Add the display name to each handle
         for iLine = 1:numScatterToPlot
             hScatter{iLine,1}.DisplayName = legendStrings{iLine,1};
+        end
+        for iLine = 1:numScatterToPlot
+            hScatter_mean{iLine,1}.DisplayName = '';
+            hScatter_mean{iLine,1}.Annotation.LegendInformation.IconDisplayStyle = 'off';        % OPTIONS: 'on' , 'off' , 'children'
         end
         
         % Create the legnend

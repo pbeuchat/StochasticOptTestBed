@@ -8,6 +8,26 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
 %
 %  DESCRIPTION: > ...
 % ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
+
 
     % Set the return flag to "false", and if we make it to the end of this
     % function it will be set to "true"
@@ -107,6 +127,9 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         
         % Get the Disturbance Coordinator object for this worker
         thisDistCoord = obj.distCoordArray(iWorker,1);
+        
+        % Get the total number of workers
+        thisTotalNumWorkers = obj.evalMulti_numWorkers;
         
         
         %% LEGACY CODE
@@ -208,7 +231,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
             progBarWidthPer10Percent = 5;
             progBarWidth = 10 * progBarWidthPer10Percent;
             progBarPercentPerMark = 100/progBarWidth;
-            disp([' Progress bar of the time horizon for: Worker# ',num2str(iWorker,'%5d'),', and Realisation #',num2str(iRealisation,'%5d'),' -out of- ',num2str(thisNumRealisations)]);
+            disp([' Time horizon progress for:   Worker # ',num2str(iWorker,'%5d'),' -out of- ',num2str(thisTotalNumWorkers,'%5d'),',   and Realisation #',num2str(iRealisation,'%5d'),' -out of- ',num2str(thisNumRealisations)]);
             fprintf('0');
             for iTemp = 1:10
                 for iTemp = 1:progBarWidthPer10Percent-1
@@ -265,6 +288,11 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
                 % Get the disturbance statisitcs for this time
                 if flag_getPredictions
                     this_prediction = getPredictions( obj.distCoord , statsRequired_mask , this_time.index , double(timeHorizon) );
+                    if obj.flag_deterministic
+                        if all( ismember( {'mean','cov'} , fields(this_prediction) ) )
+                            this_prediction.cov = this_prediction.mean * this_prediction.mean';
+                        end
+                    end
                 else
                     this_prediction = [];
                 end

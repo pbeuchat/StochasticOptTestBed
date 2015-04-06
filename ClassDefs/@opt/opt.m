@@ -16,9 +16,25 @@ classdef opt < handle
 %                   - stage cost
 %                   - infomation about constraint satisfaction
 % ----------------------------------------------------------------------- %
-% The "< handle" syntax means that "ProgressModelEngine" is a subclass of
-% the "handle" superclass. Where the "handle" class is a default MATLAB
-% class
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
 
 
     properties(Hidden,Constant)
@@ -72,6 +88,16 @@ classdef opt < handle
     methods (Static = true , Access = public)
         
         [return_x , return_objVal, return_lambda, flag_solvedSuccessfully ] = solveQP_viaGurobi( H, f, c, A_ineq, b_ineq, A_eq, b_eq, inputModelSense, verboseOptDisplay );
+        
+        [Anew, bnew, cnew, Knew, sdd_2_psd , r_for_psd_start, r_for_psd_end] = convert_sedumiSDP_2_sedumiSDDP(A_in,b_in,c_in,K_in);
+        
+        [flag_success, A_ineq, b_ineq, A_eq, b_eq, lb, ub, cnew, dd_2_psd, f_per_psd_start, f_per_psd_end, time_conversion_elaspsed] = convert_sedumiSDP_2_DD_LP(A_in,b_in,c_in,K_in);
+        
+        prob = convert_sedumi2Mosek(A,b,c,K);
+        
+        [constraints] = create_DD_constraint_for_Yalmip(P);
+        
+        [constraints] = create_SDD_constraint_for_Yalmip(P);
         
     end
     % END OF: "methods (Static = true , Access = public)"

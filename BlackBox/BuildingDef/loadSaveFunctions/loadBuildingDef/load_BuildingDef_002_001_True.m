@@ -1,10 +1,6 @@
-%  ---------------------------------------------------------------------  %
-%  ---------------------------------------------------------------------  %
-%  ---------     load_BuildingDef_002_001_True.m
-%  ---------------------------------------------------------------------  %
-%  ---------------------------------------------------------------------  %
 function [B , returnX0 , returnStateDefObject, returnConstraintParams, returnCostDefObject, returnV, returnTmax , returnDims] = load_BuildingDef_002_001_True( inputBuildingIdentifierString, bbFullPath , inputSysOptions )
-
+%  load_BuildingDef_002_001_True.m
+% ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
 %  GOAL:        Black-Box Simulation-Based Test-Bed for Building Control
@@ -14,7 +10,25 @@ function [B , returnX0 , returnStateDefObject, returnConstraintParams, returnCos
 %               Capacitance Modeling for Model Predictive Control.
 %               Copyright (C) 2013  Automatic Control Laboratory, ETH Zurich.
 %               For more infomation check: www.brcm.ethz.ch.
-%main
+% ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
 
 
 %% THIS FUNCTION SHOULD PERFORM THE FOLLOWING
@@ -49,6 +63,7 @@ flags_EHFModelsToInclude.Radiators           = true;
 flags_EHFModelsToInclude.reconstructModel    = false;
 
 B = get_BuildingDef( inputBuildingIdentifierString , flags_EHFModelsToInclude , bbFullPath );
+disp( ' DEBUGGING: If this is displayed then I was wrong :-( #06' );
 
 
 %% --------------------------------------------------------------------- %%
@@ -246,8 +261,10 @@ internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 
 
 %x0 = 22.5*internalStates + 16 * ~internalStates;
 %x0 = 22.4*internalStates + 16 * ~internalStates;
-x0 = 22.0*internalStates + 16 * ~internalStates;
+x0 = 22.2*internalStates + 16 * ~internalStates;
+%x0 = 22.0*internalStates + 16 * ~internalStates;
 %x0 = 21.5*internalStates + 16 * ~internalStates;
+%x0 = 21.0*internalStates + 16 * ~internalStates;
 %x0 = 20.0*internalStates + 16 * ~internalStates;
 %x0 = 19.0*internalStates + 16 * ~internalStates;
 %x0 = 30*internalStates + 16 * ~internalStates;
@@ -311,15 +328,15 @@ constraintsByHand.x_rect_upper = 25 * ones( n_x , 1);
 
 % For the min and max on each input
 %   (assuming they are all radiators)
-u_radiator_min = 0;
-u_radiator_max = 22;
+u_radiator_min = 2;
+%u_radiator_max = 18.75;
+u_radiator_max = 25;
 constraintsByHand.u_rect_lower = u_radiator_min * ones( n_u , 1);
 constraintsByHand.u_rect_upper = u_radiator_max * ones( n_u , 1);
 
 % For the coupling resourse constraint
 constraintsByHand.u_poly_A = sparse( ones(1,n_u) , 1:n_u , ones(n_u,1) , 1 , n_u , n_u );
 constraintsByHand.u_poly_b = n_u * u_radiator_max * 0.75;
-
 constraintsByHand.u_poly_label = { 'resource' };
 
 

@@ -1,0 +1,8 @@
+identifier,description,area,volume,group
+Z0001,Zone01_Office,75,300,ZoneGrp_EG_N
+Z0002,Zone02_Office,50,200,ZoneGrp_EG_SE
+Z0003,Zone03_Office,25,100,ZoneGrp_EG_SW
+Z0004,Zone04_Office,37.5,112.5,ZoneGrp_OG_NW
+Z0005,Zone05_Office,37.5,112.5,ZoneGrp_OG_NE
+Z0006,Zone06_Office,25,75,ZoneGrp_OG_SE
+Z0007,Zone07_Office,50,150,ZoneGrp_OG_SW

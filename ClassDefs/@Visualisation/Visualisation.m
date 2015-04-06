@@ -1,5 +1,5 @@
 classdef Visualisation < handle
-% This class interfaces the disturbance and system with the controller
+% This class interfaces plots things
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
@@ -7,6 +7,26 @@ classdef Visualisation < handle
 %
 %  DESCRIPTION: > 
 % ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
+
 
 
     properties(Hidden,Constant)
@@ -17,16 +37,17 @@ classdef Visualisation < handle
     properties(Constant)
         %colourArrayLength@double = 6;
         %colourArrayDefault@cell = {'-b','-r','-g','-c','-m','-k'};
-        colourArrayLength@double = 8;
+        colourArrayLength@double = 6;
         colourArrayDefault@cell = {   [228, 26 , 28 ]/255      ;...     % RED
                                       [55 , 126, 184]/255      ;...     % BLUE
                                       [152, 78 , 163]/255      ;...     % PURPLE
                                       [255, 127, 0  ]/255      ;...
                                       [77 , 175, 74 ]/255      ;...
-                                      [255, 255, 51 ]/255      ;...
-                                      [166, 86 , 40 ]/255      ;...
-                                      [247, 129, 191]/255       ...
-                                   };
+                                      [204, 204, 0  ]/255      ;...
+                                  };
+%                                       [166, 86 , 40 ]/255      ;...
+%                                       [247, 129, 191]/255       ...
+%                                    };
         markerArrayLength@double = 13;
         markerArrayDefault@cell = {'o','+','*','.','x','square','diamond','^','v','<','>','pentagram','hexagram'};
         markerNoneString@string = 'none';
@@ -107,6 +128,8 @@ classdef Visualisation < handle
         [ ] = visualise_plotMultipleHistogram( hAxes , data_y , varargin );
         
         [] = visualise_plotParetoFrontAsScatter( hAxes , data_x , data_y , thisPlotOptions  );
+        
+        [] = visualise_plotParetoFrontSummary( hAxes , data_x , data_y , thisPlotOptions  );
         
         function returnColour = getDefaultColourForIndex( inputIndex )
             thisIndex = mod(inputIndex-1, Visualisation.colourArrayLength ) + 1;
