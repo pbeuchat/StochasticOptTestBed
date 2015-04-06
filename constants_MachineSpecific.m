@@ -40,7 +40,7 @@ classdef constants_MachineSpecific
         saveDataPath = '/Users/pbeuchat/Documents/ETHZ_2014_PhD/L4G/Code/L4G_BuildingTestEnvironment/Data/';
         
         %% Path where the PRIVATE controller class defs are stored
-        privateControllerClasseDefsPath = '/Users/pbeuchat/Desktop/';
+        privateControllerClasseDefsPath = '/Users/pbeuchat/BitBucketRep/StochOptTestBed_ADPControllers';
         
         
     end %properties(Constant)

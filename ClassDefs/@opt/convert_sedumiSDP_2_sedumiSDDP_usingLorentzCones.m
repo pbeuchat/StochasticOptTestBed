@@ -1,4 +1,4 @@
-function [Anew, bnew, cnew, Knew, sdd_2_psd, r_per_psd_start, r_per_psd_end] = convert_sedumiSDP_2_SDDP_usingLorentzCones(A_in,b_in,c_in,K_in)
+function [Anew, bnew, cnew, Knew, sdd_2_psd, r_per_psd_start, r_per_psd_end] = convert_sedumiSDP_2_sedumiSDDP_usingLorentzCones(A_in,b_in,c_in,K_in)
 % Defined for the "opt" class, this function takes a Semi-definite program
 % given in the standard SeDuMi format and converts it to a SeDuMi format
 % where the positive semi-definite (psd) variables have been 

@@ -1,4 +1,4 @@
-function [Anew, bnew, cnew, Knew, sdd_2_psd, r_per_psd_start, r_per_psd_end] = convert_sedumiSDP_2_SDDP_usingRotLorentzCones(A_in,b_in,c_in,K_in)
+function [Anew, bnew, cnew, Knew, sdd_2_psd, r_per_psd_start, r_per_psd_end] = convert_sedumiSDP_2_sedumiSDDP_usingRotLorentzCones(A_in,b_in,c_in,K_in)
 % Defined for the "opt" class, this function takes a Semi-definite program
 % given in the standard SeDuMi format and converts it to a SeDuMi format
 % where the positive semi-definite (psd) variables have been 
@@ -31,7 +31,7 @@ function [Anew, bnew, cnew, Knew, sdd_2_psd, r_per_psd_start, r_per_psd_end] = c
 
 %% --------------------------------------------------------------------- %%
 %% 0) GET THE TIME AT THE START OF PERFORMING THE CONVERSION
-time_conversion_start = clock;
+%time_conversion_start = clock;
 
 
 %% --------------------------------------------------------------------- %%
@@ -396,11 +396,11 @@ sdd_2_psd = map_r_to_psd;
 
 %% --------------------------------------------------------------------- %%
 %% 99) GET THE TIME AT THE END, AND DISPLAY THE ELASPSED TIME
-time_conversion_end = clock;
+%time_conversion_end = clock;
 
-time_conversion_elaspsed = etime(time_conversion_end,time_conversion_start);
+%time_conversion_elaspsed = etime(time_conversion_end,time_conversion_start);
 
-disp([' ... INFO: The SeDuMi formulation was converted form SDP to SDD-SOS in ',num2str(time_conversion_elaspsed),' seconds']);
+%disp([' ... INFO: The SeDuMi formulation was converted form SDP to SDD-SOS in ',num2str(time_conversion_elaspsed),' seconds']);
 
 
 % ----------------------------------------------------------------------- %
