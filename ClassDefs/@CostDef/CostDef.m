@@ -31,7 +31,7 @@ classdef CostDef < handle
 
     properties(Hidden,Constant)
         % Number of properties required for object instantation
-        n_properties@uint64 = uint64(4);
+        n_properties@uint64 = uint64(5);
         % Name of this class for displaying relevant messages
         thisClassName@string = 'CostDef';
     end
@@ -59,6 +59,9 @@ classdef CostDef < handle
         % The array of "Cost Components"
         costComponentsArray@CostComponent;
         
+        % The scaling for each component
+        costComponentScaling@double;
+        
         % The number of sub-systems defined directly from the "stateDef"
         % odject
         % It is IMPORTANT to use this property instead of
@@ -76,7 +79,7 @@ classdef CostDef < handle
         % Define functions directly implemented here:
         % -----------------------------------------------
         % FUNCTION: the CONSTRUCTOR method for this class
-        function obj = CostDef( inputStateDef , inputSubCosts_num , inputSubCosts_label , inputCostComponentsArray )
+        function obj = CostDef( inputStateDef , inputSubCosts_num , inputSubCosts_label , inputCostComponentsArray, inputCostComponentScaling )
             % Check if number of input arguments is correct
             if nargin ~= obj.n_properties
                 %fprintf(' ... ERROR: The Constructor for the %s class requires %d argument/s for object creation.' , obj.thisClassName , obj.n_properties);
@@ -100,6 +103,7 @@ classdef CostDef < handle
                 inputSubCosts_num = 0;
                 inputSubCosts_label = cell(0,1);
                 inputCostComponentsArray = [];
+                inputCostComponentScaling = 0;
             else
                 % And check that they are the right format
                 % Check that the "number" specified is a "uint32" scalar
@@ -127,6 +131,15 @@ classdef CostDef < handle
                     disp(['            size(inputCostComponentsArray)  = ',num2str(size(inputCostComponentsArray,1)),' -by- ',num2str(size(inputCostComponentsArray,1)) ]);
                     disp(['            expected size()                 = ',num2str(inputSubCosts_num),' -by- 1' ]);
                 end
+                % Check that the "CostComponentScaling" is a the correct
+                % type and also of the same size
+                if ~isfloat(inputCostComponentScaling) || ~( (length(inputCostComponentScaling) == inputSubCosts_num) && isvector(inputCostComponentScaling) )
+                    disp( ' ... ERROR: the "inputCostComponentScaling" for specifying the ratio used to combine the cost components must be ');
+                    disp('             of data type "float" (ie. double or single) and must have a size that agrees with "inputSubCosts_num"');
+                    disp(['            class(inputCostComponentsArray) = ',class(inputCostComponentScaling) ]);
+                    disp(['            size(inputCostComponentsArray)  = ',num2str(size(inputCostComponentScaling,1)),' -by- ',num2str(size(inputCostComponentScaling,1)) ]);
+                    disp(['            expected size()                 = ',num2str(inputSubCosts_num),' -by- 1' ]);
+                end
                 
             end
 
@@ -138,6 +151,7 @@ classdef CostDef < handle
             obj.subCosts_num            = inputSubCosts_num;
             obj.subCosts_label          = inputSubCosts_label;
             obj.costComponentsArray     = inputCostComponentsArray;
+            obj.costComponentScaling    = inputCostComponentScaling;
             
             obj.n_ss                    = inputStateDef.n_ss;
             
@@ -176,8 +190,10 @@ classdef CostDef < handle
             % Iterate through the number of Cost Components
             for iCost = 1 : obj.subCosts_num
                 % Compute the cost for this component
-                [ returnCost( iCost+1 , 1 ) , thisCostPerSubSystem ] = computeCostComponent( obj.costComponentsArray(iCost,1) , x , u , xi , currentTime );
-                returnCostPerSubSystem( iCost+1 , : ) = thisCostPerSubSystem';
+                [ thisCostForComponent , thisCostPerSubSystem ] = computeCostComponent( obj.costComponentsArray(iCost,1) , x , u , xi , currentTime );
+                % Apply the cost component scaling
+                returnCost( iCost+1 , 1 ) = thisCostForComponent * obj.costComponentScaling(iCost);
+                returnCostPerSubSystem( iCost+1 , : ) = thisCostPerSubSystem' .* obj.costComponentScaling(iCost);
             end
             % Put in the total as the sum of the components
             returnCost(1,1) = sum( returnCost(2:obj.subCosts_num+1,1) );

@@ -305,7 +305,7 @@ disp('     -> Generate constraint description');
 % hyper-rectangle constraints, but is return as a dense matrix
 
 % Initialise the stuct for inserting the constraints
-constraintsParameters = struct();
+%constraintsParameters = struct();
 
 
 
@@ -328,7 +328,7 @@ constraintsByHand.x_rect_upper = 25 * ones( n_x , 1);
 
 % For the min and max on each input
 %   (assuming they are all radiators)
-u_radiator_min = 2;
+u_radiator_min = 0;
 %u_radiator_max = 18.75;
 u_radiator_max = 25;
 constraintsByHand.u_rect_lower = u_radiator_min * ones( n_u , 1);
@@ -430,14 +430,15 @@ costsByHand.subCosts_label    = {'energy';'comfort'};
 
 costComponents_num      = uint32(2);
 costComponents_label    = {'energy';'comfort'};
-costComponents_scaling  = ones( costComponents_num , 1);
+%costComponents_scaling  = ones( costComponents_num , 1);
+costComponents_scaling  = [ 5e-4 ; 1 ];
 
 % The cost components should be individually defined to allow for clear
 % separation of the costs
 
-% NOTE: can't instatiate an empty array of the correct type because they
-% could all be different types inherritting from the same "CostComponent",
-% super class
+% NOTE: difficult to instatiate an empty array of the correct type because
+% they could all be different types inherritting from the same
+% "CostComponent", super class
 %costComponentArray = CostComponent.empty(costComponents_num,0);
 clear costComponentArray;
 
@@ -472,7 +473,7 @@ costComponentArray(2,1) = CostComponent_PerSubSystem( costComponentArray_comfort
 
 % Then the cost components should be wrappen together into a "Cost
 % Definition" object
-costDefObject = CostDef( stateDefObject , costComponents_num , costComponents_label , costComponentArray );
+costDefObject = CostDef( stateDefObject , costComponents_num , costComponents_label , costComponentArray , costComponents_scaling );
 
 
 
