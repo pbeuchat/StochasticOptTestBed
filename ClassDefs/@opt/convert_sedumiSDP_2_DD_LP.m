@@ -1,4 +1,4 @@
-function [flag_success, A_ineq, b_ineq, A_eq, b_eq, lb, ub, cnew, dd_2_psd, f_per_psd_start, f_per_psd_end, time_conversion_elaspsed] = convert_sedumiSDP_2_DD_LP(A_in,b_in,c_in,K_in)
+function [flag_success, cnew, A_ineq, b_ineq, A_eq, b_eq, lb, ub, dd_2_psd, f_per_psd_start, f_per_psd_end, time_conversion_elaspsed] = convert_sedumiSDP_2_DD_LP(A_in,b_in,c_in,K_in)
 % Defined for the "opt" class, this function takes a Semi-definite program
 % given in the standard SeDuMi format and converts it to a SeDuMi format
 % where the positive semi-definite (psd) variables have been 
@@ -238,6 +238,9 @@ end
 %% 4a) COMPUTE THE TOTAL LENGTH OF THE NEW DECISION VECTOR
 x_length = abs_for_psd_end;
 
+% And compute the length of the "abs" variables introduced
+abs_for_psd_length = abs_for_psd_end - abs_for_psd_start + 1;
+
 
 %% --------------------------------------------------------------------- %%
 %% 5) NOW BUILD A "per psd" MATRIX TO CONVERT THE "f" VARIABLES TO THE "s"
@@ -448,8 +451,25 @@ A_new_f = A_in_s * map_f_to_psd_all;
 c_new_f = (c_in_s' * map_f_to_psd_all)';
 
 % Finally build the new "A" and "c"
-A_eq = [ A_in(:,1:l_end) , A_new_f ];
-cnew = [ c_in(1:l_end,1) ; c_new_f ];
+A_eq = [ A_in(:,1:l_end) , A_new_f , sparse([],[],[],size(A_new_f,1),abs_for_psd_length,0) ];
+cnew = [ c_in(1:l_end,1) ; c_new_f ; sparse([],[],[],abs_for_psd_length,1,0)];
+
+
+% Check that the width of "A_eq" is correct
+checkWidth_A_eq  = (x_length == size(A_eq,2) );
+if ~checkWidth_A_eq
+    disp( ' .. ERROR: The "A_eq" matrix built had the wrond size:' );
+    disp(['           size(A_eq,2) = ',num2str(size(A_eq,2)),', is was expected to be size(A_eq,2) = ',num2str(x_length) ]);
+    error(bbConstants.errorMsg);
+end
+
+% Check also that the length of "cnew" is correct
+checkWidth_cnew  = (x_length == length(cnew) );
+if ~checkWidth_cnew
+    disp( ' .. ERROR: The "cnew" matrix built had the wrond size:' );
+    disp(['           length(cnew) = ',num2str(length(cnew)),', is was expected to be length(cnew) = ',num2str(x_length) ]);
+    error(bbConstants.errorMsg);
+end
 
 
 %% --------------------------------------------------------------------- %%
@@ -476,8 +496,8 @@ A_ineq = [  sparse([],[],[],sum(A_ineq_numRows_for_dd),l_end,0)  ,  blkdiag( A_i
 b_ineq = sparse([],[],[],sum(A_ineq_numRows_for_dd),1,0);
 
 % Check that the width of "A_ineq" is correct
-checkWidth  = (x_length == size(A_ineq,2) );
-if ~checkWidth
+checkWidth_A_ineq  = (x_length == size(A_ineq,2) );
+if ~checkWidth_A_ineq
     disp( ' .. ERROR: The "A_ineq" matrix built had the wrond size:' );
     disp(['           size(A_ineq,2) = ',num2str(size(A_ineq,2)),', is was expected to be size(A_ineq,2) = ',num2str(x_length) ]);
     error(bbConstants.errorMsg);

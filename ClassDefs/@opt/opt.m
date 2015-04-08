@@ -90,6 +90,11 @@ classdef opt < handle
         % --------------------------------------------------------------- %
         % FOR SOLVING QUADRATIC PROGRAMS (QP)
         % FUNCTION: solves a generic QP via Gurobi
+        [return_x , return_objVal, return_lambda, flag_solvedSuccessfully ] = solveLP_viaGurobi( f, c, A_ineq, b_ineq, A_eq, b_eq, lb, ub, inputModelSense, verboseOptDisplay );
+        
+        % --------------------------------------------------------------- %
+        % FOR SOLVING QUADRATIC PROGRAMS (QP)
+        % FUNCTION: solves a generic QP via Gurobi
         [return_x , return_objVal, return_lambda, flag_solvedSuccessfully ] = solveQP_viaGurobi( H, f, c, A_ineq, b_ineq, A_eq, b_eq, inputModelSense, verboseOptDisplay );
         
         % --------------------------------------------------------------- %
@@ -105,11 +110,14 @@ classdef opt < handle
         % FUNCTION: sovles a SDP via the specified solve and relaxation
         [return_x , return_objVal, return_lambda, flag_solvedSuccessfully, return_time ] = solveSDP_sedumiInputFormat_withRelaxationOption( A_in_sedumi, b_in_sedumi, c_in_sedumi, K_in_sedumi, solverToUse, sdpRelaxation, verboseOptDisplay )
         % FUNCTION: converts a SDP to a relaxed Scaled Diagonally Dominant
-        % formulation (becomes an SOCP, with Roated Lorentz variables)
+        % formulation (becomes an SOCP, with Rotated Lorentz variables)
         [Anew, bnew, cnew, Knew, sdd_2_psd , r_for_psd_start, r_for_psd_end] = convert_sedumiSDP_2_sedumiSDDP_usingRotLorentzCones(A_in,b_in,c_in,K_in);
+        % FUNCTION: converts a SDP to a relaxed Scaled Diagonally Dominant
+        % formulation (becomes an SOCP, with Lorentz variables)
+        [Anew, bnew, cnew, Knew, sdd_2_psd , q_for_psd_start, q_for_psd_end] = convert_sedumiSDP_2_sedumiSDDP_usingLorentzCones(A_in,b_in,c_in,K_in);
         % FUNCTION: converts a SDP to a relaxed Diagonally Dominant
         % formulation
-        [flag_success, A_ineq, b_ineq, A_eq, b_eq, lb, ub, cnew, dd_2_psd, f_per_psd_start, f_per_psd_end, time_conversion_elaspsed] = convert_sedumiSDP_2_DD_LP(A_in,b_in,c_in,K_in);
+        [flag_success, cnew, A_ineq, b_ineq, A_eq, b_eq, lb, ub, dd_2_psd, f_per_psd_start, f_per_psd_end, time_conversion_elaspsed] = convert_sedumiSDP_2_DD_LP(A_in,b_in,c_in,K_in);
         
         % FUNCTION: convert a generic SDP from Sedumi to Mosek format
         prob = convert_sedumi2Mosek(A,b,c,K);

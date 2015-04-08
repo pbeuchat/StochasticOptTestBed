@@ -263,8 +263,8 @@ for i_psd = 1:num_psd_variable
             M_index_i(1,this_r_index+3) = iIndex;
             M_index_j(1,this_r_index+3) = jIndex;
             
-            M_scaling(1,this_r_index+1) = 1;
-            M_scaling(1,this_r_index+2) = 2;
+            M_scaling(1,this_r_index+1) = sqrt(2);%2;%1;
+            M_scaling(1,this_r_index+2) = sqrt(2);%1;%2;
             M_scaling(1,this_r_index+3) = 1;
             
             this_r_index = this_r_index + 3;
@@ -321,8 +321,17 @@ for i_psd = 1:num_psd_variable
             else
                 % Get a vector showing which elements in the "r" variables
                 % correspond to the current index in the "psd" variable
-                this_M_mask = bsxfun( @or , bsxfun(@and,M_index_i==i_row,M_index_j==j_col) , bsxfun(@and,M_index_i==j_col,M_index_j==i_row) );
+                %this_M_mask = bsxfun( @or , bsxfun(@and,M_index_i==i_row,M_index_j==j_col) , bsxfun(@and,M_index_i==j_col,M_index_j==i_row) );
+                % NOTE: for speed up this could be done slightly better
+                %       exploiting the fact that M_index_i/j was built with
+                %       "j" always greater than "i"
+                if j_col>i_row
+                    this_M_mask = bsxfun(@and,M_index_i==i_row,M_index_j==j_col);
+                else
+                    this_M_mask = bsxfun(@and,M_index_i==j_col,M_index_j==i_row);
+                end
                 this_M_index = find(this_M_mask);
+                
                 
                 % Put the details into the map (note: we are assuming here
                 % that find will only return a vector of size 1)

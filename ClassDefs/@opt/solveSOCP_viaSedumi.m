@@ -134,7 +134,7 @@ try
     
     %% DISPLAY THE RESULT IF REQUESTED
     if verboseOptDisplay
-        disp(return_x);
+        %disp(return_x);
     end
     
     %% CHECK IF THE PROBLEM WAS SOLVED SUCCESSFULLY
@@ -161,7 +161,7 @@ try
         flag_solvedSuccessfully = true;
     else
         % Set the return variable to placeholder values
-        return_x                    = NaN * ones(length(f),1);
+        return_x                    = NaN * ones(return_x_expected_length,1);
         return_objVal               = NaN;
         return_lambda               = [];
         flag_solvedSuccessfully     = false;
@@ -170,36 +170,8 @@ try
         
         % --------------------------------------------------------------- %
         %% Interpret the exit conditions
-        switch result.status
-            case 'LOADED'           % Code: 1
-                disp('Model is loaded, but no solution information is available.');
-            case 'OPTIMAL'          % Code: 2
-                disp('Model was solved to optimality (subject to tolerances), and an optimal solution is available.');
-            case 'INFEASIBLE'       % Code: 3
-                disp('Model was proven to be infeasible.');
-            case 'INF_OR_UNBD'      % Code: 4
-                disp('Model was proven to be either infeasible or unbounded. To obtain a more definitive conclusion, set the DualReductions parameter to 0 and reoptimize.');
-            case 'UNBOUNDED'        % Code: 5
-                disp('Model was proven to be unbounded. Important note: an unbounded status indicates the presence of an unbounded ray that allows the objective to improve without limit. It says nothing about whether the model has a feasible solution. If you require information on feasibility, you should set the objective to zero and reoptimize.');
-            case 'CUTOFF'           % Code: 6
-                disp('Optimal objective for model was proven to be worse than the value specified in the Cutoff parameter. No solution information is available.');
-            case 'ITERATION_LIMIT'  % Code: 7
-                disp('Optimization terminated because the total number of simplex iterations performed exceeded the value specified in the IterationLimit parameter, or because the total number of barrier iterations exceeded the value specified in the BarIterLimit parameter.');
-            case 'NODE_LIMIT'       % Code: 8
-                disp('Optimization terminated because the total number of branch-and-cut nodes explored exceeded the value specified in the NodeLimit parameter.');
-            case 'TIME_LIMIT'       % Code: 9
-                disp('Optimization terminated because the time expended exceeded the value specified in the TimeLimit parameter.');
-            case 'SOLUTION_LIMIT'   % Code: 10
-                disp('Optimization terminated because the number of solutions found reached the value specified in the SolutionLimit parameter.');
-            case 'INTERRUPTED'      % Code: 11
-                disp('Optimization was terminated by the user.');
-            case 'NUMERIC'          % Code: 12
-                disp('Optimization was terminated due to unrecoverable numerical difficulties.');
-            case 'SUBOPTIMAL'       % Code: 14
-                disp('Unable to satisfy optimality tolerances; a sub-optimal solution is available.');
-            case 'IN_PROGRESS'      % Code: 15
-                disp('A non-blocking optimization call was made (by setting the NonBlocking parameter to 1 in a Gurobi Compute Server environment), but the associated optimization run is not yet complete.');
-        end
+        % ... SeDuMi does not return much information that can be
+        % interpretted...
 
     end
     
@@ -217,7 +189,7 @@ catch matlabExceptionObject
     disp(exceptionReport);
     
     % Set the return variable to placeholder values
-    return_x                    = NaN * ones(length(f),1);
+    return_x                    = NaN * ones(return_x_expected_length,1);
     return_objVal               = NaN;
     return_lambda               = [];
     flag_solvedSuccessfully     = false;

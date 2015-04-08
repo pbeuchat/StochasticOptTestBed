@@ -1,4 +1,4 @@
-function [return_x , return_objVal, return_lambda, flag_solvedSuccessfully, retur_time ] = solveSDP_sedumiInputFormat_withRelaxationOption( A_in_sedumi, b_in_sedumi, c_in_sedumi, K_in_sedumi, solverToUse, sdpRelaxation, verboseOptDisplay )
+function [return_x , return_objVal, return_lambda, flag_solvedSuccessfully, return_time ] = solveSDP_sedumiInputFormat_withRelaxationOption( A_in_sedumi, b_in_sedumi, c_in_sedumi, K_in_sedumi, solverToUse, sdpRelaxation, verboseOptDisplay )
 % Defined for the "opt" class, this function solves a standard SDP.
 % The formulation of the SDP is expected to be input in the SeDuMi format.
 % There is an optional specification for solving the SDP via a relaxation
@@ -122,6 +122,7 @@ if strcmpi( sdpRelaxation , 'none' )
 %% ELSEIF: the "sdd" relaxation was requested
 elseif strcmpi( sdpRelaxation , 'sdd' )
     % Convert the SeDuMi SDP formulation to a SeDuMi SOCP formulation
+    %[A_socp_sedumi, b_socp_sedumi, c_socp_sedumi, K_socp_sedumi, sdd_2_psd , index_per_psd_start, index_per_psd_end] = opt.convert_sedumiSDP_2_sedumiSDDP_usingLorentzCones(A_in_sedumi,b_in_sedumi,c_in_sedumi,K_in_sedumi);
     [A_socp_sedumi, b_socp_sedumi, c_socp_sedumi, K_socp_sedumi, sdd_2_psd , index_per_psd_start, index_per_psd_end] = opt.convert_sedumiSDP_2_sedumiSDDP_usingRotLorentzCones(A_in_sedumi,b_in_sedumi,c_in_sedumi,K_in_sedumi);
     % If the selected solver is NOT "sedumi" then convert as requested
     if strcmpi( solverToUse , 'sedumi' )
@@ -148,7 +149,7 @@ elseif strcmpi( sdpRelaxation , 'sdd' )
 %% ELSEIF: the "dd" relaxation was requested
 elseif strcmpi( sdpRelaxation , 'dd' )
     % Convert the SeDuMi SDP formulation to a generic LP formulation
-    [flag_success, A_ineq, b_ineq, A_eq, b_eq, lb, ub, cnew, dd_2_psd, f_per_psd_start, f_per_psd_end, time_conversion_elaspsed] = opt.convert_sedumiSDP_2_DD_LP(A_in_sedumi,b_in_sedumi,c_in_sedumi,K_in_sedumi);
+    [flag_success, cnew, A_ineq, b_ineq, A_eq, b_eq, lb, ub, dd_2_psd, index_per_psd_start, index_per_psd_end, time_conversion_elaspsed] = opt.convert_sedumiSDP_2_DD_LP(A_in_sedumi,b_in_sedumi,c_in_sedumi,K_in_sedumi);
     % If the conversion was not successful then let the user know
     if ~flag_success
         disp( ' ... ERROR: converting the SeDuMi format Semi-Definte Program to a Diagonally Dominant' );
@@ -203,8 +204,10 @@ elseif strcmpi( sdpRelaxation , 'sdd' )
         %pars_sedumi.stepdif = 0;
         % Silence the output if requested
         options_sedumi.verbose = verboseOptDisplay;
+        
         % PASS TO SEDUMI
         [return_x_socp , return_objVal, return_lambda_socp, flag_solvedSuccessfully] = opt.solveSOCP_viaSedumi( A_socp_sedumi, b_socp_sedumi, c_socp_sedumi, K_socp_sedumi, options_sedumi );
+        
         % Convert the result back to the PSD variables
         num_psd_variables = length( sdd_2_psd );
         % Build the PSD section first
@@ -243,7 +246,7 @@ elseif strcmpi( sdpRelaxation , 'sdd' )
         
     % PASS TO GUROBI
     elseif strcmpi( solverToUse , 'gurobi' )
-        %[mosek_r,mosek_res]     = mosekopt('minimize',mosek_prob);
+        
         
     % ELSE: the specified "solverToUse" was not recognised
     else
@@ -256,10 +259,10 @@ elseif strcmpi( sdpRelaxation , 'dd' )
     
     % If requested to solve the resultant LP with "SeDuMi", then change to
     % solving with "Gurobi"
-    if ~strcmpi( solverToUse , 'sedumi' )
+    if strcmpi( solverToUse , 'sedumi' )
         % If ask to solve a LP with "SeDuMi" that is a little silly
         % Change to solving with "Gurobi" instead
-        solverToUse = gurobi;
+        solverToUse = 'gurobi';
         % Inform the user about the change
         disp( ' ... NOTE: the conversion from an SDP to a LP using the Diagonal Dominance relaxation was successful' );
         disp( '           However, it was requested to solve the LP with "SeDuMi". This seems cumbersome...' );
@@ -268,12 +271,53 @@ elseif strcmpi( sdpRelaxation , 'dd' )
     
     
     %% ---> Solve with "GUROBI" - using "DD" relaxation
-    if ~strcmpi( solverToUse , 'sedumi' )
+    if strcmpi( solverToUse , 'gurobi' )
+        % Set the cost constant to zero
+        tempCostConstant = 0;
+        % The SeDuMi input format implies that the model sense is
+        % minimisation
+        tempModelSense = 'min';
         
+        % PASS TO GUROBI
+        [return_x_lp , return_objVal, return_lambda_lp, flag_solvedSuccessfully ] = opt.solveLP_viaGurobi( cnew, tempCostConstant, A_ineq, b_ineq, A_eq, b_eq, lb, ub, tempModelSense, verboseOptDisplay );
         
+        % Convert the result back to the PSD variables
+        num_psd_variables = length( dd_2_psd );
+        % Build the PSD section first
+        length_psd_variables = sum( K_in_sedumi.s .* K_in_sedumi.s );
+        return_x_psd_portion = zeros(length_psd_variables,1);
+        curr_start_index = 1;        
+        for i_psd = 1:num_psd_variables
+            % Get the size of this "psd" variable
+            this_psd_size = K_in_sedumi.s(i_psd);
+            % Get the range into which to put the "psd" varaible
+            thisRange = curr_start_index:(curr_start_index+this_psd_size*this_psd_size-1);
+            % Use the "sdd_2_psd" mapping to put-in the "psd" varaible
+            return_x_psd_portion(thisRange,1) = dd_2_psd{i_psd,1} * return_x_lp( index_per_psd_start(i_psd)  : index_per_psd_end(i_psd) ,  1 );
+            % Update the index counter
+            curr_start_index = curr_start_index+this_psd_size*this_psd_size;
+        end
+        % Get the portion from above the "socp" variables used for the
+        % relaxation
+        if index_per_psd_start(1) > 1
+            return_x_above = return_x_lp( 1 : (index_per_psd_start(1)-1) , 1 );
+        else
+            return_x_above = zeros(0,1);
+        end
+        % By construction there should be no portion of the decision vector
+        % below "lp" variables
+        
+        % Now build the full return variable
+        return_x = [ return_x_above         ;...
+                     return_x_psd_portion    ...
+                   ];
+    
+    
+    % ELSE: the specified "solverToUse" was not recognised
+    else
+        disp( ' ... ERROR: The specified "solverToUse" was not recognised');
+        error(bbConstants.errorMsg);
     end
-    
-    
     
     
 %% ELSE: the specified "sdpRelation" method was not recognised
@@ -347,14 +391,19 @@ return_lambda = [];
 %% --------------------------------------------------------------------- %%
 %% COMPUTE THE RETURN TIMER RESULTS
 clear returnTime;
-retur_time.convert = etime( time_toConvert_end , time_toConvert_start);
-retur_time.solve   = etime( time_toSolve_end   , time_toSolve_start);
+return_time.convert = etime( time_toConvert_end , time_toConvert_start);
+return_time.solve   = etime( time_toSolve_end   , time_toSolve_start);
 
 %% --------------------------------------------------------------------- %%
 %% SANITY CHECK THAT A DECISION VECTOR OF THE CORRECT SIZE WAS FOUND
 if (length(return_x) ~= return_x_expected_length )
     error(' ... THE SOLUTION VECTOR "x" FROM THE SDP DOES NOT AGREE WITH THE EXPECTED SIZE');
 end
+
+%% --------------------------------------------------------------------- %%
+%% DEBUGGING CODE TO CHECK DIFFERENT METHODS
+%[debug_x , debug_objVal, debug_lambda, debug_solvedSuccessfully, debug_time ] = solveSDP_sedumiInputFormat_withRelaxationOption( A_in_sedumi, b_in_sedumi, c_in_sedumi, K_in_sedumi, 'yalmip', sdpRelaxation, true )
+
 
 
 end  %  <-- END OF FUNCTION

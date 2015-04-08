@@ -1,4 +1,4 @@
-function [Anew, bnew, cnew, Knew, sdd_2_psd, r_per_psd_start, r_per_psd_end] = convert_sedumiSDP_2_sedumiSDDP_usingLorentzCones(A_in,b_in,c_in,K_in)
+function [Anew, bnew, cnew, Knew, sdd_2_psd, q_per_psd_start, q_per_psd_end] = convert_sedumiSDP_2_sedumiSDDP_usingLorentzCones(A_in,b_in,c_in,K_in)
 % Defined for the "opt" class, this function takes a Semi-definite program
 % given in the standard SeDuMi format and converts it to a SeDuMi format
 % where the positive semi-definite (psd) variables have been 
@@ -113,9 +113,9 @@ num_psd_variable = length( s_in );
 % For each "psd" matrix, let "n" denote the size, then (1/2)*(n-1)*n sub
 % matrices are needed to define the equivalent SSD matrix
 
-r_per_psd = 0.5 .* (s_in-1) .* s_in;
+q_per_psd = 0.5 .* (s_in-1) .* s_in;
 
-r_for_psd = 3 * ones( 1 , sum(r_per_psd) );
+q_for_psd = 3 * ones( 1 , sum(q_per_psd) );
 
 
 
@@ -164,12 +164,12 @@ if flag_include_l
     Knew.l = l_in;
 end
 if flag_include_q
-    Knew.q = q_in;
+    Knew.q = [q_in , q_for_psd];
+else
+    Knew.q = q_for_psd;
 end
 if flag_include_r
-    Knew.r = [r_in , r_for_psd];
-else
-    Knew.r = r_for_psd;
+    Knew.r = r_in;
 end
 
 
@@ -190,44 +190,53 @@ else
     l_start = f_end;
     l_end = l_start;
 end
+
+% For the Lorentz variables, index the whole thing and the partitions
+q_start = l_end + 1;
+q_end = q_start + sum(Knew.q) - 1;
+
+
 if flag_include_q
-    q_start = l_end + 1;
-    q_end = q_start + sum(Knew.q) - 1;
+    q_in_start = l_end + 1;
+    q_in_end = q_in_start + sum(q_in) - 1;
 else
-    q_start = l_end;
-    q_end = q_start;
+    q_in_start = l_end;
+    q_in_end = q_in_start;
 end
-% For the Rotated Lorentz variables, index the whole thing and the
-% partitions
-r_start = q_end + 1;
-r_end = r_start + sum(Knew.r) - 1;
+
+q_for_psd_start = q_in_end + 1;
+q_for_psd_end = q_for_psd_start + sum(q_for_psd) - 1;
 
 if flag_include_r
-    r_in_start = q_end + 1;
+    r_start = q_end + 1;
+    r_end = r_start + sum(r_in) - 1;
+    
+    r_in_start = q_in_end + 1;
     r_in_end = r_in_start + sum(r_in) - 1;
 else
-    r_in_start = q_end;
+    r_start = q_end;
+    r_end = r_start;
+    
+    r_in_start = q_in_end;
     r_in_end = r_in_start;
 end
 
-r_for_psd_start = r_in_end + 1;
-r_for_psd_end = r_for_psd_start + sum(r_for_psd) - 1;
 
-% Index also the set of "r" variables introduced per "psd" variable
+% Index also the set of "q" variables introduced per "psd" variable
 % Initialise the variables first
-r_per_psd_start = zeros(num_psd_variable,1);
-r_per_psd_end = zeros(num_psd_variable,1);
-temp_previous_end = r_in_end;
+q_per_psd_start = zeros(num_psd_variable,1);
+q_per_psd_end = zeros(num_psd_variable,1);
+temp_previous_end = q_in_end;
 % Then step through the "psd" variables
 for i_psd = 1:num_psd_variable
-    % Get the number of "r" variable elements for this "i_psd"
-    this_r_length = 3 * r_per_psd(i_psd);
+    % Get the number of "q" variable elements for this "i_psd"
+    this_q_length = 3 * q_per_psd(i_psd);
     % Compute the start
-    r_per_psd_start(i_psd,1) = temp_previous_end + 1;
+    q_per_psd_start(i_psd,1) = temp_previous_end + 1;
     % Compute the end
-    r_per_psd_end(i_psd,1) = r_per_psd_start(i_psd,1) + this_r_length - 1;
+    q_per_psd_end(i_psd,1) = q_per_psd_start(i_psd,1) + this_q_length - 1;
     % Update the temporary variable for passing around the previous end
-    temp_previous_end = r_per_psd_end(i_psd,1);
+    temp_previous_end = q_per_psd_end(i_psd,1);
 end
 
 
@@ -236,7 +245,7 @@ end
 %% 5) NOW BUILD A "per psd" MATRIX TO CONVERT THE "r" VARIABLES TO THE "s"
 
 % Initialise a container for the mapping
-map_r_to_psd = cell( num_psd_variable , 1 );
+map_q_to_psd = cell( num_psd_variable , 1 );
 
 % Step through the "psd" variables
 for i_psd = 1:num_psd_variable
@@ -246,50 +255,63 @@ for i_psd = 1:num_psd_variable
     
     % Get the number of "r" variable elements for this "i_psd"
     this_psd_size = s_in(i_psd);
-    this_r_length = 3 * r_per_psd(i_psd);
+    this_q_length = 3 * q_per_psd(i_psd);
     
     % Initialise the index container
-    M_index_i = zeros(1,this_r_length);
-    M_index_j = zeros(1,this_r_length);
-    M_scaling = zeros(1,this_r_length);
+    M_index_ii = zeros(1,this_q_length);
+    M_scale_ii = zeros(1,this_q_length);
+    
+    M_index_jj = zeros(1,this_q_length);
+    M_scale_jj = zeros(1,this_q_length);
+    
+    M_index_i = zeros(1,this_q_length);
+    M_index_j = zeros(1,this_q_length);
+    M_scale_ij = zeros(1,this_q_length);
     % We will do this with for loops, which should be fast enough for such
     % simple operations
-    this_r_index = 0;
+    this_q_index = 0;
     for iIndex = 1:this_psd_size
         for jIndex = iIndex+1:1:this_psd_size
-            M_index_i(1,this_r_index+1) = iIndex;
-            M_index_j(1,this_r_index+1) = iIndex;
-            M_index_i(1,this_r_index+2) = jIndex;
-            M_index_j(1,this_r_index+2) = jIndex;
-            M_index_i(1,this_r_index+3) = iIndex;
-            M_index_j(1,this_r_index+3) = jIndex;
+            % FOR THE "M_{ii}" TERMS
+            M_index_ii(1,this_q_index+1) =  iIndex;
+            M_index_ii(1,this_q_index+2) =  iIndex;
+            M_scale_ii(1,this_q_index+1) =  0.5*2/sqrt(2);%1;%2/sqrt(2);%0.5;
+            M_scale_ii(1,this_q_index+2) =  0.5*2/sqrt(2);%1;%2/sqrt(2);%0.5;
             
-            M_scaling(1,this_r_index+1) = 1;
-            M_scaling(1,this_r_index+2) = 2;
-            M_scaling(1,this_r_index+3) = 1;
             
-            this_r_index = this_r_index + 3;
+            % FOR THE "M_{jj}" TERMS
+            M_index_jj(1,this_q_index+1) =  jIndex;
+            M_index_jj(1,this_q_index+2) =  jIndex;
+            M_scale_jj(1,this_q_index+1) =  0.5*1/sqrt(2);%1;%1/sqrt(2);%0.5;
+            M_scale_jj(1,this_q_index+2) = -0.5*1/sqrt(2);%-1;%-1/sqrt(2);%-0.5;
+            
+            
+            % FOR THE "M_{ij}" TERMS
+            M_index_i( 1,this_q_index+3)  =  iIndex;
+            M_index_j( 1,this_q_index+3)  =  jIndex;
+            M_scale_ij(1,this_q_index+3)  =  0.5;
+            
+            this_q_index = this_q_index + 3;
         end
     end
     
-    % NOTE: the SeDuMi Rotated Lorentz Constraints enforce the following:
-    %   2*x(1)x(2) >= norm(x(3))^2,  x(1)>=0,  x(2)>=0
-    % But we don't want the factor of "2" so it must be absorbed into one
-    % of the variables, hence the "M_scaling" variable created above
+    % NOTE: the SeDuMi  Lorentz Constraints enforce the following:
+    %   x(1) >= norm( [x(2) ;  x(3)] )
+    % ...
     
     % We would like to create the mapping as sparse
     % Each element on the diagonal of "psd" variable should be summed from
-    % (n-1) elements of the "r" varaibles
+    % 2*(n-1) elements of the "q" varaibles
     % While each element on the off-diagonal should correspond to only 1
-    % element of the "r" variables
+    % element of the "q" variables
     % Hence we expect to have:
-    %   ( n * (n-1) )   +   ( n * (n-1) )
+    %   ( 2 * n * (n-1) )   +   ( n * (n-1) )  =  3*n*(n-1)
     % non-zero elements
     % Hence initialise the indexing variables for building the sparse map:
-    this_nnz = 2 * this_psd_size * (this_psd_size-1);
-    this_map_i = zeros( this_nnz , 1 );
-    this_map_j = zeros( this_nnz , 1 );
-    this_map_s = zeros( this_nnz , 1 );
+    this_nnz   = 3 * this_psd_size * (this_psd_size-1);
+    this_map_i = zeros( 1 , this_nnz );
+    this_map_j = zeros( 1 , this_nnz );
+    this_map_s = zeros( 1 , this_nnz );
     
     % Now step through each element of the "psd" matrix and build the
     % sparse indexing for the map
@@ -307,29 +329,38 @@ for i_psd = 1:num_psd_variable
             if i_row == j_col
                 % Get a vector showing which elements in the "r" variables
                 % correspond to the current index in the "psd" variable
-                this_M_mask = bsxfun(@and,M_index_i==i_row,M_index_j==j_col);
-                this_M_index = find(this_M_mask);
+                this_M_mask_ii = (M_index_ii==i_row);
+                this_M_mask_jj = (M_index_jj==i_row);
+                this_M_index_ii = find(this_M_mask_ii);
+                this_M_index_jj = find(this_M_mask_jj);
                 
                 % Put the details into the map (note: we are assuming here
-                % that find will only return a vector of size 3)
-                this_map_i(curr_map_entry:(curr_map_entry+this_psd_size-1-1),1) = curr_psd_vecIndex;
-                this_map_j(curr_map_entry:(curr_map_entry+this_psd_size-1-1),1) = this_M_index;
-                this_map_s(curr_map_entry:(curr_map_entry+this_psd_size-1-1),1) = M_scaling(this_M_index);
+                % that "find" will only return a vector of size 2*(n-1))
+                this_map_i( 1 , curr_map_entry:(curr_map_entry+2*(this_psd_size-1)-1) )  = curr_psd_vecIndex;
+                this_map_j( 1 , curr_map_entry:(curr_map_entry+2*(this_psd_size-1)-1) )  = [this_M_index_ii , this_M_index_jj];
+                this_map_s( 1 , curr_map_entry:(curr_map_entry+2*(this_psd_size-1)-1) )  = [M_scale_ii(this_M_index_ii) , M_scale_jj(this_M_index_jj)];
                 
                 % Increment the "curr_map_entry" accordingly
-                curr_map_entry = curr_map_entry + this_psd_size - 1;
+                curr_map_entry = curr_map_entry + 2*(this_psd_size - 1);
                 
             else
                 % Get a vector showing which elements in the "r" variables
                 % correspond to the current index in the "psd" variable
-                this_M_mask = bsxfun( @or , bsxfun(@and,M_index_i==i_row,M_index_j==j_col) , bsxfun(@and,M_index_i==j_col,M_index_j==i_row) );
-                this_M_index = find(this_M_mask);
+                % NOTE: for speed up this could be done slightly better
+                %       exploiting the fact that M_index_i/j was built with
+                %       "j" always greater than "i"
+                if j_col>i_row
+                    this_M_mask_ij = bsxfun(@and,M_index_i==i_row,M_index_j==j_col);
+                else
+                    this_M_mask_ij = bsxfun(@and,M_index_i==j_col,M_index_j==i_row);
+                end
+                this_M_index_ij = find(this_M_mask_ij);
                 
                 % Put the details into the map (note: we are assuming here
                 % that find will only return a vector of size 1)
-                this_map_i(curr_map_entry,1) = curr_psd_vecIndex;
-                this_map_j(curr_map_entry,1) = this_M_index;
-                this_map_s(curr_map_entry,1) = M_scaling(this_M_index);
+                this_map_i( 1 , curr_map_entry ) = curr_psd_vecIndex;
+                this_map_j( 1 , curr_map_entry ) = this_M_index_ij;
+                this_map_s( 1 , curr_map_entry ) = M_scale_ij(this_M_index_ij);
                 
                 % Increment the "curr_map_entry" accordingly
                 curr_map_entry = curr_map_entry + 1;
@@ -339,7 +370,7 @@ for i_psd = 1:num_psd_variable
     end
     
     % Now store the mapping
-    map_r_to_psd{i_psd,1} = sparse( this_map_i , this_map_j , this_map_s , this_psd_size*this_psd_size , this_r_length , this_nnz );
+    map_q_to_psd{i_psd,1} = sparse( this_map_i , this_map_j , this_map_s , this_psd_size*this_psd_size , this_q_length , this_nnz );
 
 end
 
@@ -374,15 +405,20 @@ if ~(checkWidth && checkLength)
 end
 
 % Create the full mapping from ALL "r" to ALL "s"
-map_r_to_psd_all = blkdiag( map_r_to_psd{:,1} );
+map_q_to_psd_all = blkdiag( map_q_to_psd{:,1} );
 
 % And hence map the portions of the "A" and "c"
-A_new_r = A_in_s * map_r_to_psd_all;
-c_new_r = (c_in_s' * map_r_to_psd_all)';
+A_new_q = A_in_s * map_q_to_psd_all;
+c_new_q = (c_in_s' * map_q_to_psd_all)';
 
 % Finally build the new "A" and "c"
-Anew = [ A_in(:,1:r_in_end) , A_new_r ];
-cnew = [ c_in(1:r_in_end,1) ; c_new_r ];
+if flag_include_r
+    Anew = [ A_in(:,1:q_in_end) , A_new_q , A_in(:,r_start:r_end) ];
+    cnew = [ c_in(1:q_in_end,1) ; c_new_q ; c_in(r_start:r_end,1) ];
+else
+    Anew = [ A_in(:,1:q_in_end) , A_new_q ];
+    cnew = [ c_in(1:q_in_end,1) ; c_new_q ];
+end
 
 
 %% --------------------------------------------------------------------- %%
@@ -392,7 +428,7 @@ bnew = b_in;
 
 %% --------------------------------------------------------------------- %%
 %% 7) THE "sdd_2_psd" RETURN VARIABLE SHOLUD BE A CELL ARRAY WITH ONE MAPPING PER "psd" VARIABLE
-sdd_2_psd = map_r_to_psd;
+sdd_2_psd = map_q_to_psd;
 
 
 %% --------------------------------------------------------------------- %%

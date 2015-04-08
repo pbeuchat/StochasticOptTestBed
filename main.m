@@ -145,7 +145,7 @@ disturbanceOptions.statsRequired = {'mean','cov','bounds_boxtype'};
 %     T     III  M    M  EEEEE
 % ----------------------------------------------------------------------- %
 timeStart       = 1;
-timeHorizon     = 0.125*24*4;% (24*4) * 4;
+timeHorizon     = 0.25*24*4;% (24*4) * 4;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
@@ -1738,126 +1738,127 @@ currMethodID_forGroupPlotting = 0;
 
 %% ADP Dense P via SDD - DETERMIISTIC (versus gamma)
 
-% % Specify the Group ID and Group Name for grouping the plots
-% currMethodID_forGroupPlotting = currMethodID_forGroupPlotting + 1;
-% currMethodName_forGroupPlotting = 'ADP - Dense P, via SDD';
-% % Add multiple controllers with different cost-component scaling
-% gammaRange = [1.5e-3, 5.0e-4, 0 ];
-% % -----------------------------------
-% % Iterate through the range of cost-component scalings
-% for iGamma = 1:length(gammaRange)
-%     % Get this scaling
-%     thisGamma = gammaRange(iGamma);
-%     % Add a Controller Spec
-%     numCntr = numCntr + 1;
-%     % Mandatory Specifications
-%     cntrSpecs{numCntr}.label            = 'ADP Centralised - Dense P via SDD';
-%     cntrSpecs{numCntr}.legend           = ['ADP - Dense P wSDD - 10-30 - OL, gamma=',num2str(thisGamma,'%-.2e')];
-%     cntrSpecs{numCntr}.saveFolderName   = ['ADP_Dens_wSDD_10-30_OL_gamma',num2str(thisGamma,'%-.2e')];
-%     cntrSpecs{numCntr}.modelFree        = false;
-%     cntrSpecs{numCntr}.trueModelBased   = true;
-%     cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
-%     cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
-%     cntrSpecs{numCntr}.globalInit       = true;
-%     % Optional Specifications
-%     cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
-% 
-%     clear thisVararginLocal;
-%     thisVararginLocal.predHorizon               = timeHorizon;
-%     thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
-%     thisVararginLocal.ADPMethod                 = 'bellmanInequality';      % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
-%     thisVararginLocal.systemDynamics            = 'linear';                 % OPTIONS: 'linear', 'bilinear'
-%     thisVararginLocal.numBellmanIneqIterations  = 1;                        % OPTIONS: any integer >= 1
-%     thisVararginLocal.sdpRelaxation             = 'sdd';                   % OPTIONS: 'none', 'ssd', 'dd'
-% 
-%     thisVararginLocal.buildFormulationWith      = 'direct';                 % OPTIONS: 'yalmip', 'direct'
-%     thisVararginLocal.solverToUse               = 'sedumi';                 % OPTIONS: 'sedumi', 'gurobi', 'modek', 'ecos'
-% 
-%     thisVararginLocal.PMatrixStructure          = 'dense';                          % OPTIONS: 'diag', 'dense', 'distributable'
-% 
-%     thisVararginLocal.usePWAPolicyApprox        = false;                            % OPTIONS: 'true', 'false'
-%     thisVararginLocal.liftingNumSidesPerDim     = 1;                                % OPTIONS: 'true', 'false'
-%     thisVararginLocal.KMatrixStructure          = ' ';                          % OPTIONS: 'diag', 'dense', 'distributable'
-% 
-%     thisVararginLocal.computeAllVsAtInitialisation = false;                           % OPTIONS: 'true', 'false'
-%     thisVararginLocal.usePreviouslySavedVs         = true;                           % OPTIONS: 'true', 'false'
-% 
-%     thisVararginLocal.energyToComfortScaling       = thisGamma;
-% 
-%     thisVararginLocal.VFitting_xInternal_lower  = 10;
-%     thisVararginLocal.VFitting_xInternal_upper  = 30;
-%     thisVararginLocal.VFitting_xExternal_lower  = 10;
-%     thisVararginLocal.VFitting_xExternal_upper  = 20;
-% 
-%     cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-% 
-%     thisVararginGlobal                  = 'two';
-%     cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
-%     cntrSpecs{numCntr}.methodID_forGroupPlotting = currMethodID_forGroupPlotting;
-%     cntrSpecs{numCntr}.methodName_forGroupPlotting  = currMethodName_forGroupPlotting;
-% end
+% Specify the Group ID and Group Name for grouping the plots
+currMethodID_forGroupPlotting = currMethodID_forGroupPlotting + 1;
+currMethodName_forGroupPlotting = 'ADP - Dense P, via SDD';
+% Add multiple controllers with different cost-component scaling
+gammaRange = [1.5e-3, 5.0e-4, 0 ];
+% -----------------------------------
+% Iterate through the range of cost-component scalings
+for iGamma = 1:length(gammaRange)
+    % Get this scaling
+    thisGamma = gammaRange(iGamma);
+    % Add a Controller Spec
+    numCntr = numCntr + 1;
+    % Mandatory Specifications
+    cntrSpecs{numCntr}.label            = 'ADP Centralised - Dense P via SDD';
+    cntrSpecs{numCntr}.legend           = ['ADP - Dense P wSDD - 10-30 - OL, gamma=',num2str(thisGamma,'%-.2e')];
+    cntrSpecs{numCntr}.saveFolderName   = ['ADP_Dens_wSDD_10-30_OL_gamma',num2str(thisGamma,'%-.2e')];
+    cntrSpecs{numCntr}.modelFree        = false;
+    cntrSpecs{numCntr}.trueModelBased   = true;
+    cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+    cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+    cntrSpecs{numCntr}.globalInit       = true;
+    % Optional Specifications
+    cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+
+    clear thisVararginLocal;
+    thisVararginLocal.predHorizon               = timeHorizon;
+    thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+    thisVararginLocal.ADPMethod                 = 'bellmanInequality';      % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+    thisVararginLocal.systemDynamics            = 'linear';                 % OPTIONS: 'linear', 'bilinear'
+    thisVararginLocal.numBellmanIneqIterations  = 1;                        % OPTIONS: any integer >= 1
+    thisVararginLocal.sdpRelaxation             = 'sdd';                   % OPTIONS: 'none', 'ssd', 'dd'
+
+    thisVararginLocal.buildFormulationWith      = 'direct';                 % OPTIONS: 'yalmip', 'direct'
+    thisVararginLocal.solverToUse               = 'sedumi';                 % OPTIONS: 'sedumi', 'gurobi', 'modek', 'ecos'
+
+    thisVararginLocal.PMatrixStructure          = 'dense';                          % OPTIONS: 'diag', 'dense', 'distributable'
+
+    thisVararginLocal.usePWAPolicyApprox        = false;                            % OPTIONS: 'true', 'false'
+    thisVararginLocal.liftingNumSidesPerDim     = 1;                                % OPTIONS: 'true', 'false'
+    thisVararginLocal.KMatrixStructure          = ' ';                          % OPTIONS: 'diag', 'dense', 'distributable'
+
+    thisVararginLocal.computeAllVsAtInitialisation = false;                           % OPTIONS: 'true', 'false'
+    thisVararginLocal.usePreviouslySavedVs         = true;                           % OPTIONS: 'true', 'false'
+
+    thisVararginLocal.energyToComfortScaling       = thisGamma;
+
+    thisVararginLocal.VFitting_xInternal_lower  = 10;
+    thisVararginLocal.VFitting_xInternal_upper  = 30;
+    thisVararginLocal.VFitting_xExternal_lower  = 10;
+    thisVararginLocal.VFitting_xExternal_upper  = 20;
+
+    cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+
+    thisVararginGlobal                  = 'two';
+    cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+    cntrSpecs{numCntr}.methodID_forGroupPlotting = currMethodID_forGroupPlotting;
+    cntrSpecs{numCntr}.methodName_forGroupPlotting  = currMethodName_forGroupPlotting;
+end
 
 
 %% ADP Dense P via DD - DETERMIISTIC (versus gamma)
 
-% % Specify the Group ID and Group Name for grouping the plots
-% currMethodID_forGroupPlotting = currMethodID_forGroupPlotting + 1;
-% currMethodName_forGroupPlotting = 'ADP - Dense P, via DD';
-% % Add multiple controllers with different cost-component scaling
-% gammaRange = [1.5e-3, 5.0e-4, 0 ];
-% % -----------------------------------
-% % Iterate through the range of cost-component scalings
-% for iGamma = 1:length(gammaRange)
-%     % Get this scaling
-%     thisGamma = gammaRange(iGamma);
-%     % Add a Controller Spec
-%     numCntr = numCntr + 1;
-%     % Mandatory Specifications
-%     cntrSpecs{numCntr}.label            = 'ADP Centralised - Dense P via DD';
-%     cntrSpecs{numCntr}.legend           = ['ADP - Dense P wDD - 10-30 - OL, gamma=',num2str(thisGamma,'%-.2e')];
-%     cntrSpecs{numCntr}.saveFolderName   = ['ADP_Dens_wDD_10-30_OL_gamma',num2str(thisGamma,'%-.2e')];
-%     cntrSpecs{numCntr}.modelFree        = false;
-%     cntrSpecs{numCntr}.trueModelBased   = true;
-%     cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
-%     cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
-%     cntrSpecs{numCntr}.globalInit       = true;
-%     % Optional Specifications
-%     cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
-% 
-%     clear thisVararginLocal;
-%     thisVararginLocal.predHorizon               = timeHorizon;
-%     thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
-%     thisVararginLocal.ADPMethod                 = 'bellmanInequality';      % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
-%     thisVararginLocal.systemDynamics            = 'linear';                 % OPTIONS: 'linear', 'bilinear'
-%     thisVararginLocal.numBellmanIneqIterations  = 1;                        % OPTIONS: any integer >= 1
-%     thisVararginLocal.sdpRelaxation             = 'dd';                   % OPTIONS: 'none', 'ssd', 'dd'
-% 
-%     thisVararginLocal.buildFormulationWith      = 'yalmip';                 % OPTIONS: 'yalmip', 'direct'
-%     thisVararginLocal.solverToUse               = 'gurobi';                 % OPTIONS: 'sedumi', 'gurobi', 'modek', 'ecos'
-% 
-%     thisVararginLocal.PMatrixStructure          = 'dense';                          % OPTIONS: 'diag', 'dense', 'distributable'
-% 
-%     thisVararginLocal.usePWAPolicyApprox        = false;                            % OPTIONS: 'true', 'false'
-%     thisVararginLocal.liftingNumSidesPerDim     = 1;                                % OPTIONS: 'true', 'false'
-%     thisVararginLocal.KMatrixStructure          = ' ';                          % OPTIONS: 'diag', 'dense', 'distributable'
-% 
-%     thisVararginLocal.computeAllVsAtInitialisation = false;                           % OPTIONS: 'true', 'false'
-%     thisVararginLocal.usePreviouslySavedVs         = true;                           % OPTIONS: 'true', 'false'
-% 
-%     thisVararginLocal.energyToComfortScaling       = thisGamma;
-% 
-%     thisVararginLocal.VFitting_xInternal_lower  = 10;
-%     thisVararginLocal.VFitting_xInternal_upper  = 30;
-%     thisVararginLocal.VFitting_xExternal_lower  = 10;
-%     thisVararginLocal.VFitting_xExternal_upper  = 20;
-% 
-%     cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-% 
-%     thisVararginGlobal                  = 'two';
-%     cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
-%     cntrSpecs{numCntr}.methodID_forGroupPlotting = currMethodID_forGroupPlotting;
-%     cntrSpecs{numCntr}.methodName_forGroupPlotting  = currMethodName_forGroupPlotting;
-% end
+% Specify the Group ID and Group Name for grouping the plots
+currMethodID_forGroupPlotting = currMethodID_forGroupPlotting + 1;
+currMethodName_forGroupPlotting = 'ADP - Dense P, via DD';
+% Add multiple controllers with different cost-component scaling
+gammaRange = [1.5e-3, 5.0e-4, 0 ];
+% -----------------------------------
+% Iterate through the range of cost-component scalings
+for iGamma = 1:length(gammaRange)
+    % Get this scaling
+    thisGamma = gammaRange(iGamma);
+    % Add a Controller Spec
+    numCntr = numCntr + 1;
+    % Mandatory Specifications
+    cntrSpecs{numCntr}.label            = 'ADP Centralised - Dense P via DD';
+    cntrSpecs{numCntr}.legend           = ['ADP - Dense P wDD - 10-30 - OL, gamma=',num2str(thisGamma,'%-.2e')];
+    cntrSpecs{numCntr}.saveFolderName   = ['ADP_Dens_wDD_10-30_OL_gamma',num2str(thisGamma,'%-.2e')];
+    cntrSpecs{numCntr}.modelFree        = false;
+    cntrSpecs{numCntr}.trueModelBased   = true;
+    cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
+    cntrSpecs{numCntr}.classNameGlobal  = 'Control_ADPCentral_Global';
+    cntrSpecs{numCntr}.globalInit       = true;
+    % Optional Specifications
+    cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
+
+    clear thisVararginLocal;
+    thisVararginLocal.predHorizon               = timeHorizon;
+    thisVararginLocal.computeVEveryNumSteps     = timeHorizon;
+    thisVararginLocal.ADPMethod                 = 'bellmanInequality';      % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality'
+    thisVararginLocal.systemDynamics            = 'linear';                 % OPTIONS: 'linear', 'bilinear'
+    thisVararginLocal.numBellmanIneqIterations  = 1;                        % OPTIONS: any integer >= 1
+    thisVararginLocal.sdpRelaxation             = 'dd';                   % OPTIONS: 'none', 'ssd', 'dd'
+
+    thisVararginLocal.buildFormulationWith      = 'direct';                 % OPTIONS: 'yalmip', 'direct'
+    thisVararginLocal.solverToUse               = 'gurobi';                 % OPTIONS: 'sedumi', 'gurobi', 'modek', 'ecos'
+
+    thisVararginLocal.PMatrixStructure          = 'dense';                          % OPTIONS: 'diag', 'dense', 'distributable'
+
+    thisVararginLocal.usePWAPolicyApprox        = false;                            % OPTIONS: 'true', 'false'
+    thisVararginLocal.liftingNumSidesPerDim     = 1;                                % OPTIONS: 'true', 'false'
+    thisVararginLocal.KMatrixStructure          = ' ';                          % OPTIONS: 'diag', 'dense', 'distributable'
+
+    thisVararginLocal.computeAllVsAtInitialisation = false;                           % OPTIONS: 'true', 'false'
+    thisVararginLocal.usePreviouslySavedVs         = true;                           % OPTIONS: 'true', 'false'
+
+    thisVararginLocal.energyToComfortScaling       = thisGamma;
+
+    thisVararginLocal.VFitting_xInternal_lower  = 10;
+    thisVararginLocal.VFitting_xInternal_upper  = 30;
+    thisVararginLocal.VFitting_xExternal_lower  = 10;
+    thisVararginLocal.VFitting_xExternal_upper  = 20;
+
+    cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+
+    thisVararginGlobal                  = 'two';
+    cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+    cntrSpecs{numCntr}.methodID_forGroupPlotting = currMethodID_forGroupPlotting;
+    cntrSpecs{numCntr}.methodName_forGroupPlotting  = currMethodName_forGroupPlotting;
+end
+
 
 
 
