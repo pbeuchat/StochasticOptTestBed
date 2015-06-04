@@ -1,10 +1,6 @@
-%  ---------------------------------------------------------------------  %
-%  ---------------------------------------------------------------------  %
-%  ---------     load_BuildingDef_002_002_True.m
-%  ---------------------------------------------------------------------  %
-%  ---------------------------------------------------------------------  %
 function [B , returnX0 , returnConstraintParams, returnCostParams, returnV, returnTmax , returnDims] = load_BuildingDef_002_002_True( inputBuildingIdentifierString , bbFullPath , inputSysOptions )
-
+%  load_BuildingDef_002_002_True.m
+%  ---------------------------------------------------------------------  %
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
 %  GOAL:        Black-Box Simulation-Based Test-Bed for Building Control
@@ -14,7 +10,25 @@ function [B , returnX0 , returnConstraintParams, returnCostParams, returnV, retu
 %               Capacitance Modeling for Model Predictive Control.
 %               Copyright (C) 2013  Automatic Control Laboratory, ETH Zurich.
 %               For more infomation check: www.brcm.ethz.ch.
+% ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
 %
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
 
 
 %% THIS FUNCTION SHOULD PERFORM THE FOLLOWING
@@ -48,7 +62,7 @@ flag_EHFModelsToInclude.Radiators           = false;
 flags_EHFModelsToInclude.reconstructModel   = false;
 
 B = get_BuildingDef( inputBuildingIdentifierString , flags_EHFModelsToInclude , bbFullPath , sysOptions );
-
+disp( ' DEBUGGING: If this is displayed then I was wrong :-( #06' );
 
 %% --------------------------------------------------------------------- %%
 %% 1) DISPLAY AND DRAW BUILDING (optional)

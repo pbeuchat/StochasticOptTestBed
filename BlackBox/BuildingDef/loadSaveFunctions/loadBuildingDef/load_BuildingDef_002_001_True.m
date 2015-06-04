@@ -1,10 +1,6 @@
-%  ---------------------------------------------------------------------  %
-%  ---------------------------------------------------------------------  %
-%  ---------     load_BuildingDef_002_001_True.m
-%  ---------------------------------------------------------------------  %
-%  ---------------------------------------------------------------------  %
-function [B , returnX0 , returnConstraintParams, returnCostDefObject, returnV, returnTmax , returnDims] = load_BuildingDef_002_001_True( inputBuildingIdentifierString, bbFullPath , inputSysOptions )
-
+function [B , returnX0 , returnStateDefObject, returnConstraintParams, returnCostDefObject, returnV, returnTmax , returnDims] = load_BuildingDef_002_001_True( inputBuildingIdentifierString, bbFullPath , inputSysOptions )
+%  load_BuildingDef_002_001_True.m
+% ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
 %  GOAL:        Black-Box Simulation-Based Test-Bed for Building Control
@@ -14,7 +10,25 @@ function [B , returnX0 , returnConstraintParams, returnCostDefObject, returnV, r
 %               Capacitance Modeling for Model Predictive Control.
 %               Copyright (C) 2013  Automatic Control Laboratory, ETH Zurich.
 %               For more infomation check: www.brcm.ethz.ch.
-%main
+% ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
 
 
 %% THIS FUNCTION SHOULD PERFORM THE FOLLOWING
@@ -49,6 +63,7 @@ flags_EHFModelsToInclude.Radiators           = true;
 flags_EHFModelsToInclude.reconstructModel    = false;
 
 B = get_BuildingDef( inputBuildingIdentifierString , flags_EHFModelsToInclude , bbFullPath );
+disp( ' DEBUGGING: If this is displayed then I was wrong :-( #06' );
 
 
 %% --------------------------------------------------------------------- %%
@@ -245,12 +260,15 @@ disp('     -> "Reading" the specified initial condition');
 internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
 
 %x0 = 22.5*internalStates + 16 * ~internalStates;
-%x0 = 22.4*internalStates + 16 * ~internalStates;
+x0 = 22.4*internalStates + 16 * ~internalStates;
+%x0 = 22.2*internalStates + 16 * ~internalStates;
 %x0 = 22.0*internalStates + 16 * ~internalStates;
 %x0 = 21.5*internalStates + 16 * ~internalStates;
-x0 = 20.0*internalStates + 16 * ~internalStates;
+%x0 = 21.0*internalStates + 16 * ~internalStates;
+%x0 = 20.0*internalStates + 16 * ~internalStates;
 %x0 = 19.0*internalStates + 16 * ~internalStates;
 %x0 = 30*internalStates + 16 * ~internalStates;
+%x0 = 24*internalStates + 16 * ~internalStates;
 
 
 %% --------------------------------------------------------------------- %%
@@ -261,6 +279,13 @@ disp('     -> Build a "State Definition" object');
 stateDefObject = ModelCostConstraints_Building.buildStateDefObjectFromBuildingObject( B , x0 );
 
 
+% Add the plotting falg to the State Definition Object
+plotMask_x  = [true(7,1) ; false(35,1)];
+plotMask_u  = true( stateDefObject.n_u  , 1);
+plotMask_xi = true( stateDefObject.n_xi , 1);
+
+
+updatePlottingMasks( stateDefObject , plotMask_x, plotMask_u, plotMask_xi );
 
 
 %% --------------------------------------------------------------------- %%
@@ -280,7 +305,7 @@ disp('     -> Generate constraint description');
 % hyper-rectangle constraints, but is return as a dense matrix
 
 % Initialise the stuct for inserting the constraints
-constraintsParameters = struct();
+%constraintsParameters = struct();
 
 
 
@@ -304,15 +329,15 @@ constraintsByHand.x_rect_upper = 25 * ones( n_x , 1);
 % For the min and max on each input
 %   (assuming they are all radiators)
 u_radiator_min = 0;
-u_radiator_max = 22;
+%u_radiator_max = 18.75;
+u_radiator_max = 25;
 constraintsByHand.u_rect_lower = u_radiator_min * ones( n_u , 1);
 constraintsByHand.u_rect_upper = u_radiator_max * ones( n_u , 1);
 
 % For the coupling resourse constraint
-constraintsByHand.u_poly_A = sparse( ones(1,n_u) , 1:n_u , ones(n_u,1) , 1 , n_u , n_u );
-constraintsByHand.u_poly_b = n_u * u_radiator_max * 0.70;
-
-constraintsByHand.u_poly_label = { 'resource' };
+% constraintsByHand.u_poly_A = sparse( ones(1,n_u) , 1:n_u , ones(n_u,1) , 1 , n_u , n_u );
+% constraintsByHand.u_poly_b = n_u * u_radiator_max * 0.75;
+% constraintsByHand.u_poly_label = { 'resource' };
 
 
 %% --------------------------------------------------------------------- %%
@@ -366,6 +391,7 @@ n_x = size( B.building_model.discrete_time_model.A  , 2 );
 % Get the size of the input vector
 n_u = size( B.building_model.discrete_time_model.Bu  , 2 );
 
+%x_ref = 20.0;
 x_ref = 22.5;
 %num_x_to_cotnrol = 42;
 
@@ -405,50 +431,64 @@ costsByHand.subCosts_label    = {'energy';'comfort'};
 
 costComponents_num      = uint32(2);
 costComponents_label    = {'energy';'comfort'};
-costComponents_scaling  = ones( costComponents_num , 1);
+%costComponents_scaling  = ones( costComponents_num , 1);
+costComponents_scaling  = [ 5e-4 ; 1 ];
 
 % The cost components should be individually defined to allow for clear
 % separation of the costs
 
-% NOTE: can't instatiate an empty array of the correct type because they
-% could all be different types inherritting from the same "CostComponent",
-% super class
+% NOTE: difficult to instatiate an empty array of the correct type because
+% they could all be different types inherritting from the same
+% "CostComponent", super class
 %costComponentArray = CostComponent.empty(costComponents_num,0);
 clear costComponentArray;
 
+% COST COMPONENT CELL ARRAY
+% Each cell will contain a cost function
+% costComponentCellArray_energy = cell(7,1);
+% costComponentCellArray_comfort = cell(7,1);
 
 % Create the "energy" cost as a component array of the linear costs for
 % each sub-system
 for i_ss = 1:7
     this_cu = sparse( i_ss , 1 , cu(i_ss,1) , n_u , 1 , 1);
     costComponentArray_energy(i_ss,1) = CostComponent_Linear( sparse([],[],[],n_x,1,0) , this_cu , sparse([],[],[],1,1,0) , stateDefObject );
+    
+    %costComponentCellArray_energy{i_ss,1} = CostDef.createCostComponent_Linear( sparse([],[],[],n_x,1,0) , this_cu , sparse([],[],[],1,1,0) , stateDefObject );
 end
 
 
-% Create the "comfort" cost as a component array of the linear costs for
-% each sub-system
-x_ref = 22.5;
+% Create the "comfort" cost as a component array of the quadratic costs
+% for each sub-system
+%x_ref = 22.5; % This is defined above
 for i_ss = 1:7
     this_Q = sparse( i_ss , i_ss , 1         , n_x , n_x , 1);
     this_q = sparse( i_ss , 1    , -2*x_ref  , n_x , 1   , 1);
     this_c = sparse( 1    , 1    , x_ref^2   , 1   , 1   , 1);
     costComponentArray_comfort(i_ss,1) = CostComponent_Quadratic_StateOnly( this_Q , this_q , this_c , stateDefObject );
+    
+    % costComponentCellArray_comfort{i_ss,1} = costDef.createCostComponent_Quadratic_StateOnly( this_Q , this_q , this_c , stateDefObject );
 end
 
 
 % Now fill in each element of the array:
 %  -> The "energy" cost, a linear function of the input only
 costComponentArray(1,1) = CostComponent_PerSubSystem( costComponentArray_energy , stateDefObject );
+%costComponentArray{1,1} = CostComponent_PerSubSystem( costComponentArray_energy , stateDefObject );
 
 %  -> The "comfort" cost, a quadratic cost of the states
 costComponentArray(2,1) = CostComponent_PerSubSystem( costComponentArray_comfort , stateDefObject );
 
+% costComponentCellArray = { ...
+%         costComponentCellArray_energy   ;...
+%         costComponentArray_comfort       ...
+%      };
 
 
 % Then the cost components should be wrappen together into a "Cost
 % Definition" object
-costDefObject = CostDef( stateDefObject , costComponents_num , costComponents_label , costComponentArray );
-
+costDefObject = CostDef( stateDefObject , costComponents_num , costComponents_label , costComponentArray , costComponents_scaling );
+%costDefObject = CostDef( stateDefObject , costComponents_num , costComponents_label , costComponentCellArray , costComponents_scaling );
 
 
 
@@ -456,6 +496,7 @@ costDefObject = CostDef( stateDefObject , costComponents_num , costComponents_la
 
 %% PUT TOGETHER THE RETURN VARIABLES
 returnX0                    = x0;
+returnStateDefObject        = stateDefObject;
 returnConstraintParams      = constraintsByHand;
 returnCostDefObject         = costDefObject;
 

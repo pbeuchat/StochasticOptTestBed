@@ -19,10 +19,27 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
 %                   - stage cost
 %                   - infomation about constraint satisfaction
 % ----------------------------------------------------------------------- %
-% The "< handle" syntax means that "ProgressModelEngine" is a subclass of
-% the "handle" superclass. Where the "handle" class is a default MATLAB
-% class
-    
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
+
+
     properties(Hidden,Constant)
         % Name of this class for displaying relevant messages
         thisClassName@string = 'ModelCostConstraints_Building';
@@ -122,7 +139,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
                 % Now check "inputBuilding" has the required properties
                 % An "inputModel" of type "building" should have:
                 %  ".building"  , ".costs"  ,  ".constraints"
-                inputBuildingFields = {'building','costDef','constraints','x0'};
+                inputBuildingFields = {'building','stateDef','costDef','constraints','x0'};
                 checkBuilding = checkForFields(inputBuilding,inputBuildingFields);
                 if ~checkBuilding
                     disp( ' ... ERROR: The "inputBuilding" variable was a struct but did not have the correct fields');
@@ -138,6 +155,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
 
                 % Store the inputs into the properties of this "obj"
                 obj.building            = copy(inputBuilding.building);
+                obj.stateDef             = inputBuilding.stateDef;
                 obj.costDef             = inputBuilding.costDef;
                 obj.constraintParams    = inputBuilding.constraints;
                 obj.x0                  = inputBuilding.x0;
@@ -192,8 +210,8 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         
         % FUNCTION: to call for a state update externally
         %       > This function is defined in the SUPER-CLASS as ABSTRACT
-        function [xnew , l , l_per_ss , constraintSatisfaction] = requestStateUpdate( obj , x , u , xi , delta_t )
-            [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t );
+        function [xnew , u, l , l_per_ss , constraintSatisfaction] = requestStateUpdate( obj , x , u , xi , delta_t )
+            [xnew , u, l , l_per_ss , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t );
         end
         % END OF: "function [...] = requestStateUpdate(...)"
         
@@ -246,7 +264,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         returnIsValid = checkValidity(obj);
         
         % FUNCTION: to update the state for this type of model
-        [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , currentTime );
+        [xnew , u, l , l_per_ss , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , currentTime );
        
         % FUNCTION: to build a "StateDef" object for this type of model
         returnStateDef = buildAndReturnStateDefObject( obj );

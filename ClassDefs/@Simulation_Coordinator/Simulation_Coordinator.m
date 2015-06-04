@@ -16,9 +16,26 @@ classdef Simulation_Coordinator < handle
 %                   - stage cost
 %                   - infomation about constraint satisfaction
 % ----------------------------------------------------------------------- %
-% The "< handle" syntax means that "ProgressModelEngine" is a subclass of
-% the "handle" superclass. Where the "handle" class is a default MATLAB
-% class
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
+
 
 
     properties(Hidden,Constant)
@@ -37,6 +54,9 @@ classdef Simulation_Coordinator < handle
     properties (Access = private)
         % The Disturbance_Coordinator of the appropriate class
         distCoord@Disturbance_Coordinator;
+        
+        % The cell array Disturbance_Coordinator for parallelisation
+        distCoordArray@Disturbance_Coordinator;
         
         % The Control Coordinator of the appropriate class
         controlCoord@Control_Coordinator;
@@ -71,6 +91,37 @@ classdef Simulation_Coordinator < handle
         % Flag to specify whether to perform a deterministic simulation or
         % not
         flag_deterministic@logical = false;
+        
+        % The "Original" Seed that fully determines the simulation
+        seed_original@double;
+        
+        % The "Generator Type" to use for the "RandStream" objects
+        randNumGenType@string;
+        
+        % The number of workers to be used for simulating multiple
+        % realisations
+        evalMulti_numWorkers@uint32;
+        
+        % A cell array that will be filled with "RandStream" objects
+        % And the details thereof
+        randStream_perWorkerCellArray@cell;
+        detailsOf_randStreamPerWorker@cell;
+        
+        % The number of realisation to be performed
+        evalMulti_numRealisations@uint32;
+        
+        % A vector of length "number of workers" that provides the number
+        % realisations to be simulated by each worker
+        evalMulti_numRealisationsPerWorkerVector@uint32;
+        
+        % A vector of length "number of workers" that provides the indexing
+        % in the context of the overall realisations
+        evalMulti_realisationIndexStart@uint32;
+        evalMulti_realisationIndexEnd@uint32;
+        
+        % Struct with the details about evaluating controllers by
+        % simulating over multiple realisation of the uncertainty
+        evalMultiReal_details@struct;
         
         % A pre-computed stream of uncertainties to ensure a fair
         % comparison
@@ -181,6 +232,15 @@ classdef Simulation_Coordinator < handle
         % FUNCTION DEF
         returnIsReady = checkSimulationIsReadyToRun( obj , flag_throwError );
         
+        % FUNCTION DEF:
+        returnParallelInitialise = prepareDetailsFor_MultipleDistCoord_ForParallelSimulations( obj );
+        
+        % FUNCTION DEF:
+        returnParallelInitialise = initialise_MultipleDistCoordRandStream_ForParallelSimulations( obj );
+        
+        % FUNCTION DEF:
+        returnParallelInitialise = initialiseMultipleProgEngModelForParallelSimulations( obj );
+        
         
         % FUNCTION: to specify the Precomputed Disturbance Data
         function [ ] = specifyPrecomputedDisturbances( obj , inputDisturbances )
@@ -197,11 +257,31 @@ classdef Simulation_Coordinator < handle
         
         
         % FUNCTION: to specify the key simulation parameters
-        function [ ] = specifySimulationParameters(obj, inputTimeIndex_start , inputTimeIndex_end , inputFlagSaveResults, inputFlagDeterministic)
-            obj.simTimeIndex_start  = uint32( inputTimeIndex_start );
-            obj.simTimeIndex_end    = uint32( inputTimeIndex_end );
-            obj.flag_SaveResults    = inputFlagSaveResults;
-            obj.flag_deterministic  = inputFlagDeterministic;
+        function [ ] = specifySimulationParameters(obj, inputTimeIndex_start , inputTimeIndex_end , inputSeed , inputRandNumGeneratorType , inputFlagSaveResults, inputFlagDeterministic, inputEvalMultiRealDetails)
+            obj.simTimeIndex_start      = uint32( inputTimeIndex_start );
+            obj.simTimeIndex_end        = uint32( inputTimeIndex_end );
+            obj.seed_original           = inputSeed;
+            obj.randNumGenType          = inputRandNumGeneratorType;
+            obj.flag_SaveResults        = inputFlagSaveResults;
+            obj.flag_deterministic      = inputFlagDeterministic;
+            obj.evalMultiReal_details   = inputEvalMultiRealDetails;
+            
+            % Adjust the flags such that "deterministic" is 'false' if
+            % "evaulate multiple realisation" is spefied as 'true'
+            if inputEvalMultiRealDetails.flag_evaluateOnMultipleRealisations
+                
+                obj.flag_deterministic = false;
+                
+                if inputFlagDeterministic
+                    disp( ' NOTE: Both of these flags were set to be true:' );
+                    disp( '       > "evaluate multiple realisations", and' );
+                    disp( '       > "perform deterministic realisations"');
+                    disp( '       This does NOT make sense because all the realisations will give the same results' );
+                    disp( '       Hence the "perform deterministic realisations" flag has been set to "false"' );
+                end
+                
+            end
+            
         end
         
         

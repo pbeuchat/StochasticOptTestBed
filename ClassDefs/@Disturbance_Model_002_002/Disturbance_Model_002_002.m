@@ -7,6 +7,25 @@ classdef Disturbance_Model_002_002 < Disturbance_Model
 %
 %  DESCRIPTION: > ...
 % ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
 
 
     properties(Hidden,Constant)
@@ -44,6 +63,14 @@ classdef Disturbance_Model_002_002 < Disturbance_Model
         %stats_directlyAvailable = {'mean'};
         stats_directlyAvailable = {''};
         
+        % Details for being able to compute a Multi-Variate Normal random
+        % vector from an input of a input sample of idenpendent univariate
+        % standard normal distributions
+        sigmaMatrix@double;
+        lengthRandInputVector@uint32 = uint32(1);
+        simgaDecomp@double;
+        
+        
     end
     
     methods
@@ -62,6 +89,12 @@ classdef Disturbance_Model_002_002 < Disturbance_Model
 
                 % There is actually nothing to do, everything should be
                 % defined inside the model
+                % ...
+                
+                % Call the function to compute the Cholesky or spectral
+                % Decomposition of the covariance matrix
+                
+                
                 
                 % Set the handles to the appropriate properties
                 obj.isValid  = uint8(1);
@@ -80,11 +113,18 @@ classdef Disturbance_Model_002_002 < Disturbance_Model
     % END OF: "methods"
     
     methods (Static = false , Access = public)
+        % FUNCTION: to initialise properties of the model
+        [] = initiliaseDisturbanceModelParameters( obj );
+        
         % FUNCTION: to get a trace for the full length of the cycle
         returnSample = requestSampleForFullCylce( obj );
         
-        % FUNCTION: to call for a state update externally
+        % FUNCTION: to get a trace for given duration
         returnSample = requestSampleFromTimeForDuration( obj , startTime , duration , startXi );
+        
+        % FUNCTION: to get a trace for given duration using the random
+        % input
+        returnSample = requestSampleFromTimeForDuration_withRandInput( obj , startTime , duration , startXi , inputRandNumbers );
         
         % FUNCTION: to check if a statistics is available directly
         returnCheck = isStatAvailableDirectly( obj , statDesired );

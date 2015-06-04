@@ -1,4 +1,4 @@
-classdef Disturbance_Coordinator < handle
+classdef Disturbance_Coordinator < matlab.mixin.Copyable
 % This class interfaces the disturbance with everything else
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
@@ -7,6 +7,25 @@ classdef Disturbance_Coordinator < handle
 %
 %  DESCRIPTION: > 
 % ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
 
 
     properties(Hidden,Constant)
@@ -17,6 +36,9 @@ classdef Disturbance_Coordinator < handle
     end
    
     properties (Access = public)
+        % A token public property to confirm that copies are deep
+        tokenPublicProperty@double = 1;
+        
         % Very few properties should have public access, otherwise the
         % concept and benefits of Object-Orientated-Programming will be
         % degraded...
@@ -115,7 +137,28 @@ classdef Disturbance_Coordinator < handle
     end
     % END OF: "methods"
     
+    
+    
+    
     methods (Static = false , Access = public)
+        
+        
+        % FUNCTION: to initialise a "RandStream" from details
+        function returnSuccess = initialiseDisturbanceRandStreamWithSeedAndDetails( obj , inputSeed , inputDetails )
+            returnSuccess = initialiseDisturbanceRandStreamWithSeedAndDetails( obj.myDisturbanceModel , inputSeed , inputDetails );
+        end
+        
+        % FUNCTION: to initialise a "RandStream" directly with a given
+        % "RandStream" object
+        function returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj , inputRandStream )
+            returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj.myDisturbanceModel , inputRandStream );
+        end
+        
+        % FUNCTION: to set the stream number of the Random Stream object
+        function setSubStreamNumberForDisturbanceRandStream( obj , inputSubStream )
+            setSubStreamNumberForDisturbanceRandStream( obj.myDisturbanceModel , inputSubStream );
+        end
+        
         
         % FUNCTION: 
         function returnSuccess = checkStatsAreAvailable_ComputingAsRequired( obj, requestedStats , flag_RecomputeStats )
@@ -193,26 +236,52 @@ classdef Disturbance_Coordinator < handle
         %END OF: "function ... = sampleAndComputePredictions()"
         
         
-        % FUNCTION:
-        function returnSuccess = initialiseDisturbanceRealisationWithRandSeed( obj , inputSeed )
-            %...
-            
-            % If made it here then successful
-            returnSuccess = 1;
-        end
-        %END OF: "function ... = sampleAndComputePredictions()"
-        
         
         % FUNCTION:
         function returnSample = getDisturbanceSampleForOneTimeStep( obj , inputTime )
             timeHorizon = 1;
-            returnSample = requestSampleFromTimeForDuration( obj.myDisturbanceModel , inputTime , timeHorizon );
+            startXi = [];
+            returnSample = requestSampleFromTimeForDuration( obj.myDisturbanceModel , inputTime , timeHorizon , startXi );
+        end
+        %END OF: "function ... = sampleAndComputePredictions()"
+
+        % FUNCTION: 
+        function returnSample = getDisturbanceSampleForOneTimeStep_withRandInput( obj , inputTime , inputRandomNumbers )
+            timeHorizon = 1;
+            startXi = [];
+            returnSample = requestSampleFromTimeForDuration_withRandInput( obj.myDisturbanceModel , inputTime , timeHorizon , startXi , inputRandomNumbers );
         end
         %END OF: "function ... = sampleAndComputePredictions()"
         
         
     end
     % END OF: "methods (Static = false , Access = public)"
+    
+    methods (Static = false , Access = {?Control_LocalController})
+        % FUNCTION: to get the Full Time Cycle for Local Controllers that
+        % need to do initialisation using disturbance information for
+        % computational reasons
+        % Additionally, this violates the "all properties should be
+        % private" structure. See more notes at end for reasoning
+        function returnCorrelated = isDisturbanceModelTimeCorrelated( obj )
+            returnCorrelated = obj.isTimeCorrelated;
+        end
+        
+        % FUNCTION: get the Full Time Cycle of the Disturbance Model
+        
+        function returnFullTimeCycleSteps = getDisturbanceModelFullTimeCycle_forLocalController( obj , requestingFileName )
+            if strcmp( requestingFileName , 'initialise_localControl_withDisturbanceInfo' )
+                returnFullTimeCycleSteps = getDisturbanceModelFullTimeCycle( obj.myDisturbanceModel );
+            else
+                disp([' ... ERROR: The requesting file name was: "',requestingFileName,'"' ]);
+                disp( '            It was expected to be: "initialise_localControl_withDisturbanceInfo"' );
+                disp( '            Hence the Full Cycle Time of the Disturbance Model has NOT been provided');
+                returnFullTimeCycleSteps = 0;
+            end
+        end
+        
+    end
+    % END OF: "methods (Static = false , Access = {?Disturbance_ology})"
     
     %methods (Static = false , Access = private)
     %end
@@ -229,4 +298,24 @@ classdef Disturbance_Coordinator < handle
     % END OF: "methods (Static = true , Access = private)"
     
 end
+
+
+% > In relation to the function: "getDisturbanceModelFullTimeCycle", the
+% following is the justification for making it available to the
+% "disturbancologist"
+%   This violates the "all properties should be private" structure
+%   because it is essentially a "getter" method. It makes sense that
+%   this violate the structure because NO-ONE else deserves to know
+%   the time cycle on which the Disturbance Model repeats itself.
+%   BUT... it saves the Disturbance-ology Department a lot of trouble
+%   in terms of having to sample over a long time horizon and instead
+%   allows then to provide arbitarily long predicitons
+%   Hence the method is set to only be accessible by the
+%   "disturbance-ologists"
+%   
+%   For a "Control_LocalController" it is a similar line of reasoning,
+%   having access to this information allows the local controller to
+%   pre-compute a set of value functions that can be plat for an arbitarily
+%   long time horizon
+
 

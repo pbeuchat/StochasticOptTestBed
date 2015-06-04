@@ -8,6 +8,26 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
 %
 %  DESCRIPTION: > ...
 % ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
+
 
 
     %% REFERENCES:
@@ -117,6 +137,8 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     yLabelOnOff             = [];
     xLabelString            = [];
 	yLabelString            = [];
+    xLabelInterpreter       = [];
+    yLabelInterpreter       = [];
 	xLabelColour            = [];
 	yLabelColour            = [];
 	labelFontSize           = [];
@@ -158,6 +180,8 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     default_yLabelOnOff             = 'off';
     default_xLabelString            = [];
 	default_yLabelString            = [];
+    default_xLabelInterpreter       = 'none';
+    default_yLabelInterpreter       = 'none';
 	default_xLabelColour            = 'k';
 	default_yLabelColour            = 'k';
 	default_labelFontSize           = 12;
@@ -388,6 +412,26 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
                     
                     
                 % ------------------------------- %
+                case 'xlabelinterpreter'
+                    xLabelInterpreter = inputSettings{iTemp,2};
+                    % If is is not a memeber then ignore it
+                    if ~ismember( lower(xLabelInterpreter) , Visualisation.interpretterOptions )
+                        disp(' ... ERROR: the "xLabelInterpreter" option input was not valid, using default instead');
+                        xLabelInterpreter = [];
+                    end
+                    
+                    
+                % ------------------------------- %
+                case 'ylabelinterpreter'
+                    yLabelInterpreter = inputSettings{iTemp,2};
+                    % If is is not a memeber then ignore it
+                    if ~ismember( lower(yLabelInterpreter) , Visualisation.interpretterOptions )
+                        disp(' ... ERROR: the "yLabelInterpreter" option input was not valid, using default instead');
+                        yLabelInterpreter = [];
+                    end
+                    
+                    
+                % ------------------------------- %
                 case 'xlabelcolour'
                     % If is is not a memeber or a 3-by-1 double, then
                     % ignore it
@@ -606,6 +650,12 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     if isempty(yLabelString)
         yLabelString = default_yLabelString;
     end
+    if isempty(xLabelInterpreter)
+        xLabelInterpreter = default_xLabelInterpreter;
+    end
+    if isempty(yLabelInterpreter)
+        yLabelInterpreter = default_yLabelInterpreter;
+    end
     if isempty(xLabelColour)
         xLabelColour = default_xLabelColour;
     end
@@ -680,6 +730,7 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     
     if strcmp( xLabelOnOff , 'on' )
         hXLabel = xlabel(hAxes,xLabelString);
+        set(hXLabel,'Interpreter',xLabelInterpreter);
         set(hXLabel,'Color',xLabelColour);
         set(hXLabel,'FontSize',labelFontSize);
         set(hXLabel,'FontWeight',labelFontWeight);
@@ -688,6 +739,7 @@ function [ ] = visualise_plotMultipleLines( hAxes , data_x , data_y , varargin )
     if strcmp( yLabelOnOff , 'on' )
         yLabelString = strrep( yLabelString , '_' , '\_' );
         hYLabel = ylabel(hAxes,yLabelString);
+        set(hYLabel,'Interpreter',yLabelInterpreter);
         set(hYLabel,'Color',yLabelColour);
         set(hYLabel,'FontSize',labelFontSize);
         set(hYLabel,'FontWeight',labelFontWeight);

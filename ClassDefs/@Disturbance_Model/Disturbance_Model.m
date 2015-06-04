@@ -8,6 +8,26 @@ classdef (Abstract) Disturbance_Model < handle
 %
 %  DESCRIPTION: > 
 % ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
+
 
 
     properties(Hidden,Constant)
@@ -81,6 +101,22 @@ classdef (Abstract) Disturbance_Model < handle
         % NOTE: that this class (ie. "Disturbance_Model") must be included
         % in the access list so that its sub-classes will have acccess
         
+        % FUNCTION: to initialise a "RandStream" from details
+        returnSuccess = initialiseDisturbanceRandStreamWithSeedAndDetails( obj , inputSeed , inputDetails );
+        
+        % FUNCTION: to initialise a "RandStream" directly with a given
+        % "RandStream" object
+        returnSuccess = initialiseDisturbanceRandStreamWithRandStream( obj , inputRandStream );
+        
+        % FUNCTION: to set the stream number of the Random Stream object
+        setSubStreamNumberForDisturbanceRandStream( thisDistCoord , thisStream );
+    end
+    
+    
+    methods (Static = false , Access = {?Disturbance_Model,?Disturbance_ology,?Disturbance_Coordinator})
+        % NOTE: that this class (ie. "Disturbance_Model") must be included
+        % in the access list so that its sub-classes will have acccess
+        
         % FUNCTION: to get a trace for the full length of the cycle
         % This violates the "all properties should be private" structure
         % But is required for interfacing with other components
@@ -126,7 +162,7 @@ classdef (Abstract) Disturbance_Model < handle
         %returnIsValid = checkValidity(obj)
         
         % FUNCTION: to update the state for this type of model
-        %[xnew , l , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t )
+        %[xnew , u, l , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t )
     %end
     % END OF: "methods (Static = false , Access = private , Abstract = true )"
     

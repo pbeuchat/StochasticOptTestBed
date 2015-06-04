@@ -17,9 +17,24 @@ classdef (Abstract) ModelCostConstraints < matlab.mixin.Copyable
 %                   - stage cost
 %                   - infomation about constraint satisfaction
 % ----------------------------------------------------------------------- %
-% The "< handle" syntax means that "ProgressModelEngine" is a subclass of
-% the "handle" superclass. Where the "handle" class is a default MATLAB
-% class
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
     
     properties(Hidden,Constant)
         % Number of properties required for object instantation
@@ -91,7 +106,7 @@ classdef (Abstract) ModelCostConstraints < matlab.mixin.Copyable
         returnIsValid = attemptValidityCheck(obj)
         
         % FUNCTION: to call for a state update externally
-        [xnew , l , constraintSatisfaction] = requestStateUpdate( obj , x , u , xi , delta_t )
+        [xnew , u, l , constraintSatisfaction] = requestStateUpdate( obj , x , u , xi , delta_t )
         
         % FUNCTION: to build a "StateDef" object from the model
         returnStateDef = requestStateDefObject( obj );
@@ -117,7 +132,7 @@ classdef (Abstract) ModelCostConstraints < matlab.mixin.Copyable
         %returnIsValid = checkValidity(obj)
         
         % FUNCTION: to update the state for this type of model
-        %[xnew , l , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t )
+        %[xnew , u, l , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t )
     %end
     % END OF: "methods (Static = false , Access = private , Abstract = true )"
 

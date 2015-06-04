@@ -63,6 +63,17 @@ classdef StateDef < matlab.mixin.Copyable
         x0@double;
         
         
+        % To Make The Plotting a bit more flexible, we define here which
+        % components of the states, input and disturbances are most
+        % "important" to plot
+        % This should be a logical vector of length equal to 'n_x', 'n_u'
+        %  or 'n_xi' respectively
+        mask_toPlot_x@logical
+        mask_toPlot_u@logical
+        mask_toPlot_xi@logical
+        
+        
+        
     end
     
     properties (Access = private)
@@ -321,6 +332,15 @@ classdef StateDef < matlab.mixin.Copyable
             
         end
         
+        
+        function updatePlottingMasks( obj , new_plotMask_x , new_plotMask_u , new_plotMask_xi )
+            % Put the input objects directly into the variables assuming
+            % they have been checked via the "checkMasksAreValid" function
+            obj.mask_toPlot_x   = new_plotMask_x;
+            obj.mask_toPlot_u   = new_plotMask_u;
+            obj.mask_toPlot_xi  = new_plotMask_xi;
+            
+        end
         
 
         

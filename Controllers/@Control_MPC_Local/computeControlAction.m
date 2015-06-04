@@ -9,6 +9,26 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
 %
 %  DESCRIPTION: > ...
 % ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
+
 
     %% INCREMENT THE ITERATION COUNTER
     obj.iterationCounter = obj.iterationCounter + uint32(1);
@@ -62,7 +82,7 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
         %           +     x' * obj.A_S ...
         %           +     obj.q_Bu;
         % NOTE: this equation above is already transposed!!
-        r_new =  2 * obj.A_Q_Bu' * x  +  2 * obj.Bxi_Q_Bu' * predictions.mean  +  obj.q_Bu';
+        r_new =  obj.r_mpc + 2 * obj.A_Q_Bu' * x  +  2 * obj.Bxi_Q_Bu' * predictions.mean  +  obj.q_Bu';
         
         % c_new   =         x' * obj.A_Q_A * x ...
         %             +     trace( obj.Bxi*Q*Bxi * predictions.cov ) ...
@@ -103,7 +123,6 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
             disp([' ... ERROR: The optimisation for MPC failed at time step: ',num2str(currentTime.index) ]);
             error(bbConstants.errorMsg);
         end
-        
         
     end
     

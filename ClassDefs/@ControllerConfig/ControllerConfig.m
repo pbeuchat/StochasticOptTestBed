@@ -1,17 +1,34 @@
 classdef ControllerConfig
 % This class stores the configuration of a controller
-% All classes that are not subclasses of the handle class are value classes
+% All classes that are not subclasses of the handle class are value class.
+% Where the "value" class is a default MATLAB superclass
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
 %  GOAL:        Black-Box Simulation-Based Test-Bed for Building Control
 %
 %  DESCRIPTION: > It is a value class because it can be changed at every
-%                   time step
+%                 time step
 % ----------------------------------------------------------------------- %
-% The "< value" syntax means that "ControllerConfig" is a subclass of
-% the "value" superclass. Where the "value" class is a default MATLAB
-% class
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
 
 
     properties(Hidden,Constant)

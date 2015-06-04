@@ -1,10 +1,6 @@
-%  ---------------------------------------------------------------------  %
-%  ---------------------------------------------------------------------  %
-%  ---------     runBlackBoxSimWithConfig.m
-%  ---------------------------------------------------------------------  %
-%  ---------------------------------------------------------------------  %
-function [returnAllResults, object_system, object_disturbance] = runBlackBoxSimWithConfig(inputBlackBoxInstructions)
-
+function [returnAllResults, returnSavePath, object_system, object_disturbance] = runBlackBoxSimWithConfig(inputBlackBoxInstructions)
+%  runBlackBoxSimWithConfig.m
+% ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
 %  DATE:        13-Oct-2014
 %  GOAL:        Black-Box Simulation-Based Test-Bed for Building Control
@@ -13,7 +9,27 @@ function [returnAllResults, object_system, object_disturbance] = runBlackBoxSimW
 %                   - Load the requested building model
 %                   - Simulate each controller
 %                   - Keep the results organised and return them
-%               
+% ----------------------------------------------------------------------- %
+% This file is part of the Stochastic Optimisation Test Bed.
+%
+% The Stochastic Optimisation Test Bed - Copyright (C) 2015 Paul Beuchat
+%
+% The Stochastic Optimisation Test Bed is free software: you can
+% redistribute it and/or modify it under the terms of the GNU General
+% Public License as published by the Free Software Foundation, either
+% version 3 of the License, or (at your option) any later version.
+% 
+% The Stochastic Optimisation Test Bed is distributed in the hope that it
+% will be useful, but WITHOUT ANY WARRANTY; without even the implied
+% warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with the Stochastic Optimisation Test Bed.  If not, see
+% <http://www.gnu.org/licenses/>.
+%  ---------------------------------------------------------------------  %
+
+
 
 %% --------------------------------------------------------------------- %%
 %% EXTRACT THE INFORMATION FROM THE INPUT
@@ -26,7 +42,9 @@ sysType     = inputBlackBoxInstructions.systemType;
 sysID       = inputBlackBoxInstructions.systemIDRequest;
 sysOptions  = inputBlackBoxInstructions.systemOptions;
  
-
+% Get the disturbance model ID requested and the options for loading it
+distID       = inputBlackBoxInstructions.disturbanceIDRequest;
+distOptions  = inputBlackBoxInstructions.disturbanceOptions;
 
 % Get the Full File Path to the Black Box location on this machine
 bbFullPath = inputBlackBoxInstructions.fullPath;
@@ -50,6 +68,15 @@ flag_returnObjectsToWorkspace       = inputBlackBoxInstructions.flag_returnObjec
 
 % Get the flag for whether to perform a deterministic simulation or not
 flag_deterministicSimulation        = inputBlackBoxInstructions.flag_deterministicSimulation;
+
+% Get the seed for controlling repeatability of runs
+seed_forSimulation                  = inputBlackBoxInstructions.seed_forSimulation;
+% Get the random number "Generator Type" for how to draw random samples
+seed_RandNumGeneratorType           = inputBlackBoxInstructions.seed_RandNumGeneratorType;
+
+% Get the details stuct about "Evaulating Multiple Realisations"
+details_evalMultiReal               = inputBlackBoxInstructions.details_evalMultiReal;
+
 
 % Get the plotting flags:
 flag_plotResults                        = inputBlackBoxInstructions.flag_plotResults;
@@ -86,10 +113,13 @@ disp('******************************************************************');
 disp([' Black-Box: Loading the "',sysType,'"-type model requested']);
 disp('            and wrapping it together as a "Progress Model Engine" class');
 % Load the building
-[bbBuilding , bbX0 , bbConstraints , bbCostDef ] = load_forBlackBox_BuildingModel( sysID , bbFullPath , sysOptions );
+[bbBuilding , bbX0 , bbStateDef, bbConstraints , bbCostDef ] = load_forBlackBox_BuildingModel( sysID , bbFullPath , sysOptions );
+
+disp(' DEBUGGING: If this is displayed then the load function was finished before the crash...');
 
 clear buildingModelStruct;
 buildingModelStruct.building        = bbBuilding;
+buildingModelStruct.stateDef        = bbStateDef;
 buildingModelStruct.costDef         = bbCostDef;
 buildingModelStruct.constraints     = bbConstraints;
 buildingModelStruct.x0              = bbX0;
@@ -104,7 +134,8 @@ clear sysModel;
 sysModel = ModelCostConstraints_Building(buildingModelStruct, sysType);
 
 % Extract the "StateDef" definition of the State, Input and Disturbance
-stateDef = requestStateDefObject( sysModel );
+%stateDef = requestStateDefObject( sysModel );
+stateDef = bbStateDef;
 
 
 % Extract the "ConstraintDef" definition object
@@ -132,11 +163,11 @@ disp('            and wrapping it together as a "Distrubance Coordinator" class'
 
 % Instantiate a "Disturbance Coordinator" object
 % This requires the identifier for the disturbance model to be used
-thisDistIdentifier  = '002_002';
-thisRecomputeStats  = false;
+thisDistIdentifier  = distID;
+thisRecomputeStats  = distOptions.recomputeStats;
 distCoord           = Disturbance_Coordinator(thisDistIdentifier);
 
-statsRequired = {'mean','cov','bounds_boxtype'};
+statsRequired = distOptions.statsRequired;
 
 thisSuccess = checkStatsAreAvailable_ComputingAsRequired( distCoord , statsRequired , thisRecomputeStats);
 if ~thisSuccess
@@ -175,7 +206,7 @@ for iController = 1:numControlTechniques
     thisVararginLocal       = thisControllerSpec.vararginLocal;
     thisVararginGlobal      = thisControllerSpec.vararginGlobal;
     % Create the Global Coordinator for this controller
-    myControlCoordArray(iController,1) = Control_Coordinator(thisClassNameLocal , thisClassNameGlobal , thisVararginLocal , thisVararginGlobal , stateDef , constraintDef , sysType);
+    myControlCoordArray(iController,1) = Control_Coordinator(thisClassNameLocal , thisClassNameGlobal , thisVararginLocal , thisVararginGlobal , stateDef , constraintDef , sysType , sysID , distID );
     
     % Put together the setting for the Global Coord Initialise function
     clear thisSettings;
@@ -241,7 +272,7 @@ for iController = 1:numControlTechniques
     mySimCoordArray(iController,1) = Simulation_Coordinator( distCoord , myControlCoordArray(iController,1) , myProgModelEng , stateDef , costDef , constraintDef );
     
     % Set the parameters for the simulation
-    specifySimulationParameters( mySimCoordArray(iController,1) , timeIndex_start , timeIndex_end , flag_saveResults , flag_deterministicSimulation);
+    specifySimulationParameters( mySimCoordArray(iController,1) , timeIndex_start , timeIndex_end , seed_forSimulation , seed_RandNumGeneratorType , flag_saveResults , flag_deterministicSimulation, details_evalMultiReal);
     
     % Check that the components of the simulation are compatible
     flag_throwError = true;
@@ -250,12 +281,22 @@ for iController = 1:numControlTechniques
         disp(' ... ERROR: the simulation for Control Technique number "',num2str(iController),'" is incompatable and will not be run');
     end
     
-    % Finally check that the simulation is ready to be run
+    % Next check that the simulation is ready to be run
     flag_throwError = true;
     this_isReady = checkSimulationIsReadyToRun( mySimCoordArray(iController,1) , flag_throwError );
     if ~(this_isReady)
         disp(' ... ERROR: the simulation Coordinator Object has been instantiated and intialised, but for some reason is not "ready" for simulation');
     end
+    
+    % To allow parallel simulation create cell array of disturbance
+    % coordinators, each initialised with a random number generator to
+    % allow for repeatability of the results
+    this_parallelInitialised = prepareDetailsFor_MultipleDistCoord_ForParallelSimulations( mySimCoordArray(iController,1) );
+    if ~(this_parallelInitialised)
+        disp(' ... ERROR: the Simulation Coordinator Object could not successfully make a deep copy of the disturbance Coordinator object for parallel simulations');
+    end
+    
+    
     
     % Put together the setting for the Global Coord Initialise function
     %clear thisSettings;
@@ -305,6 +346,18 @@ if flag_saveResults
     if ~(exist(savePath_Results_thisTime,'dir') == 7)
         mkdir(savePath_Results_thisTime);
     end
+    
+    
+    % Should run a look here to check that all the ".saveFolderName"
+    % properties are unique
+    %for iController = 1:numControlTechniques
+    %    
+    %end
+    
+else
+    % Set the "savePath_Results_thisTime" variable as blank for the retrn
+    savePath_Results_thisTime = [];
+    
 end
 
 
@@ -329,7 +382,7 @@ for iController = 1:numControlTechniques
     % Start a timer for this control technique
     thisStartTime = clock;
     
-    % Use the previously started timer
+    % Get the specification for this control technique
     thisControllerSpec = controllerSpecArray{iController};
     
     % Create a folder to save the results for this Control Technique
@@ -342,17 +395,28 @@ for iController = 1:numControlTechniques
         savePath_Results_thisTime_thisTechnique = [];
     end
     
+    % Inform the use about the simulation that is about to be run
+    disp( ' ');
+    disp( ' ... INFO: The following simulation will now commence:' );
+    disp(['            Controller:                    "',thisControllerSpec.label ,'"' ]);
+    disp(['            # Time Steps per realisation:   ',num2str((timeIndex_end-timeIndex_start+1)) ]);
+    disp(['            # of realisations:              ',num2str(2) ]);
     
-    % Run the simulation
+    % RUN THE SIMULATION:
     [thisCompletedSuccessfully , allResults{iController,1} , savedDataFileNames] = runSimulation( mySimCoordArray(iController,1) , savePath_Results_thisTime_thisTechnique );
+    
+    % Keep the results into one big struct
     allDataFileNames{iController,1} = savedDataFileNames;
     
     
     % If completed successfully then store the names of the files saved
-    % And put the reesults into one big struct
+    % (saved into the same folder as the results)
+    % NOTE: the "controllerSpecArray" will be saved directly in the root
+    % "savePath_Results_thisTime" folder so that it can be used to
+    % unambiguously get the folder names in which the results are saved.
     if thisCompletedSuccessfully
         if flag_saveResults
-            save( [savePath_Results_thisTime,'savedDataFileNames.mat'] , 'savedDataFileNames' , '-v7.3' );
+            save( [savePath_Results_thisTime_thisTechnique,'savedDataFileNames.mat'] , 'savedDataFileNames' , '-v7.3' );
         end
         
     % If not completed successfully, inform the user
@@ -368,42 +432,61 @@ for iController = 1:numControlTechniques
     % Store the time taken for this section
     thisTime = etime(clock,thisStartTime);
     % Give the user a little bit of info
-    disp([' ... INFO: ',num2str(thisTime),' seconds elapsed using the "',thisControllerSpec.label ,'" control technique run for ',num2str((timeIndex_end-timeIndex_start+1)),' time steps']);
+    disp([' ... INFO: ',num2str(thisTime),' seconds elapsed using the following:' ]);
+    disp(['            Controller:                    "',thisControllerSpec.label ,'"' ]);
+    disp(['            # Time Steps per realisation:   ',num2str((timeIndex_end-timeIndex_start+1)) ]);
+    if details_evalMultiReal.flag_evaluateOnMultipleRealisations
+        disp(['            # of realisations:              ',num2str(details_evalMultiReal.numSamplesUserSpec) ]);
+    else
+        disp( '            # of realisations:              1' );
+    end
+    disp(' ');
+
 
     
-    % TO ENSURE THAT EVERY CONTROLLER SEES THE SAME DISTURBANCE
-    % This is also for some computational efficiency because it "should" be
-    % quicker than starting with the same seed and generating the same
-    % random number that are from the same sequence
-    if ~passedSameDisturbanceToAllSimulators && (numControlTechniques > 1)
-        % If the field exists
-        if isfield( allResults{iController,1} , 'xi' )
-            % Then get the disturbance sequence that was used
-            tempXi = allResults{iController,1}.xi.data;
-            % A flag for whether to throw errors or not
-            temp_flag_throwError = false;
-            % Now step through all the remaining Simulations and add this
-            % same disturbance sequence to their property
-            for iTemp = (iController+1) : numControlTechniques
-                % Add the data
-                specifyPrecomputedDisturbances( mySimCoordArray(iTemp,1) , tempXi );
-                % Check the compatibility
-                returnIsCompatible = checkSimulationCompatability( mySimCoordArray(iTemp,1) , temp_flag_throwError );
-                % If the compatibility check failed
-                if ~returnIsCompatible
-                    % then remove the disturbance data
-                    specifyPrecomputedDisturbances( mySimCoordArray(iTemp,1) , flase );
-                    % and check the compatability again
-                    checkSimulationCompatability( mySimCoordArray(iTemp,1) , temp_flag_throwError );
+    if ~details_evalMultiReal.flag_evaluateOnMultipleRealisations
+        % TO ENSURE THAT EVERY CONTROLLER SEES THE SAME DISTURBANCE
+        % This is also for some computational efficiency because it "should" be
+        % quicker than starting with the same seed and generating the same
+        % random number that are from the same sequence
+        if ~passedSameDisturbanceToAllSimulators && (numControlTechniques > 1)
+            % If the field exists
+            if isfield( allResults{iController,1} , 'xi' )
+                % Then get the disturbance sequence that was used
+                tempXi = allResults{iController,1}.xi.data;
+                % A flag for whether to throw errors or not
+                temp_flag_throwError = false;
+                % Now step through all the remaining Simulations and add this
+                % same disturbance sequence to their property
+                for iTemp = (iController+1) : numControlTechniques
+                    % Add the data
+                    specifyPrecomputedDisturbances( mySimCoordArray(iTemp,1) , tempXi );
+                    % Check the compatibility
+                    returnIsCompatible = checkSimulationCompatability( mySimCoordArray(iTemp,1) , temp_flag_throwError );
+                    % If the compatibility check failed
+                    if ~returnIsCompatible
+                        % then remove the disturbance data
+                        specifyPrecomputedDisturbances( mySimCoordArray(iTemp,1) , false );
+                        % and check the compatability again
+                        checkSimulationCompatability( mySimCoordArray(iTemp,1) , temp_flag_throwError );
+                    end
                 end
             end
+            % Set the flag so that we don't do this again
+            passedSameDisturbanceToAllSimulators = true;
         end
-        % Set the flag so that we don't do this again
-        passedSameDisturbanceToAllSimulators = true;
+        % END OF: "if passedSameDisturbanceToAllSimulators && (numControlTechniques > 1)"
     end
-    % END OF: "if passedSameDisturbanceToAllSimulators && (numControlTechniques > 1)"
     
 end
+
+% NOW SAVE THE "controllerSpecArray" directly in the root
+    % "savePath_Results_thisTime" folder so that it can be used to
+    % unambiguously get the folder names in which the results are saved.
+if flag_saveResults
+    save( [savePath_Results_thisTime,'controllerSpecArray.mat'] , 'controllerSpecArray' , '-v7.3' );
+end
+
 
 % This loop naturally suits parallelisation, see this links for some
 % details about parallelising in Maltab:
@@ -419,6 +502,7 @@ timedResults.runAllSimulations = etime(clock,timerStart);
 % Give the user a little bit more info for the cumulative time
 disp(' ');
 disp([' ... INFO: ',num2str(numControlTechniques),' controllers were run for ',num2str((timeIndex_end-timeIndex_start+1)),' time steps each, this was completed in ',num2str(timedResults.runAllSimulations),' seconds']);
+disp(' ');
 %% --------------------------------------------------------------------- %%
 %% NOW PLOT THE RESULTS
 timerStart = clock;
@@ -434,6 +518,14 @@ if flag_plotResults
     % BUILD A STRUCT WITH THE SELECTED OPTIONS FOR THE PLOTTING
     clear plotOptions;
     plotOptions.unitsForTimeAxis = plotResults_unitsForTimeAxis;
+    plotOptions.flag_plotResultsPerController = flag_plotResultsPerController;
+    plotOptions.flag_plotResultsControllerComparison = flag_plotResultsControllerComparison;
+    
+    
+    % CALL THE GENERAL PLOTTING FUNCTION
+    % (the idea is that this function can be equally called separately to
+    % plot saved date)
+    
     
     % PLOT THE PER-CONTROLLER RESULTS
     if flag_plotResultsPerController
@@ -457,7 +549,7 @@ if flag_plotResults
             % 'cost'
             
             % Visualise the comparative results for ALL controller
-            Visualisation.visualise_multipleControllers( controllerSpecArray(:,1) , allResults(:,1) , allDataFileNames(iController,1) , plotOptions );
+            Visualisation.visualise_multipleControllers( controllerSpecArray(:,1) , allResults(:,1) , allDataFileNames{iController,1} , plotOptions );
         end
         
     end
@@ -470,7 +562,8 @@ timedResults.plotResults = etime(clock,timerStart);
 %% --------------------------------------------------------------------- %%
 %% ELSE: if NOT "flag_performControlSimulations", then do some BOOK KEEPING to make things work smoothly
 else
-    returnAllResults = [];
+    %returnAllResults = [];
+    savePath_Results_thisTime = [];
     
     
 end
@@ -483,7 +576,9 @@ end
 % Either as empty or with the actual data depending on the flag
 if flag_returnObjectsToWorkspace
 
-    returnAllResults = [];
+    returnAllResults = allResults;
+    
+    returnSavePath = savePath_Results_thisTime;
     
     object_system = sysModel;
     
@@ -492,6 +587,9 @@ if flag_returnObjectsToWorkspace
 else
     clear returnAllResults;
     returnAllResults = [];
+    
+    % Still return the path
+    returnSavePath = savePath_Results_thisTime;
     
     clear object_system;
     object_system = [];
