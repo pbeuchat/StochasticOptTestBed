@@ -106,7 +106,7 @@ classdef (Abstract) ModelCostConstraints < matlab.mixin.Copyable
         returnIsValid = attemptValidityCheck(obj)
         
         % FUNCTION: to call for a state update externally
-        [xnew , l , constraintSatisfaction] = requestStateUpdate( obj , x , u , xi , delta_t )
+        [xnew , u, l , constraintSatisfaction] = requestStateUpdate( obj , x , u , xi , delta_t )
         
         % FUNCTION: to build a "StateDef" object from the model
         returnStateDef = requestStateDefObject( obj );
@@ -132,7 +132,7 @@ classdef (Abstract) ModelCostConstraints < matlab.mixin.Copyable
         %returnIsValid = checkValidity(obj)
         
         % FUNCTION: to update the state for this type of model
-        %[xnew , l , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t )
+        %[xnew , u, l , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t )
     %end
     % END OF: "methods (Static = false , Access = private , Abstract = true )"
 

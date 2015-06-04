@@ -1,4 +1,4 @@
-function [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , currentTime)
+function [xnew , u, l , l_per_ss , flag_constraintSatisfaction] = performStateUpdate( obj , x , u , xi , currentTime)
 % Defined for the "ModelCostConstraints_Building" class, this function
 % progresses the state given that the "obj" is already know to be of type
 % "building"
@@ -12,7 +12,7 @@ function [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( ob
 %                 computations
 %               > Computational speed is important for this function
 %                 because it is called at every iteration
-%               > Additionally, as the funtion is pecific to buildings it
+%               > Additionally, as the funtion is specific to buildings it
 %                 is "ok" to put in a few hacks
 % ----------------------------------------------------------------------- %
 % This file is part of the Stochastic Optimisation Test Bed.
@@ -37,7 +37,9 @@ function [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( ob
 
 
 %% DEFAULT THE CONSTRAINT VIOLATION FLAG TO BE "true"
-    constraintSatisfaction = true;
+    flag_constraintSatisfaction = true;
+    flag_constraintSatisfaction_input = true;
+    flag_constraintSatisfaction_state = false;
 
 %% GET THE SIZES FOR THINGS
     % Get the size of the stuff, state, input, disturbance and sub-systems
@@ -67,13 +69,115 @@ function [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( ob
     constraintCheck_u = ( obj.constraintDef.u_all_A * u <= obj.constraintDef.u_all_b);
     if sum(~constraintCheck_u) > 0
         % Set the flag the the constraint were not satisfied
-        constraintSatisfaction = false;
+        flag_constraintSatisfaction = false;
+        flag_constraintSatisfaction_input = false;
         % Display some info about what the constraint violation was
         %disp([' ... CONSTRAINT VIOLATION: at time ',num2str(0),' the input specified violates the following input constraints:' ]);
         %disp( obj.constraintDef.u_all_label(~constraintCheck_u,1) );
         %disp( ' ');
         %disp( ' ... An adjustment will be made to map the specified inputs to a set of feasible inputs');
     end
+    
+%% IF VIOLATED, THEN ENFORCE INPUT CONSTRAINT SATISFICATION
+
+if not( flag_constraintSatisfaction_input )
+   
+    
+    % ------------------------------------------------------------------- %
+    % CLOSED 2-NORM MAPPING
+    % Formulate an optimisation to map "u" to the nearest point in the
+    % constraint (where the euclidian norm based defines nearest)
+    H_tomapu = speye( n_u );
+    f_tomapu = -2*u;
+    c_tomapu = u'*u;
+
+    % Some things that need to be passed to the solver
+    A_eq_input = sparse([],[],[],0,double(n_u),0);
+    b_eq_input = sparse([],[],[],0,1,0);
+    tempModelSense = 'min';
+    tempVerboseOptDisplay = false;
+
+    % Pass the problem to a solver
+    % RETURN SYNTAX: [x , objVal, lambda, flag_solvedSuccessfully] = = solveQP_viaGurobi( H, f, c, A_ineq, b_ineq, A_eq, b_eq, inputModelSense, verboseOptDisplay )
+    [u_closest , ~, ~, flag_solvedSuccessfully ] = opt.solveQP_viaGurobi( H_tomapu, f_tomapu, c_tomapu, obj.constraintDef.u_all_A, obj.constraintDef.u_all_b, A_eq_input, b_eq_input, tempModelSense, tempVerboseOptDisplay );
+
+    % Check that this closest "u" doesn't violate any of the constraints
+    if flag_solvedSuccessfully
+        threshhold = 10e-4;
+        violatingIndices_all_02 = (obj.constraintDef.u_all_A * u_closest - obj.constraintDef.u_all_b > threshhold);
+        if any(violatingIndices_all_02)
+            flag_manuallyMapU = true;
+        else
+            u = u_closest;
+            flag_manuallyMapU = false;
+        end
+    else
+        flag_manuallyMapU = true;
+    end
+
+    if flag_manuallyMapU
+        disp( ' ... ERROR: this is wierd. The closest point mapping did NOT return a solution within the feasible constraint set!!!' );
+        % First apply any "per-dimension" clipping based on any "box" or
+        % "hyper-rectangle" sets
+        if obj.constraintDef.flag_inc_u_box
+            violatingIndices_above = ( u > obj.constraintDef.u_box );
+            if any(violatingIndices_above)
+                u(violatingIndices_above) = obj.constraintDef.u_box(violatingIndices_above);
+            end
+            violatingIndices_below = ( u < -obj.constraintDef.u_box );
+            if any(violatingIndices_below)
+                u(violatingIndices_below) = -obj.constraintDef.u_box(violatingIndices_below);
+            end
+        end
+
+        if obj.constraintDef.flag_inc_u_rect
+            violatingIndices_above = ( u > obj.constraintDef.u_rect_upper );
+            if any(violatingIndices_above)
+                u(violatingIndices_above) = obj.constraintDef.u_rect_upper(violatingIndices_above);
+            end
+            violatingIndices_below = ( u < obj.constraintDef.u_rect_lower );
+            if any(violatingIndices_below)
+                u(violatingIndices_below) = -obj.constraintDef.u_rect_lower(violatingIndices_below);
+            end
+        end
+
+        % Second check with of the polytopic constraints are violated post
+        % clipping
+        if obj.constraintDef.flag_inc_u_poly
+            violatingIndices_poly = ( obj.constraintDef.u_poly_A * u > obj.constraintDef.u_poly_b );
+            if any(violatingIndices_poly)
+                % Map "u" back to be inside the violated constraints
+                violatingIndex = find(violatingIndices_poly);
+                % Step through the violating indicies
+                for iIndex = 1:length(violatingIndex)
+                    thisIndex = violatingIndex(iIndex);
+                    thisa = obj.constraintDef.u_poly_A(thisIndex,:);
+                    thisb = obj.constraintDef.u_poly_b(thisIndex,1);
+                    % Compute the "amount" of violation (should be > 0)
+                    thisViolationAmount = obj.constraintDef.u_poly_A(thisIndex,:) * u - thisb;
+                    % Get a logical index flag to the non-zero components of
+                    % "A"
+                    thisa_nonZero = ( thisa ~= 0 )';
+                    % Noramlise the row of "A"
+                    % Map the elements of "u" proportional to their factor in 
+                    % "A"
+                    thisa_sum = sum( thisa(thisa_nonZero') ) * 0.99;
+                    u(thisa_nonZero) = u(thisa_nonZero) - thisa(thisa_nonZero')' .* thisViolationAmount ./ thisa_sum;
+                end
+                % Check that this mapping didn't violate any other constraints
+                violatingIndices_all_03 = (obj.constraintDef.u_all_A * u > obj.constraintDef.u_all_b);
+                if any(violatingIndices_all_03)
+                    disp( ' ... ERROR: it was attempted to map the input "u" back into the feasible input set' );
+                    disp( '            BUT, it did NOT work and an infeasible "u" is being requested' );
+                    disp( '            The violated constraints are:' );
+                    diplay( obj.constraintDef.u_all_label(violatingIndices_all_03,1) );
+                end
+             end
+        end
+    end
+    
+end
+    
     
     
 %% AND ALSO CHECK THAT ANY STATE-by-INPUT CONSTRAINTS ARE SATISFIED    
@@ -105,7 +209,7 @@ function [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( ob
     constraintCheck_xnew = ( obj.constraintDef.x_all_A * xnew <= obj.constraintDef.x_all_b);
     if sum(~constraintCheck_xnew) > 0
         % Set the flag the the constraint were not satisfied
-        constraintSatisfaction = false;
+        flag_constraintSatisfaction = false;
         % Display some info about what the constraint violation was
         %disp([' ... CONSTRAINT VIOLATION: after progressing the state from time ',num2str(0),' to time ',num2str(0),',' ]);
         %disp( '            the updated state violates the following state constraints:');

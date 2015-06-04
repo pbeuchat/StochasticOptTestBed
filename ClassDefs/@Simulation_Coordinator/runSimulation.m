@@ -138,8 +138,8 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
         % The The "RandStream" object that will be used by this worker for
         % generating random samples
         %thisRandStream = obj.randStream_perWorkerCellArray{iWorker,1};
-        % @TODO - this is a HACK, should retreive the number from the
-        % diturbance
+        % This was a major HACK, as it should retreive the length from the
+        % diturbance from the disturbance Coordinator
         %thisLengthRandSamplePerXi = obj.stateDef.n_xi;
         
         
@@ -269,6 +269,8 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
 
                 % Get the disturbance sample for this time
                 if ~obj.flag_deterministic
+                    % If NOT determinisitc (ie. is STOCHASTIC) then request
+                    % a random sample from the Disturbance Coordinator
                     if obj.flag_precomputedDisturbancesAvailable
                         this_xi = obj.precomputedDisturbances(:,this_time.index);
                     else
@@ -280,6 +282,8 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
                         %this_xi = getDisturbanceSampleForOneTimeStep_withRandInput( obj.distCoord , this_time.index , tempSample );
                     end
                 else
+                    % Else DETERMINISTIC, therefore use the mean as the
+                    % disturbance
                     this_prediction_forDeterminisitic = getPredictions( obj.distCoord , statsRequiredDeterministic_mask , this_time.index , 1 );
                     this_xi = this_prediction_forDeterminisitic.mean;
                 end
@@ -288,6 +292,10 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
                 % Get the disturbance statisitcs for this time
                 if flag_getPredictions
                     this_prediction = getPredictions( obj.distCoord , statsRequired_mask , this_time.index , double(timeHorizon) );
+                    
+                    % If DETERMINISTIC, and the 'cov' statistic is
+                    % required, then build it as the outer product of the
+                    % 'mean'
                     if obj.flag_deterministic
                         if all( ismember( {'mean','cov'} , fields(this_prediction) ) )
                             this_prediction.cov = this_prediction.mean * this_prediction.mean';
@@ -311,11 +319,12 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
 
 
                 % Progress the Plant
-                [new_x , this_stageCost , this_stageCost_per_ss , constraintSatisfaction] = performStateUpdate( obj.progModelEng , this_x , this_u , this_xi , this_time);
+                [new_x , this_u_applied, this_stageCost , this_stageCost_per_ss , constraintSatisfaction] = performStateUpdate( obj.progModelEng , this_x , this_u , this_xi , this_time);
 
                 % Save the results
                 result_x(  : , iTime , iRealisation ) = this_x;
-                result_u(  : , iTime , iRealisation ) = this_u;
+                %result_u_requested(  : , iTime , iRealisation ) = this_u;
+                result_u(  : , iTime , iRealisation ) = this_u_applied;
                 result_xi( : , iTime , iRealisation ) = this_xi;
 
 
@@ -356,7 +365,7 @@ function [returnCompletedSuccessfully , returnResults , returnSavedDataNames] = 
             % @TODO: this is a partial HACK at the moment
             this_u  =  zeros( obj.stateDef.n_u  , 1 );
             this_xi =  zeros( obj.stateDef.n_xi , 1 );
-            [~ , this_stageCost , this_stageCost_per_ss , ~] = performStateUpdate( obj.progModelEng , this_x , this_u , this_xi , this_time);
+            [~ , ~, this_stageCost , this_stageCost_per_ss , ~] = performStateUpdate( obj.progModelEng , this_x , this_u , this_xi , this_time);
 
             result_cost( : , timeDuration+1 , iRealisation ) = this_stageCost;
             result_cost_per_ss( : , : , timeDuration+1 , iRealisation ) =  this_stageCost_per_ss;

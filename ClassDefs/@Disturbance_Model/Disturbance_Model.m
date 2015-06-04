@@ -162,7 +162,7 @@ classdef (Abstract) Disturbance_Model < handle
         %returnIsValid = checkValidity(obj)
         
         % FUNCTION: to update the state for this type of model
-        %[xnew , l , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t )
+        %[xnew , u, l , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t )
     %end
     % END OF: "methods (Static = false , Access = private , Abstract = true )"
     

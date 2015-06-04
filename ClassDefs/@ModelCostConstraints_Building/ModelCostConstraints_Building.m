@@ -210,8 +210,8 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         
         % FUNCTION: to call for a state update externally
         %       > This function is defined in the SUPER-CLASS as ABSTRACT
-        function [xnew , l , l_per_ss , constraintSatisfaction] = requestStateUpdate( obj , x , u , xi , delta_t )
-            [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t );
+        function [xnew , u, l , l_per_ss , constraintSatisfaction] = requestStateUpdate( obj , x , u , xi , delta_t )
+            [xnew , u, l , l_per_ss , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , delta_t );
         end
         % END OF: "function [...] = requestStateUpdate(...)"
         
@@ -264,7 +264,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
         returnIsValid = checkValidity(obj);
         
         % FUNCTION: to update the state for this type of model
-        [xnew , l , l_per_ss , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , currentTime );
+        [xnew , u, l , l_per_ss , constraintSatisfaction] = performStateUpdate( obj , x , u , xi , currentTime );
        
         % FUNCTION: to build a "StateDef" object for this type of model
         returnStateDef = buildAndReturnStateDefObject( obj );

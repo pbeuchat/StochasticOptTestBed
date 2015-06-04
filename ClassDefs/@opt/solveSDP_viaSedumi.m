@@ -114,7 +114,7 @@ try
     
     %% DISPLAY THE RESULT IF REQUESTED
     if verboseOptDisplay
-        disp(return_x);
+        %disp(return_x);
     end
     
     %% CHECK IF THE PROBLEM WAS SOLVED SUCCESSFULLY

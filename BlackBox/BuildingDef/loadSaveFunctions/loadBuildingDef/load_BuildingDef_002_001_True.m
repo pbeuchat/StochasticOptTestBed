@@ -260,8 +260,8 @@ disp('     -> "Reading" the specified initial condition');
 internalStates = [1 1 1 1 1 1 1 0 0 1 1 0 1 0 0 0 0 1 1 1 1 1 0 1 1 0 0 0 1 1 0 0 1 0 0 0 0 0 0  1 1 1 ]';
 
 %x0 = 22.5*internalStates + 16 * ~internalStates;
-%x0 = 22.4*internalStates + 16 * ~internalStates;
-x0 = 22.2*internalStates + 16 * ~internalStates;
+x0 = 22.4*internalStates + 16 * ~internalStates;
+%x0 = 22.2*internalStates + 16 * ~internalStates;
 %x0 = 22.0*internalStates + 16 * ~internalStates;
 %x0 = 21.5*internalStates + 16 * ~internalStates;
 %x0 = 21.0*internalStates + 16 * ~internalStates;
@@ -335,9 +335,9 @@ constraintsByHand.u_rect_lower = u_radiator_min * ones( n_u , 1);
 constraintsByHand.u_rect_upper = u_radiator_max * ones( n_u , 1);
 
 % For the coupling resourse constraint
-%constraintsByHand.u_poly_A = sparse( ones(1,n_u) , 1:n_u , ones(n_u,1) , 1 , n_u , n_u );
-%constraintsByHand.u_poly_b = n_u * u_radiator_max * 0.75;
-%constraintsByHand.u_poly_label = { 'resource' };
+% constraintsByHand.u_poly_A = sparse( ones(1,n_u) , 1:n_u , ones(n_u,1) , 1 , n_u , n_u );
+% constraintsByHand.u_poly_b = n_u * u_radiator_max * 0.75;
+% constraintsByHand.u_poly_label = { 'resource' };
 
 
 %% --------------------------------------------------------------------- %%
@@ -391,6 +391,7 @@ n_x = size( B.building_model.discrete_time_model.A  , 2 );
 % Get the size of the input vector
 n_u = size( B.building_model.discrete_time_model.Bu  , 2 );
 
+%x_ref = 20.0;
 x_ref = 22.5;
 %num_x_to_cotnrol = 42;
 
@@ -442,39 +443,52 @@ costComponents_scaling  = [ 5e-4 ; 1 ];
 %costComponentArray = CostComponent.empty(costComponents_num,0);
 clear costComponentArray;
 
+% COST COMPONENT CELL ARRAY
+% Each cell will contain a cost function
+% costComponentCellArray_energy = cell(7,1);
+% costComponentCellArray_comfort = cell(7,1);
 
 % Create the "energy" cost as a component array of the linear costs for
 % each sub-system
 for i_ss = 1:7
     this_cu = sparse( i_ss , 1 , cu(i_ss,1) , n_u , 1 , 1);
     costComponentArray_energy(i_ss,1) = CostComponent_Linear( sparse([],[],[],n_x,1,0) , this_cu , sparse([],[],[],1,1,0) , stateDefObject );
+    
+    %costComponentCellArray_energy{i_ss,1} = CostDef.createCostComponent_Linear( sparse([],[],[],n_x,1,0) , this_cu , sparse([],[],[],1,1,0) , stateDefObject );
 end
 
 
-% Create the "comfort" cost as a component array of the linear costs for
-% each sub-system
-x_ref = 22.5;
+% Create the "comfort" cost as a component array of the quadratic costs
+% for each sub-system
+%x_ref = 22.5; % This is defined above
 for i_ss = 1:7
     this_Q = sparse( i_ss , i_ss , 1         , n_x , n_x , 1);
     this_q = sparse( i_ss , 1    , -2*x_ref  , n_x , 1   , 1);
     this_c = sparse( 1    , 1    , x_ref^2   , 1   , 1   , 1);
     costComponentArray_comfort(i_ss,1) = CostComponent_Quadratic_StateOnly( this_Q , this_q , this_c , stateDefObject );
+    
+    % costComponentCellArray_comfort{i_ss,1} = costDef.createCostComponent_Quadratic_StateOnly( this_Q , this_q , this_c , stateDefObject );
 end
 
 
 % Now fill in each element of the array:
 %  -> The "energy" cost, a linear function of the input only
 costComponentArray(1,1) = CostComponent_PerSubSystem( costComponentArray_energy , stateDefObject );
+%costComponentArray{1,1} = CostComponent_PerSubSystem( costComponentArray_energy , stateDefObject );
 
 %  -> The "comfort" cost, a quadratic cost of the states
 costComponentArray(2,1) = CostComponent_PerSubSystem( costComponentArray_comfort , stateDefObject );
 
+% costComponentCellArray = { ...
+%         costComponentCellArray_energy   ;...
+%         costComponentArray_comfort       ...
+%      };
 
 
 % Then the cost components should be wrappen together into a "Cost
 % Definition" object
 costDefObject = CostDef( stateDefObject , costComponents_num , costComponents_label , costComponentArray , costComponents_scaling );
-
+%costDefObject = CostDef( stateDefObject , costComponents_num , costComponents_label , costComponentCellArray , costComponents_scaling );
 
 
 

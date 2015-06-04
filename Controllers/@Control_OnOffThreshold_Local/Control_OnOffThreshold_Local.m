@@ -1,4 +1,4 @@
-classdef Control_LQRCentral_Local < Control_LocalController
+classdef Control_OnOffThreshold_Local < Control_LocalController
 % This class runs the local control algorithms
 % ----------------------------------------------------------------------- %
 %  AUTHOR:      Paul N. Beuchat
@@ -76,43 +76,20 @@ classdef Control_LQRCentral_Local < Control_LocalController
         
         % --------------------------------------------------------------- %
         % VARIABLES SPECIFIC TO THIS CONTROLLER
-        P@cell;
-        p@cell;
-        s@cell;
+        onOff_state@logical = true;
         
-        K@cell;
+        on_control@double;
+        off_control@double;
         
-        computeKEveryNumSteps@uint32 = uint32(1);
-        
-        iterationCounter@uint32;
-                
-        computeAllKsAtInitialisation@logical;
-        
-        usePreviouslySavedKs@logical;
-        
-        numKsInitialised@uint32;
-        
-        % Specify the trade off to be used for the multi-objective
-        energyToComfortScaling@double;
-        
-        % Specify how the control action should be clipped back into the
-        % constraint set
-        clippingMethod@string;
-        
-        % Cost Coefficients for the quadratic costs
-        costCoeff_Q@double;
-        costCoeff_R@double;
-        costCoeff_S@double;
-        costCoeff_q@double;
-        costCoeff_r@double;
-        costCoeff_c@double;
+        x_threshold_lower@double;
+        x_threshold_upper@double;
         
     end
 
     
     methods
         % This is the "CONSTRUCTOR" method
-        function obj = Control_LQRCentral_Local( input_idnum , inputStateDef , inputConstraintDef , inputGlobalControlObject)
+        function obj = Control_OnOffThreshold_Local( input_idnum , inputStateDef , inputConstraintDef , inputGlobalControlObject)
             % Allow the Constructor method to pass through when called with
             % no nput arguments (required for the "empty" object array
             % creator)
@@ -202,7 +179,7 @@ classdef Control_LQRCentral_Local < Control_LocalController
         % simulation run-time is faster
         [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl( obj , inputModelType , inputModel , vararginLocal);
         
-        [flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl_withDisturbanceInfo( obj , inputModelID , inputDisturbanceID , inputDistCoord , vararginLocal);
+        %[flag_successfullyInitialised , flag_requestDisturbanceData] = initialise_localControl_withDisturbanceInfo( obj , inputModelID , inputDisturbanceID , inputDistCoord , vararginLocal);
         
         
         

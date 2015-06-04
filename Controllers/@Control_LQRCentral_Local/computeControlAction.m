@@ -33,39 +33,7 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
     %% INCREMENT THE ITERATION COUNTER
     obj.iterationCounter = obj.iterationCounter + uint32(1);
 
-    %% Extract the system matrices from the model
-    myBuilding      = obj.model.building;
-    myCosts         = obj.model.costDef;
-    myConstraints   = obj.model.constraintDef;
-    
-    A       = sparse( myBuilding.building_model.discrete_time_model.A   );
-    Bu      = sparse( myBuilding.building_model.discrete_time_model.Bu  );
-    Bxi     = sparse( myBuilding.building_model.discrete_time_model.Bv  );
-    %Bxu     = myBuilding.building_model.discrete_time_model.Bxu;
-    %Bxiu    = myBuilding.building_model.discrete_time_model.Bvu;
-    
-    % Get the coefficients for a quadratic cost
-    [costCoeff , flag_allCostComponentsIncluded] = getCostCoefficients_uptoQuadratic( myCosts , currentTime );
-
-    Q       = costCoeff.Q;
-    R       = costCoeff.R;
-    S       = costCoeff.S;
-    q       = costCoeff.q;
-    r       = costCoeff.r;
-    c       = costCoeff.c;
-    
-    % APPLY THE ENERGY TO COMFORT SCALING
-    % If the "S" term is non-zero then this scaling doesn't make as
-    % much sense
-    r = obj.energyToComfortScaling*r;
-    %R = obj.energyToComfortScaling*R;
-    
-    % Display an error message if all Cost Components are not included
-    if not(flag_allCostComponentsIncluded)
-        disp( ' ... ERROR: not all of the cost components could be retireived');
-        disp( '            This likely because at least one of the components is NOT a quadratic or linear function');
-        disp( '            and this ADP implementation can only handle linear or quadratic cost terms');
-    end
+    %% Extract the system size from the state definition
     
     n_x  = obj.stateDef.n_x;
     n_u  = obj.stateDef.n_u;
@@ -89,6 +57,52 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
             % Reset the iteration counter to one
             obj.iterationCounter = uint32(1);
 
+            % Extraxt the systems details required
+            myBuilding      = obj.model.building;
+            myCosts         = obj.model.costDef;
+            
+            A       = sparse( myBuilding.building_model.discrete_time_model.A   );
+            Bu      = sparse( myBuilding.building_model.discrete_time_model.Bu  );
+            Bxi     = sparse( myBuilding.building_model.discrete_time_model.Bv  );
+            %Bxu     = myBuilding.building_model.discrete_time_model.Bxu;
+            %Bxiu    = myBuilding.building_model.discrete_time_model.Bvu;
+
+            % Get the coefficients for a quadratic cost
+            flag_requestCostCoeff = false;
+            if flag_requestCostCoeff
+                % SYNTAX: "[costCoeff , flag_allCostComponentsIncluded] = getCostCoefficients_uptoQuadratic( myCosts , currentTime )"
+                [costCoeff , flag_allCostComponentsIncluded] = getCostCoefficients_uptoQuadratic( myCosts , currentTime );
+
+                Q       = costCoeff.Q;
+                R       = costCoeff.R;
+                S       = costCoeff.S;
+                q       = costCoeff.q;
+                r       = costCoeff.r;
+                c       = costCoeff.c;
+            else
+                Q       = obj.costCoeff_Q;
+                R       = obj.costCoeff_R;
+                S       = obj.costCoeff_S;
+                q       = obj.costCoeff_q;
+                r       = obj.costCoeff_r;
+                c       = obj.costCoeff_c;
+
+                flag_allCostComponentsIncluded = true;
+            end
+
+            % APPLY THE ENERGY TO COMFORT SCALING
+            % If the "S" term is non-zero then this scaling doesn't make as
+            % much sense
+            r = obj.energyToComfortScaling*r;
+            %R = obj.energyToComfortScaling*R;
+
+            % Display an error message if all Cost Components are not included
+            if not(flag_allCostComponentsIncluded)
+                disp( ' ... ERROR: not all of the cost components could be retireived');
+                disp( '            This likely because at least one of the components is NOT a quadratic or linear function');
+                disp( '            and this ADP implementation can only handle linear or quadratic cost terms');
+            end
+            
 
             % Initialise the TERMINAL VALUE FUNCITON needed for the first
             % iteration
@@ -165,6 +179,9 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
 
     %% APPLY THE INPUT CONSTRAINTS TO MAP "u" BACK INTO "\mathcal{U}" (if required)
 
+    % Extract the constraint definition from the model
+    myConstraints   = obj.model.constraintDef;
+    
     % Check if the LQR input violtes any of the constraints
     violatingIndices_all_01 = (myConstraints.u_all_A * u > myConstraints.u_all_b);
     if any(violatingIndices_all_01)
@@ -207,7 +224,7 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
 
         if flag_manuallyMapU
             if flag_specifiedClippingMethodFailed
-                disp( ' ... ERROR: this is wierd. The closest point mapping did NOT return a solution with the feasiblec onstraint set!!!' );
+                disp( ' ... ERROR: this is wierd. The closest point mapping did NOT return a solution within the feasible constraint set!!!' );
             end
             % First apply any "per-dimension" clipping based on any "box" or
             % "hyper-rectangle" sets

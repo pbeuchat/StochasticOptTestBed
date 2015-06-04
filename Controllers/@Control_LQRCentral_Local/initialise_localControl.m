@@ -190,6 +190,20 @@ function [flag_successfullyInitialised , flag_requestDisturbanceData] = initiali
     end
     
     
+    
+    %% ----------------------------------------------------------------- %%
+    %% GET THE COST CO-EFFICIENT TO SAVE HAVING TO GET THEM AT EVERY ITERATION
+    
+    % SYNTAX: "[costCoeff , flag_allCostComponentsIncluded] = getCostCoefficients_uptoQuadratic( myCosts , currentTime )"
+    tempCurrentTime = 1;
+    [costCoeff , ~]  = getCostCoefficients_uptoQuadratic( obj.model.costDef , tempCurrentTime );
+    obj.costCoeff_Q  =  costCoeff.Q;
+    obj.costCoeff_R  =  costCoeff.R;
+    obj.costCoeff_S  =  costCoeff.S;
+    obj.costCoeff_q  =  costCoeff.q;
+    obj.costCoeff_r  =  costCoeff.r;
+    obj.costCoeff_c  =  costCoeff.c;
+    
 
     
     

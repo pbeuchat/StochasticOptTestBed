@@ -468,6 +468,10 @@ if ismember( thisProperty , inputPropertyNames )
     clear data;
         
     %% Iterate through the number of Cost Components to compare, making a sub-plot for each
+    % Pareto Front data points
+    temp_paretoFrontDataPoints = zeros( numControllers , numCostsToCompare );
+    temp_paretoFrontLabelControllers = cell(numControllers,1);
+    temp_paretoFrontLabelCost = cell(numCostsToCompare,1);
     for iCost = 1:numCostsToCompare
         % Get the index of this state
         thisCostIndex = iCost;
@@ -510,10 +514,15 @@ if ismember( thisProperty , inputPropertyNames )
         disp([' ... NOTE: FOR COST COMPONENT: ',inputDataCellArray{1,1}.(thisProperty).labelPerDim{1}{thisCostIndex} ]);
         for iController = 1:numControllers
             disp(['  ',num2str(sum(data{iController,1}),'%10.1f'),'   for "',labelPerController{iController},'"' ]);
+            
+            temp_paretoFrontDataPoints(iController,iCost) = sum(data{iController,1});
         end
+        temp_paretoFrontLabelCost{iCost,1} = inputDataCellArray{1,1}.(thisProperty).labelPerDim{1}{thisCostIndex};
         
     end
-
+    for iController = 1:numControllers
+        temp_paretoFrontLabelControllers{iController,1} = labelPerController{iController};
+    end
     
     
     %% ----------------------------------------------------------------- %%

@@ -42,7 +42,7 @@ try
     
     %% BUILD THE GUROBI FORMULATION
     % Clear the model vairable for piece of mind
-    clear model;
+    %clear model;
     % Specify the objective fucntion
     model.obj   = full(f);  %  *objValScaling;
     model.Q     = H;        %  *objValScaling;
@@ -72,7 +72,7 @@ try
     % Display the model if desired
     %gurobi_write(model, 'mip1.lp');
 
-    clear params;
+    %clear params;
     params.method = -1;
     if verboseOptDisplay
         params.outputflag = true;
