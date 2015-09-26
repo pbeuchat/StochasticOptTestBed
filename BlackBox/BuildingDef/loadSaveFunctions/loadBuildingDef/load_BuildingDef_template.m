@@ -1,4 +1,4 @@
-function [returnB , returnX0 , returnConstraintParams, returnCostParams, returnV, returnTmax , returnDims] = load_BuildingDef( inputBuildingIdentifierString , bbFullPath )
+function [returnB , returnX0 , returnConstraintParams, returnCostParams, returnV, returnTmax , returnDims] = load_BuildingDef_template( inputBuildingIdentifierString , bbFullPath )
 %  load_BuildingDef.m
 %  ---------------------------------------------------------------------  %
 %  AUTHOR:      Paul N. Beuchat

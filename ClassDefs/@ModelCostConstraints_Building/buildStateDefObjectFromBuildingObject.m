@@ -1,4 +1,4 @@
-function returnStateDef = buildStateDefObjectFromBuildingObject( B , x0 )
+function returnStateDef = buildStateDefObjectFromBuildingObject( B , x0 , internalStates)
 % Defined for the "Building_MoselCostConstraints", to build a "StateDef"
 % object for this type of model
 % ----------------------------------------------------------------------- %
@@ -170,7 +170,7 @@ end
 
 %% --------------------------------------------------------------------- %%
 %% FINALLY BUILD THE STATE-DEF OBJECT FROM ALL THE VARIABLES ABOVE
-returnStateDef = StateDef( n_x , n_u , n_xi , label_x , label_u , label_xi , n_ss , mask_x_ss , mask_u_ss , mask_xi_ss , x0);
+returnStateDef = StateDef( n_x , n_u , n_xi , label_x , label_u , label_xi , n_ss , mask_x_ss , mask_u_ss , mask_xi_ss , x0 , internalStates);
 
 
 end

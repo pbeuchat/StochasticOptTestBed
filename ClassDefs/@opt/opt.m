@@ -88,14 +88,14 @@ classdef opt < handle
     methods (Static = true , Access = public)
         
         % --------------------------------------------------------------- %
-        % FOR SOLVING QUADRATIC PROGRAMS (QP)
+        % FOR SOLVING LINEAR PROGRAMS (LP)
         % FUNCTION: solves a generic QP via Gurobi
         [return_x , return_objVal, return_lambda, flag_solvedSuccessfully ] = solveLP_viaGurobi( f, c, A_ineq, b_ineq, A_eq, b_eq, lb, ub, inputModelSense, verboseOptDisplay );
         
         % --------------------------------------------------------------- %
         % FOR SOLVING QUADRATIC PROGRAMS (QP)
         % FUNCTION: solves a generic QP via Gurobi
-        [return_x , return_objVal, return_lambda, flag_solvedSuccessfully ] = solveQP_viaGurobi( H, f, c, A_ineq, b_ineq, A_eq, b_eq, inputModelSense, verboseOptDisplay );
+        [return_x , return_objVal, return_lambda, flag_solvedSuccessfully ] = solveQP_viaGurobi( H, f, c, A_ineq, b_ineq, A_eq, b_eq, lb, ub, inputModelSense, verboseOptDisplay );
         
         % --------------------------------------------------------------- %
         % FOR SOLVING SEMI-DEFINITE PROGRAMS (SOCP)

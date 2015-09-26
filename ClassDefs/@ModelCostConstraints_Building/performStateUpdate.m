@@ -98,8 +98,8 @@ if not( flag_constraintSatisfaction_input )
     tempVerboseOptDisplay = false;
 
     % Pass the problem to a solver
-    % RETURN SYNTAX: [x , objVal, lambda, flag_solvedSuccessfully] = = solveQP_viaGurobi( H, f, c, A_ineq, b_ineq, A_eq, b_eq, inputModelSense, verboseOptDisplay )
-    [u_closest , ~, ~, flag_solvedSuccessfully ] = opt.solveQP_viaGurobi( H_tomapu, f_tomapu, c_tomapu, obj.constraintDef.u_all_A, obj.constraintDef.u_all_b, A_eq_input, b_eq_input, tempModelSense, tempVerboseOptDisplay );
+    % RETURN SYNTAX: [x , objVal, lambda, flag_solvedSuccessfully] = = solveQP_viaGurobi( H, f, c, A_ineq, b_ineq, A_eq, b_eq, lb, ub, inputModelSense, verboseOptDisplay )
+    [u_closest , ~, ~, flag_solvedSuccessfully ] = opt.solveQP_viaGurobi( H_tomapu, f_tomapu, c_tomapu, obj.constraintDef.u_all_A, obj.constraintDef.u_all_b, A_eq_input, b_eq_input, [], [], tempModelSense, tempVerboseOptDisplay );
 
     % Check that this closest "u" doesn't violate any of the constraints
     if flag_solvedSuccessfully

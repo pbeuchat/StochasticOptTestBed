@@ -82,12 +82,19 @@ classdef Control_MPC_Local < Control_LocalController
         
         energyToComfortScaling@double;
         
+        flag_hasBilinearTerms@logical;
+        flag_hasBilinearTerm_Bxu@logical;
+        flag_hasBilinearTerm_Bxiu@logical;
+        
         % Model matrices (this is to allow for a different discreteisation
         % to be used compared to that from the one contained in the "model"
         % property)
         A@double;
         Bu@double;
         Bxi@double;
+        
+        Bxu_stacked@double;
+        Bxiu_stacked@double;
         
         % MPC Matrices - these are the matrices that predict the future
         % Storing here helps with speed up of the code
@@ -219,8 +226,11 @@ classdef Control_MPC_Local < Control_LocalController
     end
     % END OF: "methods (Static = false , Access = public)"
     
-    %methods (Static = false , Access = private)
-    %end
+    methods (Static = false , Access = private)
+        % Build the MPC matrices that account of the linearisation of the
+        % Bi-linear terms
+        [ ] = buildMPCMatrices_updateForLinearisedTerms( obj, T, Bxu_linearised , Bxiu_linearised)
+    end
     % END OF: "methods (Static = false , Access = private)"
         
         

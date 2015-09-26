@@ -527,67 +527,75 @@ if ismember( thisProperty , inputPropertyNames )
     
     %% ----------------------------------------------------------------- %%
     %% Create the figure - FOR THE HISTOGRAM PLOT COST DIFFERECNCE
-    thisFigurePosition = Visualisation.getFigurePositionInFullScreenGrid( 2,2, [2,1] , 'rowandcolumn' );
-    hFig = figure('position',thisFigurePosition);
-    set(hFig,'Color', Visualisation.figure_backgroundColour );
     
-    % Clear the data variable
-    clear data;
-        
-    %% Iterate through the number of Cost Components to compare, making a sub-plot for each
-    for iCost = 1:numCostsToCompare
-        % Get the index of this state
-        thisCostIndex = iCost;
+    % Only works for Matlab 2014b or higher
+    if verLessThan('matlab', '8.4')
+        disp( ' ... INFO: the Matlab version is less than 2014b (ie. version 8.4)' );
+        disp( '           This means that the historgram plots cannot be made :-(' );
+        disp( '           Oh well, no big loss, most other plots should still work.' );
+    else
+    
+        thisFigurePosition = Visualisation.getFigurePositionInFullScreenGrid( 2,2, [2,1] , 'rowandcolumn' );
+        hFig = figure('position',thisFigurePosition);
+        set(hFig,'Color', Visualisation.figure_backgroundColour );
 
-        % Create a cell array for storing the data
-        data = cell(numControllers-1,1);
+        % Clear the data variable
+        clear data;
 
-        % For now we just compare with the last controller in the list
-        
-        
-        % Handle based on the data structure
-        if (dimPerRealisation == 1)
-            % Construct the data to be plotted
-            data_lastController = inputDataCellArray{numControllers,1}.(thisProperty).data(thisCostIndex,:);
-            
-            for iController = 1:numControllers-1
-                % Get the data for this controller
-                data_thisController = inputDataCellArray{iController,1}.(thisProperty).data(thisCostIndex,:);
-                % Store the difference as the data to be plotted                
-                data{iController,1} = data_thisController - data_lastController;
+        %% Iterate through the number of Cost Components to compare, making a sub-plot for each
+        for iCost = 1:numCostsToCompare
+            % Get the index of this state
+            thisCostIndex = iCost;
+
+            % Create a cell array for storing the data
+            data = cell(numControllers-1,1);
+
+            % For now we just compare with the last controller in the list
+
+
+            % Handle based on the data structure
+            if (dimPerRealisation == 1)
+                % Construct the data to be plotted
+                data_lastController = inputDataCellArray{numControllers,1}.(thisProperty).data(thisCostIndex,:);
+
+                for iController = 1:numControllers-1
+                    % Get the data for this controller
+                    data_thisController = inputDataCellArray{iController,1}.(thisProperty).data(thisCostIndex,:);
+                    % Store the difference as the data to be plotted                
+                    data{iController,1} = data_thisController - data_lastController;
+                end
+
+                % Adjust the length of things to remove the last item
+                % For the color index
+                thisPlotOptions{1,2} = 1:(numControllers-1);
+                % For the legnend strings
+                thisPlotOptions{5,2} = labelPerController(1:(numControllers-1),1);
+
+
+                % Put in the title string
+                thisPlotOptions{10,2} = labelPerDim{1}{thisCostIndex};
+
+
+            elseif (dimPerRealisation == 2)
+
+                % ... NOT HANLDING THIS
+
+            else
+                % We are not handling this case properly
+                disp( ' ... ERROR: This function does NOT handle data with more' );
+                disp( '            than 2 dimensions per time step' );
+                numCostsToCompare = 0;
             end
-            
-            % Adjust the length of things to remove the last item
-            % For the color index
-            thisPlotOptions{1,2} = 1:(numControllers-1);
-            % For the legnend strings
-            thisPlotOptions{5,2} = labelPerController(1:(numControllers-1),1);
-            
-            
-            % Put in the title string
-            thisPlotOptions{10,2} = labelPerDim{1}{thisCostIndex};
-            
 
-        elseif (dimPerRealisation == 2)
-            
-            % ... NOT HANLDING THIS
-            
-        else
-            % We are not handling this case properly
-            disp( ' ... ERROR: This function does NOT handle data with more' );
-            disp( '            than 2 dimensions per time step' );
-            numCostsToCompare = 0;
+
+            % Create the axes for the subplot for this cost component
+            hAxes = subplot(1, numCostsToCompare, iCost );
+
+            % Now call the generic plotting function
+            Visualisation.visualise_plotMultipleHistogram( hAxes , data , thisPlotOptions  );
         end
-
-
-        % Create the axes for the subplot for this cost component
-        hAxes = subplot(1, numCostsToCompare, iCost );
-        
-        % Now call the generic plotting function
-        Visualisation.visualise_plotMultipleHistogram( hAxes , data , thisPlotOptions  );
-    end
     
-    
+    end  % END OF: "if verLessThan('matlab', '8.4')"    
     
     
     

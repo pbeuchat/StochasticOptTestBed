@@ -21,7 +21,7 @@ classdef StateDef < matlab.mixin.Copyable
 
     properties(Hidden,Constant)
         % Number of properties required for object instantation
-        n_properties@uint64 = uint64(11);
+        n_properties@uint64 = uint64(12);
         % Name of this class for displaying relevant messages
         thisClassName@string = 'StateDef';
     end
@@ -62,6 +62,9 @@ classdef StateDef < matlab.mixin.Copyable
         % The Initial State
         x0@double;
         
+        % The Mask for which state are internal states
+        internalStates@double;
+        
         
         % To Make The Plotting a bit more flexible, we define here which
         % components of the states, input and disturbances are most
@@ -88,7 +91,7 @@ classdef StateDef < matlab.mixin.Copyable
         % Define functions directly implemented here:
         % -----------------------------------------------
         % FUNCTION: the CONSTRUCTOR method for this class
-        function obj = StateDef( n_x , n_u , n_xi , label_x , label_u , label_xi , n_ss , mask_x_ss , mask_u_ss , mask_xi_ss , x0 )
+        function obj = StateDef( n_x , n_u , n_xi , label_x , label_u , label_xi , n_ss , mask_x_ss , mask_u_ss , mask_xi_ss , x0 , internalStates )
             % Check if number of input arguments is correct
             if nargin ~= obj.n_properties
                 %fprintf(' ... ERROR: The Constructor for the %s class requires %d argument/s for object creation.' , obj.thisClassName , obj.n_properties);
@@ -171,6 +174,19 @@ classdef StateDef < matlab.mixin.Copyable
             
             
             
+            % Check that the initial condition is of type "logical" and the
+            % correct size
+            if ~isfloat(internalStates)
+                disp(' ... ERROR: the internal states masks is not of type "dobule"');
+                disp(['             type of "internalStates"  = ',class(internalStates)]);
+                error(bbConstants.errorMsg);
+            end
+            if ~( (size(internalStates,1) == n_x) || (size(internalStates,2) == 1) )
+                disp(' ... ERROR: the internal states mask is not the expected size');
+                disp(['            size(internalStates)  = ',size(internalStates,1),'-by-',size(internalStates,2),' , but was expected to be of size = ',num2str(n_x),'-by- 1']);
+                error(bbConstants.errorMsg);
+            end
+            
             % Create a mask for how each element of the "n_u" inputs can
             % depend on the state and disturbance measurements
             % ... or don't :-(
@@ -188,6 +204,7 @@ classdef StateDef < matlab.mixin.Copyable
             obj.mask_u_ss       = mask_u_ss;
             obj.mask_xi_ss      = mask_xi_ss;
             obj.x0              = x0;
+            obj.internalStates  = internalStates;
 
         end
         % END OF: "function [..] = ProgressModelEngine(...)"
@@ -272,8 +289,11 @@ classdef StateDef < matlab.mixin.Copyable
             % The the portion of the initial state variable
             this_x0 = obj.x0( obj.mask_x_ss(  : , i_ss ) );
             
+            % The the portion of the internal states variable
+            this_internalStates = obj.internalStates( obj.mask_x_ss(  : , i_ss ) );
+            
             % Create the return object
-            returnStateDef = StateDef( this_n_x , this_n_u , this_n_xi , this_label_x , this_label_u , this_label_xi , this_n_ss , this_mask_x_ss , this_mask_u_ss , this_mask_xi_ss , this_x0);
+            returnStateDef = StateDef( this_n_x , this_n_u , this_n_xi , this_label_x , this_label_u , this_label_xi , this_n_ss , this_mask_x_ss , this_mask_u_ss , this_mask_xi_ss , this_x0 , this_internalStates);
         end
         
         

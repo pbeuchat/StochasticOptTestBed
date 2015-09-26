@@ -1,0 +1,3 @@
+facade_solar_group,   buildingelement_identifier,   disturbance_identifier,   absorptance,,,,,window_solar_group,   buildingelement_identifier,   disturbance_identifier,   control_identifier,   secondary_gains_fraction                  ,   B0001                     ,   facade_east           ,                     ,   0.15
+                  ,   B0005                     ,   facade_east           ,                     ,   0.15
+                  ,   B0008                     ,   facade_east           ,                     ,   0.15infiltration_specification,   zone_identifier,   airchangerate,   ,

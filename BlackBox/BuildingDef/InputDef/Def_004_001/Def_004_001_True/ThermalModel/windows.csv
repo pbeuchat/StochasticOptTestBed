@@ -1,0 +1,4 @@
+  identifier    , description           , glass_area   , frame_area    , U_value    , SHGC
+  W0001         , WindowGlazing_Buro21  , 13.27        , 0.846         , UValue_Window_EPConstr_WindowGlazing_Office   ,  GValue_Window_EPConstr_WindowGlazing_Office
+  W0002         , WindowGlazing_Buro20  , 13.27        , 0.846         , UValue_Window_EPConstr_WindowGlazing_Office   ,  GValue_Window_EPConstr_WindowGlazing_Office
+  W0003         , WindowGlazing_Buro19  , 13.27        , 0.846         , UValue_Window_EPConstr_WindowGlazing_Office   ,  GValue_Window_EPConstr_WindowGlazing_Office

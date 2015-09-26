@@ -142,6 +142,11 @@ function [flag_successfullyInitialised , flag_requestDisturbanceData] = initiali
             
             % Set the flag to prevent this been over-written
             flag_useInputModelDiscreteTimeModel = false;
+            
+            % Set the "Has Bilinear Terms" Flag
+            obj.flag_hasBilinearTerms = false;
+            obj.flag_hasBilinearTerm_Bxu = false;
+            obj.flag_hasBilinearTerm_Bxiu = false;
         end
     end
     
@@ -152,6 +157,31 @@ function [flag_successfullyInitialised , flag_requestDisturbanceData] = initiali
         obj.A    =  sparse(  inputModel.building.building_model.discrete_time_model.A   );
         obj.Bu   =  sparse(  inputModel.building.building_model.discrete_time_model.Bu  );
         obj.Bxi  =  sparse(  inputModel.building.building_model.discrete_time_model.Bv  );
+        
+        Bxu     = inputModel.building.building_model.discrete_time_model.Bxu;
+        Bxiu    = inputModel.building.building_model.discrete_time_model.Bvu;
+        % The stacked form is used to speed up computations even further
+        obj.Bxu_stacked   = sparse( reshape( Bxu , size(obj.A,1) , [] ) );
+        obj.Bxiu_stacked  = sparse( reshape( Bxiu , size(obj.A,1) , [] ) );
+        
+        % Set the "Has Bilinear Terms" Flag
+        if (nnz(Bxu) > 0) || (nnz(Bxiu) > 0)
+            obj.flag_hasBilinearTerms = true;
+            if (nnz(Bxu) > 0)
+                obj.flag_hasBilinearTerm_Bxu = true;
+            else
+                obj.flag_hasBilinearTerm_Bxu = false;
+            end
+            if (nnz(Bxiu) > 0)
+                obj.flag_hasBilinearTerm_Bxiu = false;
+            else
+                obj.flag_hasBilinearTerm_Bxiu = false;
+            end
+        else
+            obj.flag_hasBilinearTerms = false;
+            obj.flag_hasBilinearTerm_Bxu = false;
+            obj.flag_hasBilinearTerm_Bxiu = false;
+        end
     end
     
     

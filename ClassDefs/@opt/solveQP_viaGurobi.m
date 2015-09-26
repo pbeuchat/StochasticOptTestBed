@@ -1,4 +1,4 @@
-function [return_x , return_objVal, return_lambda, flag_solvedSuccessfully ] = solveQP_viaGurobi( H, f, c, A_ineq, b_ineq, A_eq, b_eq, inputModelSense, verboseOptDisplay )
+function [return_x , return_objVal, return_lambda, flag_solvedSuccessfully ] = solveQP_viaGurobi( H, f, c, A_ineq, b_ineq, A_eq, b_eq, lb, ub, inputModelSense, verboseOptDisplay )
 % Defined for the "opt" class, this function solves a standard QP using the
 % Gurobi solver package
 % ----------------------------------------------------------------------- %
@@ -26,6 +26,41 @@ function [return_x , return_objVal, return_lambda, flag_solvedSuccessfully ] = s
 % along with the Stochastic Optimisation Test Bed.  If not, see
 % <http://www.gnu.org/licenses/>.
 %  ---------------------------------------------------------------------  %
+
+
+%% --------------------------------------------------------------------- %%
+%% GET THE EXPECTED SIZE OF THE DECISION VECTOR
+return_x_expected_length = length(f);
+
+
+%% --------------------------------------------------------------------- %%
+%% IF ANY OF THE INPUT ARE EMPTY THEN SET THEN TO THEIR DEFAULT
+% Set the additive cost constant = 0 by default
+if isempty(c)
+    c = 0;
+end
+% Set the Inequalit and equality constraints to be a compatible size
+if isempty(A_ineq)
+    A_ineq = sparse([],[],[],0,return_x_expected_length,0);
+end
+if isempty(b_ineq)
+    b_ineq = zeros(0,1);
+end
+if isempty(A_eq)
+    A_eq = sparse([],[],[],0,return_x_expected_length,0);
+end
+if isempty(b_eq)
+    b_eq = zeros(0,1);
+end
+% Set the lower and upper bound to be unconstrained by default
+if isempty(lb)
+    lb = -1e21*ones(return_x_expected_length,1);
+end
+if isempty(ub)
+    ub =  1e21*ones(return_x_expected_length,1);
+end
+
+
 
 
 
@@ -63,8 +98,8 @@ try
     model.modelsense = inputModelSense;
     %model.varnames = names;
     % Specify the Lower and Upper bounds on each variable
-    model.lb = -1e21*ones(size(A_ineq,2),1);
-    model.ub =  1e21*ones(size(A_ineq,2),1);
+    model.lb = lb;
+    model.ub = ub;
     % Specify the model name that appears in the Gurobi log, and when
     % writing a model to a file
     model.modelname = 'Generic QP Solver using Gurobi';

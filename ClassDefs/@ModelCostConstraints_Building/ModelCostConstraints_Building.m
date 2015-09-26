@@ -249,7 +249,7 @@ classdef ModelCostConstraints_Building < ModelCostConstraints
     %% methods (Static = true , Access = public)
     methods (Static = true , Access = public)
         % FUNCTION: to build a "StateDef" object for this type of model
-        returnStateDef = buildStateDefObjectFromBuildingObject( B , x0 );
+        returnStateDef = buildStateDefObjectFromBuildingObject( B , x0 , internalStates );
         
     end
     % END OF: "methods (Static = false , Access = private)"

@@ -54,6 +54,40 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
         % Although it is not generic enough to handle time-varying costs
         % and constraints
         
+        
+        %% LINEARISE THE BI-LINEAR TERMS
+        
+        if obj.flag_hasBilinearTerms
+            % Choose a state about which to linearise
+            x_to_linearise = sparse( 22.5 * obj.stateDef.internalStates + 16 * ~obj.stateDef.internalStates );
+
+            % Creat a block diagonal version of the "x_to_linearise"
+            x_to_linearise_cell = repmat({x_to_linearise}, 1, obj.n_u);
+            x_to_linearise_blkdiag = blkdiag(x_to_linearise_cell{:});
+
+            Bxu_linearised = obj.Bxu_stacked * x_to_linearise_blkdiag;
+
+
+            % Choose a disturbance about which to linearise
+            xi_to_linearise = predictions.mean;
+            
+            % Pre-allocate a cell for linearising "Bxiu" at each time step
+            Bxiu_linearised = cell(obj.statsPredictionHorizon,1);
+            
+            % Iterate through the Time Horizon
+            for iTime = 1:obj.statsPredictionHorizon
+                this_xi_to_linearise = xi_to_linearise( (iTime-1)*obj.stateDef.n_xi+1 : iTime*obj.stateDef.n_xi , 1 );
+                this_xi_to_linearise_cell = repmat({this_xi_to_linearise}, 1, obj.n_u);
+                this_xi_to_linearise_blkdiag = blkdiag(this_xi_to_linearise_cell{:});
+
+                Bxiu_linearised{iTime,1} = obj.Bxiu_stacked * this_xi_to_linearise_blkdiag;
+            end
+            
+            % Call the function to build the updated MPC matrices
+            buildMPCMatrices_updateForLinearisedTerms( obj, obj.statsPredictionHorizon, Bxu_linearised , Bxiu_linearised);
+        
+        end
+            
         %% EQUATIONS FOR BUILDING THE COST FUNCTION IN TERMS OF "u" ONLY
         % R_new   =     R ...
         %             + Bu_new' * Q * Bu_new ...
@@ -72,6 +106,7 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
         %             + q' * Bxi_new * thisExi ...
         %             + c;
         
+                
         % BUILD THE OBJECTIVE FROM THE PRE-COMPUTED OBJECTS
         %R_new = obj.R_mpc + obj.Bu_Q_Bu + obj.Bu_S;
         R_new = obj.Bu_Q_Bu;
@@ -108,8 +143,8 @@ function u = computeControlAction( obj , currentTime , x , xi_prev , stageCost_p
         tempVerboseOptDisplay = false;
                 
         % Pass the problem to a solver
-        % RETURN SYNTAX: [x , objVal, lambda, flag_solvedSuccessfully] = = solveQP_viaGurobi( H, f, c, A_ineq, b_ineq, A_eq, b_eq, inputModelSense, verboseOptDisplay )
-        [temp_u , ~, ~, flag_solvedSuccessfully ] = opt.solveQP_viaGurobi( R_new, r_new, c_new, obj.A_ineq_input, obj.b_ineq_input, A_eq_input, b_eq_input, tempModelSense, tempVerboseOptDisplay );
+        % RETURN SYNTAX: [x , objVal, lambda, flag_solvedSuccessfully] = = solveQP_viaGurobi( H, f, c, A_ineq, b_ineq, A_eq, b_eq, lb, ub, inputModelSense, verboseOptDisplay )
+        [temp_u , ~, ~, flag_solvedSuccessfully ] = opt.solveQP_viaGurobi( R_new, r_new, c_new, obj.A_ineq_input, obj.b_ineq_input, A_eq_input, b_eq_input, [], [], tempModelSense, tempVerboseOptDisplay );
         
         
         % TEMPORATY TIMING USED FOR IMPROVING SPEED

@@ -55,7 +55,7 @@ if isempty(lb)
     lb = -1e21*ones(return_x_expected_length,1);
 end
 if isempty(ub)
-    ub = -1e21*ones(return_x_expected_length,1);
+    ub =  1e21*ones(return_x_expected_length,1);
 end
 
 try
@@ -102,12 +102,14 @@ try
     %gurobi_write(model, 'mip1.lp');
 
     clear params;
-    params.method = -1;
+    params.method = -1;  % Options are: -1=automatic(default), 0=primal simplex, 1=dual simplex, 2=barrier, 3=concurrent, 4=deterministic concurrent
     if verboseOptDisplay
         params.outputflag = true;
     else
         params.outputflag = false;
     end
+    % Turn this param on to distinguish result status: "INF_OR_UNBD"
+    %params.DualReductions = 0;
     
     %% SOLVE THE OPTIMISATION FORMULATION
     result = gurobi(model, params);

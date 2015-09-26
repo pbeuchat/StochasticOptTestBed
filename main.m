@@ -101,16 +101,21 @@ constants_MachineSpecific.addUserSpecifiedPaths();
 % '001_001' = a small 1 room building
 % '002_001' = a small 7 room, 2 storey building
 % '003_001' = a single floor in the Basel OptiControl 2 Building
+% '004_001' = a 3-room building representing Aachen
 
 systemType          = 'building';
 %systemIDRequest     = '001';
-systemIDRequest     = '002_001';
+%systemIDRequest     = '002_001';
+
+systemIDRequest     = '004_001';   % Aachen Building with TABS only, without Solar Disturbance
+%systemIDRequest     = '004_002';   % Aachen Building with TABS, with Solar Disturbance
+%systemIDRequest     = '004_003';   % Aachen Building with TABS and AHU, without Solar Disturbance
 
 
 
 % Some options for what to do with the system that is loaded
 clear systemOptions;
-systemOptions.displaySystemDetails         = false;
+systemOptions.displaySystemDetails         = true;
 systemOptions.drawSystem                   = false;
 systemOptions.plotContTimeModelSparisity   = false;
 systemOptions.discretisationMethod         = 'default';  % 'default','euler','expm'
@@ -129,7 +134,11 @@ systemOptions.discretisationMethod         = 'default';  % 'default','euler','ex
 % Need to make a list of what the various disturbance's are
 
 %disturbanceIDRequest  = '001';
-disturbanceIDRequest  = '002_004';
+%disturbanceIDRequest  = '002_004';
+
+disturbanceIDRequest  = '004_001';
+%disturbanceIDRequest  = '004_002';
+%disturbanceIDRequest  = '004_003';
 
 % Some options for what to do with the disturbance model that is loaded
 clear disturbanceOptions;
@@ -153,7 +162,7 @@ disturbanceOptions.statsRequired = {'mean','cov','bounds_boxtype'};
 %     T     III  M    M  EEEEE
 % ----------------------------------------------------------------------- %
 timeStart       = 1;
-timeHorizon     = 10*24*4;% (24*4) * 4;
+timeHorizon     = 14*24*4;% (24*4) * 4;
 timeUnits       = 'steps'; % Possible Units: 'steps', 'mins', 'hours', 'days'
 
 
@@ -200,8 +209,9 @@ flag_deterministicSimulation = false;
 %       S   E       E       D  D
 %   SSSS    EEEEE   EEEEE   DDD
 % ----------------------------------------------------------------------- %
-seed_forSimulation = sum(clock);        % <-- This will give random runs
+%seed_forSimulation = sum(clock);        % <-- This will give random runs
 %seed_forSimulation = 10;               % <-- This could give repeatable runs
+seed_forSimulation = 2.1772e+03;               % <-- This could give repeatable runs
 
 seed_RandNumGeneratorType   = 'mrg32k3a';
 % OPTIONS: that can have independent sub-streams
@@ -222,13 +232,13 @@ seed_RandNumGeneratorType   = 'mrg32k3a';
 % stochastic sense
 
 % First the flag to turn this option on or off
-flag_evaluateOnMultipleRealisations = false;
+flag_evaluateOnMultipleRealisations = true;
 
 % Now some options to speficy the details:
 % About how many realisations to run:
 evalMultiReal_numSampleMethod       = 'userSpecified';      % OPTIONS: 'userSpecified', 'n_xi^2'
 evalMultiReal_numSamplesMax         =  inf;                 % OPTIONS: set to "inf" for unbounded
-evalMultiReal_numSamplesUserSpec    =  1;
+evalMultiReal_numSamplesUserSpec    =  15;
 
 % About how to parallelise the computations
 evalMultiReal_parallelise_onOff     = true;                 % OPTIONS: 'true', 'false'
@@ -257,6 +267,14 @@ flag_returnObjectsToWorkspace = true;        % "true" or "false"
 
 
 %% PLOT              - SPECIFY SOME THINGS ABOUT WHAT RESULTS SHOULD BE PLOTTED
+% ----------------------------------------------------------------------- %
+%  PPPP   L      OOO    TTTTT
+%  P  P   L     O   O     T
+%  PPPP   L     O   O     T
+%  P      L     O   O     T
+%  P      LLLLL  OOO      T
+% ----------------------------------------------------------------------- %
+
 % This option can be used the if user wants to turn plotting off
 % completely, or if the used only wishes to see certain catagories or plots
 
@@ -451,36 +469,36 @@ currMethodID_forGroupPlotting = 0;
 % cntrSpecs{numCntr}.methodID_forGroupPlotting = currMethodID_forGroupPlotting;
 
 
-% -----------------------------------
-% % Specify the Group ID and Group Name for grouping the plots
-currMethodID_forGroupPlotting = currMethodID_forGroupPlotting + 1;
-currMethodName_forGroupPlotting = 'On-Off Threshold Control';
-% Add multiple controllers with different Constant Control values
-constantControlRange = 0;
-% -----------------------------------
-% Iterate through the range of constant control values
-for iConstant = 1:length(constantControlRange)
-    % Add a Controller Spec
-    numCntr = numCntr + 1;
-    % Get this constant control value
-    thisConstant = constantControlRange(iConstant);
-    % Mandatory Specifications
-    cntrSpecs{numCntr}.label            = ['On-Off Threshold Controller Local Only, ',num2str(thisConstant,'%-.2e')];
-    cntrSpecs{numCntr}.legend           = ['On-Off Threshold Local, u=',num2str(thisConstant,'%-.2e')];
-    cntrSpecs{numCntr}.saveFolderName   = ['On-Off-Threshold_Local_',num2str(thisConstant,'%-.2e')];
-    cntrSpecs{numCntr}.modelFree        = true;
-    cntrSpecs{numCntr}.trueModelBased   = [];
-    cntrSpecs{numCntr}.classNameLocal   = 'Control_OnOffThreshold_Local';
-    cntrSpecs{numCntr}.classNameGlobal  = [];
-    cntrSpecs{numCntr}.globalInit       = false;
-    % Optional Specifications
-    cntrSpecs{numCntr}.description      = 'A controller that switches between full on and full odd depending on the local tmperature';
-    thisVararginLocal                   = thisConstant;        % This is the constant control action that will be applied
-    cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-    cntrSpecs{numCntr}.vararginGlobal   = [];
-    cntrSpecs{numCntr}.methodID_forGroupPlotting = currMethodID_forGroupPlotting;
-    cntrSpecs{numCntr}.methodName_forGroupPlotting  = currMethodName_forGroupPlotting;
-end
+% % -----------------------------------
+% % % Specify the Group ID and Group Name for grouping the plots
+% currMethodID_forGroupPlotting = currMethodID_forGroupPlotting + 1;
+% currMethodName_forGroupPlotting = 'On-Off Threshold Control';
+% % Add multiple controllers with different Constant Control values
+% constantControlRange = 0;
+% % -----------------------------------
+% % Iterate through the range of constant control values
+% for iConstant = 1:length(constantControlRange)
+%     % Add a Controller Spec
+%     numCntr = numCntr + 1;
+%     % Get this constant control value
+%     thisConstant = constantControlRange(iConstant);
+%     % Mandatory Specifications
+%     cntrSpecs{numCntr}.label            = ['On-Off Threshold Controller Local Only, ',num2str(thisConstant,'%-.2e')];
+%     cntrSpecs{numCntr}.legend           = ['On-Off Threshold Local, u=',num2str(thisConstant,'%-.2e')];
+%     cntrSpecs{numCntr}.saveFolderName   = ['On-Off-Threshold_Local_',num2str(thisConstant,'%-.2e')];
+%     cntrSpecs{numCntr}.modelFree        = true;
+%     cntrSpecs{numCntr}.trueModelBased   = [];
+%     cntrSpecs{numCntr}.classNameLocal   = 'Control_OnOffThreshold_Local';
+%     cntrSpecs{numCntr}.classNameGlobal  = [];
+%     cntrSpecs{numCntr}.globalInit       = false;
+%     % Optional Specifications
+%     cntrSpecs{numCntr}.description      = 'A controller that switches between full on and full odd depending on the local tmperature';
+%     thisVararginLocal                   = thisConstant;        % This is the constant control action that will be applied
+%     cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+%     cntrSpecs{numCntr}.vararginGlobal   = [];
+%     cntrSpecs{numCntr}.methodID_forGroupPlotting = currMethodID_forGroupPlotting;
+%     cntrSpecs{numCntr}.methodName_forGroupPlotting  = currMethodName_forGroupPlotting;
+% end
 
 
 
@@ -689,43 +707,54 @@ end
 
 %% MPC - Energy-to-Comfort Scaling Range
 
-% % Specify the Group ID and Group Name for grouping the plots
-% currMethodID_forGroupPlotting = currMethodID_forGroupPlotting + 1;
-% currMethodName_forGroupPlotting = 'MPC - T=12h, Recede=2h';
-% % Add multiple controllers with different cost-component scaling
-% gammaRange = [1.0e-3, 7.5e-4, 6.2e-4, 5.0e-4, 3.75e-4, 2.5e-4, 1.25e-4, 1.0e-4, 0];
-% %gammaRange = [1.0e-3, 7.5e-4, 5.0e-4, 1.25e-4, 0];
-% % -----------------------------------
-% % Iterate through the range of cost-component scalings
-% for iGamma = 1:length(gammaRange)
-%     % Add a Controller Spec
-%     numCntr = numCntr + 1;
-%     % Get this scaling
-%     thisGamma = gammaRange(iGamma);
-%     % Mandatory Specifications
-%     cntrSpecs{numCntr}.label            = 'MPC';
-%     cntrSpecs{numCntr}.legend           = ['MPC - T=12h, Recede=2h, gamma=',num2str(thisGamma,'%-.2e')];
-%     cntrSpecs{numCntr}.saveFolderName   = ['MPC_T12h_R2h_gamma',num2str(thisGamma,'%-.2e')];
-%     cntrSpecs{numCntr}.modelFree        = false;
-%     cntrSpecs{numCntr}.trueModelBased   = true;
-%     cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
-%     cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
-%     cntrSpecs{numCntr}.globalInit       = true;
-%     % Optional Specifications
-%     cntrSpecs{numCntr}.description      = 'A typical MPC controller';
-% 
-%     clear thisVararginLocal;
-%     thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler'
-%     thisVararginLocal.predHorizon               = 12*4;
-%     thisVararginLocal.computeMPCEveryNumSteps   = 2*4;
-%     thisVararginLocal.energyToComfortScaling    = thisGamma;
-%     cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
-% 
-%     thisVararginGlobal                  = 'two';
-%     cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
-%     cntrSpecs{numCntr}.methodID_forGroupPlotting = currMethodID_forGroupPlotting;
-%     cntrSpecs{numCntr}.methodName_forGroupPlotting  = currMethodName_forGroupPlotting;
-% end
+% Specify the Group ID and Group Name for grouping the plots
+currMethodID_forGroupPlotting = currMethodID_forGroupPlotting + 1;
+currMethodName_forGroupPlotting = 'MPC - T=12h, Recede=2h';
+% Add multiple controllers with different cost-component scaling
+%gammaRange = [1.0e-3, 7.5e-4, 6.2e-4, 5.0e-4, 3.75e-4, 2.5e-4, 1.25e-4, 1.0e-4, 0];
+%gammaRange = [1.0e-3, 7.5e-4, 5.0e-4, 1.25e-4, 0];
+%gammaRange = [7.5e-4, 2.5e-4, 0];
+
+% FOR AACHEN BUILDING
+%gammaRange = [1.1e-4, 1.0e-4, 7.5e-5, 2.5e-5, 7.5e-6, 2.5e-6, 7.5e-7];   % 004_001, 18h Horizon, 2h Recede
+
+%gammaRange = [5.0e-3, 5.0e-4, 5.0e-5, 2.5e-5 7.5e-6];   % 004_003, 18h Horizon, 2h Recede
+gammaRange = [1.0e-3, 7.5e-4, 5.0e-4, 2.0e-4];   % 004_003, 18h Horizon, 2h Recede
+%gammaRange = [1.0e-3, 5.0e-4];   % 004_003, 18h Horizon, 2h Recede
+
+
+% -----------------------------------
+% Iterate through the range of cost-component scalings
+for iGamma = 1:length(gammaRange)
+    % Add a Controller Spec
+    numCntr = numCntr + 1;
+    % Get this scaling
+    thisGamma = gammaRange(iGamma);
+    % Mandatory Specifications
+    cntrSpecs{numCntr}.label            = 'MPC';
+    cntrSpecs{numCntr}.legend           = ['MPC - T=12h, Recede=2h, gamma=',num2str(thisGamma,'%-.2e')];
+    cntrSpecs{numCntr}.saveFolderName   = ['MPC_T12h_R2h_gamma',num2str(thisGamma,'%-.2e')];
+    cntrSpecs{numCntr}.modelFree        = false;
+    cntrSpecs{numCntr}.trueModelBased   = true;
+    cntrSpecs{numCntr}.classNameLocal   = 'Control_MPC_Local';
+    cntrSpecs{numCntr}.classNameGlobal  = 'Control_MPC_Global';
+    cntrSpecs{numCntr}.globalInit       = true;
+    % Optional Specifications
+    cntrSpecs{numCntr}.description      = 'A typical MPC controller';
+
+    clear thisVararginLocal;
+    thisVararginLocal.discretisationMethod      = 'none';   % 'none' , 'euler'
+    thisVararginLocal.predHorizon               = 18*4;
+    thisVararginLocal.computeMPCEveryNumSteps   = 2*4;
+    thisVararginLocal.energyToComfortScaling    = thisGamma;
+    cntrSpecs{numCntr}.vararginLocal            = thisVararginLocal;
+
+    thisVararginGlobal                  = 'two';
+    cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+    
+    cntrSpecs{numCntr}.methodID_forGroupPlotting = currMethodID_forGroupPlotting;
+    cntrSpecs{numCntr}.methodName_forGroupPlotting  = currMethodName_forGroupPlotting;
+end
 
 
 
@@ -741,8 +770,15 @@ end
 % %gammaRange = [2.0e-3, 1.75e-3, 1.5e-3, 1.25e-3, 1.0e-3, 7.5e-4, 1.0e-4 , 0];
 % %gammaRange = [1.75e-3, 1.5e-3, 1.25e-3, 1.0e-3, 7.5e-4, 1.0e-4 , 0];
 % %gammaRange = [1.25e-3, 1.0e-3, 7.5e-4, 1.0e-4 , 0];
-% gammaRange = [1.0e-3, 7.5e-4, 5.0e-4, 2.5e-4, 1.0e-4 , 0];
+% %gammaRange = [1.0e-3, 7.5e-4, 5.0e-4, 2.5e-4, 1.0e-4 , 0];
 % %gammaRange = [2.0e-3,  1.25e-3, 1.0e-3,  0];
+% 
+% % FOR AACHEN BUILDING
+% %gammaRange = [1.0e-3, 7.5e-4, 5.0e-4, 2.0e-4];   % 004_003, 18h Horizon, 2h Recede
+% %gammaRange = [1.0e-3, 5.0e-4];   % 004_003, 18h Horizon, 2h Recede
+% gammaRange = [1.0e-3, 7.5e-4, 5.0e-4, 2.5e-4 ];   % 004_003, 18h Horizon, 2h Recede
+% % ALREADY COMPUTED FOR: [2.5e-3, 1.0e-3, 7.5e-4, 5.0e-4, 2.5e-4]
+% 
 % % -----------------------------------
 % % Iterate through the range of cost-component scalings
 % for iGamma = 1:length(gammaRange)
@@ -752,8 +788,8 @@ end
 %     thisGamma = gammaRange(iGamma);
 %     % Mandatory Specifications
 %     cntrSpecs{numCntr}.label            = 'ADP Centralised';
-%     cntrSpecs{numCntr}.legend           = ['ADP - Dense P - 10-30, T=12h, Recede=2h, gamma=',num2str(thisGamma,'%-.2e')];
-%     cntrSpecs{numCntr}.saveFolderName   = ['ADP_Dens_10-30_T12h_R2h_gamma',num2str(thisGamma,'%-.2e')];
+%     cntrSpecs{numCntr}.legend           = ['ADP - Dist P - 10-30, T=12h, Recede=2h, gamma=',num2str(thisGamma,'%-.2e')];
+%     cntrSpecs{numCntr}.saveFolderName   = ['ADP_Dist_10-30_T12h_R2h_gamma',num2str(thisGamma,'%-.2e')];
 %     cntrSpecs{numCntr}.modelFree        = false;
 %     cntrSpecs{numCntr}.trueModelBased   = true;
 %     cntrSpecs{numCntr}.classNameLocal   = 'Control_ADPCentral_Local';
@@ -763,25 +799,25 @@ end
 %     cntrSpecs{numCntr}.description      = 'ADP Controller using a Centralised architecture';
 % 
 %     clear thisVararginLocal;
-%     thisVararginLocal.predHorizon               = 12*4;%timeHorizon;
+%     thisVararginLocal.predHorizon               = 18*4;%timeHorizon;
 %     thisVararginLocal.computeVEveryNumSteps     = 2*4;%timeHorizon;
 %     thisVararginLocal.discretisationMethod      = 'euler';                   % 'none' , 'euler' , 'expm'
 %     thisVararginLocal.ADPMethod                 = 'bellmanInequality';      % OPTIONS: 'samplingWithLeastSquaresFit', 'bellmanInequality', 'bellmanInequality_Qfunction'
 %     thisVararginLocal.systemDynamics            = 'linear';                 % OPTIONS: 'linear', 'bilinear'
 %     thisVararginLocal.numBellmanIneqIterations  = 1;                        % OPTIONS: any integer >= 1
-%     thisVararginLocal.sdpRelaxation             = 'none';                   % OPTIONS: 'none', 'ssd', 'dd'
+%     thisVararginLocal.sdpRelaxation             = 'none';                   % OPTIONS: 'none', 'sdd', 'dd'
 % 
 %     thisVararginLocal.buildFormulationWith      = 'yalmip';                 % OPTIONS: 'yalmip', 'direct'
-%     thisVararginLocal.solverToUse               = 'sedumi';                 % OPTIONS: 'sedumi', 'gurobi', 'modek', 'ecos'
+%     thisVararginLocal.solverToUse               = 'mosek';                 % OPTIONS: 'sedumi', 'gurobi', 'modek', 'ecos'
 % 
-%     thisVararginLocal.PMatrixStructure          = 'dense';                          % OPTIONS: 'diag', 'dense', 'distributable'
+%     thisVararginLocal.PMatrixStructure          = 'distributable';                          % OPTIONS: 'diag', 'dense', 'distributable'
 % 
 %     thisVararginLocal.usePWAPolicyApprox        = false;                            % OPTIONS: 'true', 'false'
 %     thisVararginLocal.liftingNumSidesPerDim     = 1;                                % OPTIONS: 'true', 'false'
 %     thisVararginLocal.KMatrixStructure          = ' ';                          % OPTIONS: 'diag', 'dense', 'distributable'
 % 
 %     thisVararginLocal.computeAllVsAtInitialisation = true;                           % OPTIONS: 'true', 'false'
-%     thisVararginLocal.usePreviouslySavedVs         = true;                           % OPTIONS: 'true', 'false'
+%     thisVararginLocal.usePreviouslySavedVs         = false;                           % OPTIONS: 'true', 'false'
 % 
 %     thisVararginLocal.energyToComfortScaling       = thisGamma;
 % 
@@ -2543,52 +2579,52 @@ end
 
 %% LQR DETERMINISTIC (versus gamma)
 
-% Specify the clipping method to use
-LQR_clipping_default = 'manual';        % OPTIONS: 'closest_2norm', 'manual'
-% Specify the Group ID and Group Name for grouping the plots
-currMethodID_forGroupPlotting = currMethodID_forGroupPlotting + 1;
-currMethodName_forGroupPlotting = 'LQR';
-% Add multiple controllers with different cost-component scaling
-%gammaRange = [7.5e-4, 6.25e-4, 5.0e-4, 3.75e-4, 2.5e-4, 1.25e-4, 1.0e-4, 5.0e-5, 0];
-%gammaRange = [7.5e-4, 5.0e-4, 2.5e-4, 1.0e-4, 5.0e-5, 0];
-%gammaRange = [7.5e-4, 5.0e-4, 2.5e-4, 1.0e-4, 0];
-gammaRange = [7.5e-4, 2.5e-4, 0];
-% -----------------------------------
-% Iterate through the range of cost-component scalings
-for iGamma = 1:length(gammaRange)
-    % Get this scaling
-    thisGamma = gammaRange(iGamma);
-    % Add a Controller Spec
-    numCntr = numCntr + 1;
-    % Mandatory Specifications
-    cntrSpecs{numCntr}.label            = 'LQR Centralised';
-    cntrSpecs{numCntr}.legend           = ['LQR OL, gamma=',num2str(thisGamma,'%-.2e') ];
-    cntrSpecs{numCntr}.saveFolderName   = ['LQR_OL_gamma',num2str(thisGamma,'%-.2e') ];
-    cntrSpecs{numCntr}.modelFree        = false;
-    cntrSpecs{numCntr}.trueModelBased   = true;
-    cntrSpecs{numCntr}.classNameLocal   = 'Control_LQRCentral_Local';
-    cntrSpecs{numCntr}.classNameGlobal  = 'Control_LQRCentral_Global';
-    cntrSpecs{numCntr}.globalInit       = true;
-    % Optional Specifications
-    cntrSpecs{numCntr}.description      = 'LQR Controller using a Centralised architecture';
-
-    clear thisVararginLocal;
-    thisVararginLocal.predHorizon               = timeHorizon;
-    thisVararginLocal.computeKEveryNumSteps     = timeHorizon;
-    thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
-    thisVararginLocal.computeAllKsAtInitialisation = false;                           % OPTIONS: 'true', 'false'
-    thisVararginLocal.usePreviouslySavedKs         = true;                           % OPTIONS: 'true', 'false'
-    thisVararginLocal.energyToComfortScaling       = thisGamma;
-
-    thisVararginLocal.clippingMethod       = LQR_clipping_default;               % OPTIONS: 'closest_2norm', 'manual'
-
-    cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
-
-    thisVararginGlobal                  = 'two';
-    cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
-    cntrSpecs{numCntr}.methodID_forGroupPlotting = currMethodID_forGroupPlotting;
-    cntrSpecs{numCntr}.methodName_forGroupPlotting  = currMethodName_forGroupPlotting;
-end
+% % Specify the clipping method to use
+% LQR_clipping_default = 'manual';        % OPTIONS: 'closest_2norm', 'manual'
+% % Specify the Group ID and Group Name for grouping the plots
+% currMethodID_forGroupPlotting = currMethodID_forGroupPlotting + 1;
+% currMethodName_forGroupPlotting = 'LQR';
+% % Add multiple controllers with different cost-component scaling
+% %gammaRange = [7.5e-4, 6.25e-4, 5.0e-4, 3.75e-4, 2.5e-4, 1.25e-4, 1.0e-4, 5.0e-5, 0];
+% %gammaRange = [7.5e-4, 5.0e-4, 2.5e-4, 1.0e-4, 5.0e-5, 0];
+% %gammaRange = [7.5e-4, 5.0e-4, 2.5e-4, 1.0e-4, 0];
+% gammaRange = [7.5e-4, 2.5e-4, 0];
+% % -----------------------------------
+% % Iterate through the range of cost-component scalings
+% for iGamma = 1:length(gammaRange)
+%     % Get this scaling
+%     thisGamma = gammaRange(iGamma);
+%     % Add a Controller Spec
+%     numCntr = numCntr + 1;
+%     % Mandatory Specifications
+%     cntrSpecs{numCntr}.label            = 'LQR Centralised';
+%     cntrSpecs{numCntr}.legend           = ['LQR OL, gamma=',num2str(thisGamma,'%-.2e') ];
+%     cntrSpecs{numCntr}.saveFolderName   = ['LQR_OL_gamma',num2str(thisGamma,'%-.2e') ];
+%     cntrSpecs{numCntr}.modelFree        = false;
+%     cntrSpecs{numCntr}.trueModelBased   = true;
+%     cntrSpecs{numCntr}.classNameLocal   = 'Control_LQRCentral_Local';
+%     cntrSpecs{numCntr}.classNameGlobal  = 'Control_LQRCentral_Global';
+%     cntrSpecs{numCntr}.globalInit       = true;
+%     % Optional Specifications
+%     cntrSpecs{numCntr}.description      = 'LQR Controller using a Centralised architecture';
+% 
+%     clear thisVararginLocal;
+%     thisVararginLocal.predHorizon               = timeHorizon;
+%     thisVararginLocal.computeKEveryNumSteps     = timeHorizon;
+%     thisVararginLocal.systemDynamics            = 'linear';                         % OPTIONS: 'linear', 'bilinear'
+%     thisVararginLocal.computeAllKsAtInitialisation = false;                           % OPTIONS: 'true', 'false'
+%     thisVararginLocal.usePreviouslySavedKs         = true;                           % OPTIONS: 'true', 'false'
+%     thisVararginLocal.energyToComfortScaling       = thisGamma;
+% 
+%     thisVararginLocal.clippingMethod       = LQR_clipping_default;               % OPTIONS: 'closest_2norm', 'manual'
+% 
+%     cntrSpecs{numCntr}.vararginLocal    = thisVararginLocal;
+% 
+%     thisVararginGlobal                  = 'two';
+%     cntrSpecs{numCntr}.vararginGlobal   = thisVararginGlobal;
+%     cntrSpecs{numCntr}.methodID_forGroupPlotting = currMethodID_forGroupPlotting;
+%     cntrSpecs{numCntr}.methodName_forGroupPlotting  = currMethodName_forGroupPlotting;
+% end
 
 
 

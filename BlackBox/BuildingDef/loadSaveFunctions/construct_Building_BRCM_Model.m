@@ -104,10 +104,13 @@ end
 
 % Ventilation
 if flags_EHFModelsToInclude.AHU
-    EHFModelClassFile = 'AHU.m'; 
-    EHFModelDataFile = [EHFModelDataDir,filesep,'ahu']; 
-    EHFModelIdentifier = 'AHU1';
-    B.declareEHFModel(EHFModelClassFile,EHFModelDataFile,EHFModelIdentifier);
+    
+    for iAHU = 1 : flags_EHFModelsToInclude.AHU_quantity
+        EHFModelClassFile = 'AHU.m'; 
+        EHFModelDataFile = [EHFModelDataDir,filesep,'ahu',num2str(iAHU,'%02d')]; 
+        EHFModelIdentifier = [ 'AHU',num2str(iAHU,'%02d') ];
+        returnB.declareEHFModel(EHFModelClassFile,EHFModelDataFile,EHFModelIdentifier);
+    end
 end
 
 
@@ -125,7 +128,7 @@ if flags_EHFModelsToInclude.BEHeatfluxes
     EHFModelClassFile = 'BEHeatfluxes.m'; 
     EHFModelDataFile = [EHFModelDataDir,filesep,'BEHeatfluxes']; 
     EHFModelIdentifier = 'TABS';
-    B.declareEHFModel(EHFModelClassFile,EHFModelDataFile,EHFModelIdentifier);
+    returnB.declareEHFModel(EHFModelClassFile,EHFModelDataFile,EHFModelIdentifier);
 end
 
 

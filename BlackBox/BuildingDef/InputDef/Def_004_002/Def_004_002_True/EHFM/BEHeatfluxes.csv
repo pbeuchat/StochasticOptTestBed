@@ -1,0 +1,4 @@
+buildingelement_identifier   ,   layer_number  ,   control_identifier     ,   heating_cooling_selection
+B0014                        ,   1             ,   Office_TABS_Z0021_01   ,   h
+B0015                        ,   1             ,   Office_TABS_Z0020_01   ,   h
+B0016                        ,   1             ,   Office_TABS_Z0019_01   ,   h
