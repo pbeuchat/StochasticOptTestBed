@@ -41,7 +41,7 @@ classdef opt < handle
         % Number of properties required for object instantation
         n_properties@uint64 = uint64(0);
         % Name of this class for displaying relevant messages
-        thisClassName@string = 'opt';
+        thisClassName@char = 'opt';
     end
    
     properties (Access = public)
